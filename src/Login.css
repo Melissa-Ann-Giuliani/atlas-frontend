@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #2a4b3c;
+  background-color: var(--admin-primary-800);
   font-family: 'DM Sans', sans-serif;
   width: 100vw;
   margin: 0;
@@ -16,7 +16,7 @@
 .login-card {
   background-color: #e5d9b8;
   padding: 48px;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 90%;
   max-width: 400px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -110,6 +110,7 @@
   font-size: 14px;
   color: #1a1a1a;
   font-weight: 600;
+  text-align: left;
 }
 
 .form-input {
@@ -117,6 +118,7 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+  font-family: inherit;
   background-color: white;
   outline: none;
   transition: border-color 0.2s;
@@ -146,10 +148,11 @@
   border-radius: 6px;
   padding: 12px;
   font-size: 15px;
+  font-family: inherit;
   font-weight: 500;
   cursor: pointer;
   width: 135px;
-  margin: 8px auto 0;
+  margin-inline: auto;
   transition: background-color 0.2s;
 }
 
@@ -169,7 +172,7 @@
 }
 
 .forgot-link {
-  color: #2a4b3c;
+  color: var(--admin-primary-800);
   text-decoration: none;
 }
 

@@ -1,3 +1,11 @@
+# "ATLAS" - Sistema de Gestión de Mapa Docente FFHA
+
+Servicio frontend para automatizar la automatizar la gestión de trámites correspondientes a los docentes (designaciones, licencias, renuncias, subrogaciones), así como también realizar auditorías y brindar un acceso rápido a estadísticas e información consolidada.
+
+## Tecnologías
+- React
+- Typescript
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
