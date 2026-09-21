@@ -1,3 +1,10 @@
+# "ATLAS" - Sistema de Gestión de Mapa Docente FFHA
+
+Servicio frontend para automatizar la automatizar la gestión de trámites correspondientes a los docentes (designaciones, licencias, renuncias, subrogaciones), así como también realizar auditorías y brindar un acceso rápido a estadísticas e información consolidada.
+
+## Tecnologías
+- React
+- Typescript
 # atlas-frontend
 
 Frontend del proyecto: Sistema de Gestión de Mapa Docente "ATLAS"
