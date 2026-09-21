@@ -2,6 +2,118 @@
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
+  /* Admin / Primary */
+  --admin-primary-50: #EFF6F0;
+  --admin-primary-100: #D1E5D4;
+  --admin-primary-200: #B4D5B8;
+  --admin-primary-300: #97C49D;
+  --admin-primary-400: #79B481;
+  --admin-primary-500: #5CA365;
+  --admin-primary-600: #4B8653;
+  --admin-primary-700: #3F6F45;
+  --admin-primary-800: #2A4B2F;
+  --admin-primary-900: #1A2E1C;
+  --admin-primary-950: #09100A;
+
+  /* Admin / Tertiary */
+  --admin-tertiary-50: #F2F9EB;
+  --admin-tertiary-100: #DAEEC8;
+  --admin-tertiary-200: #C2E3A5;
+  --admin-tertiary-300: #ABD982;
+  --admin-tertiary-400: #93CE5F;
+  --admin-tertiary-500: #7BC33C;
+  --admin-tertiary-600: #6FAE36;
+  --admin-tertiary-700: #4F7D26;
+  --admin-tertiary-800: #395A1C;
+  --admin-tertiary-900: #223711;
+  --admin-tertiary-950: #0C1406;
+
+  /* Auditor / Primary */
+  --auditor-primary-50: #F1EBFA;
+  --auditor-primary-100: #D8C7F0;
+  --auditor-primary-200: #BFA2E6;
+  --auditor-primary-300: #A67EDD;
+  --auditor-primary-400: #8C5AD3;
+  --auditor-primary-500: #7336C9;
+  --auditor-primary-600: #5E2CA5;
+  --auditor-primary-700: #4A2281;
+  --auditor-primary-800: #2F1652;
+  --auditor-primary-900: #200F38;
+  --auditor-primary-950: #0C0514;
+
+  /* Auditor / Tertiary */
+  --auditor-tertiary-50: #F4E7FE;
+  --auditor-tertiary-100: #E1BBFC;
+  --auditor-tertiary-200: #CD8FFA;
+  --auditor-tertiary-300: #BA63F8;
+  --auditor-tertiary-400: #A637F6;
+  --auditor-tertiary-500: #870AE0;
+  --auditor-tertiary-600: #7809C8;
+  --auditor-tertiary-700: #5E079C;
+  --auditor-tertiary-800: #440570;
+  --auditor-tertiary-900: #290344;
+  --auditor-tertiary-950: #0F0118;
+
+  /* Docente / Primary */
+  --docente-primary-50: #E9F0FC;
+  --docente-primary-100: #C0D4F6;
+  --docente-primary-200: #98B8F1;
+  --docente-primary-300: #6F9DEB;
+  --docente-primary-400: #4781E6;
+  --docente-primary-500: #1F66E0;
+  --docente-primary-600: #1953B8;
+  --docente-primary-700: #144291;
+  --docente-primary-800: #0E2F67;
+  --docente-primary-900: #091C3F;
+  --docente-primary-950: #030A16;
+
+  /* Docente / Tertiary */
+  --docente-tertiary-50: #EBF5FA;
+  --docente-tertiary-100: #C7E3F0;
+  --docente-tertiary-200: #A2D1E6;
+  --docente-tertiary-300: #7EBFDD;
+  --docente-tertiary-400: #5AADD3;
+  --docente-tertiary-500: #369BC9;
+  --docente-tertiary-600: #2C7FA5;
+  --docente-tertiary-700: #226381;
+  --docente-tertiary-800: #163F52;
+  --docente-tertiary-900: #0F2B38;
+  --docente-tertiary-950: #050F14;
+
+  /* Users / Secondary */
+  --users-secondary-50: #F6F3EE;
+  --users-secondary-100: #E7DFD0;
+  --users-secondary-200: #D7CAB2;
+  --users-secondary-300: #C8B593;
+  --users-secondary-400: #B8A075;
+  --users-secondary-500: #A88C57;
+  --users-secondary-600: #8A7347;
+  --users-secondary-700: #6C5937;
+  --users-secondary-800: #4D4028;
+  --users-secondary-900: #2F2718;
+  --users-secondary-950: #110E09;
+
+  /* Users / Neutral */
+  --users-neutral-50: #F2F3F2;
+  --users-neutral-100: #DBDCDB;
+  --users-neutral-200: #C4C6C3;
+  --users-neutral-300: #ADAFAC;
+  --users-neutral-400: #969994;
+  --users-neutral-500: #757873;
+  --users-neutral-600: #686B66;
+  --users-neutral-700: #515350;
+  --users-neutral-800: #3A3C39;
+  --users-neutral-900: #242423;
+  --users-neutral-950: #0D0D0C;
+
+  /* Buttons */
+  --btn-caution: #FFC801;
+  --btn-confirm: #305839;
+  --btn-delete: #890505;
+  --btn-expiring: #EF476F;
+  --btn-modify: #0551DD;
+  --btn-warning: #DE7200;
 }
 
 body {
