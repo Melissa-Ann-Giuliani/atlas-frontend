@@ -5,6 +5,9 @@ Servicio frontend para automatizar la automatizar la gestión de trámites corre
 ## Tecnologías
 - React
 - Typescript
+# atlas-frontend
+
+Frontend del proyecto: Sistema de Gestión de Mapa Docente "ATLAS"
 
 # React + TypeScript + Vite
 
