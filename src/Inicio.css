@@ -2,12 +2,19 @@
 
 .dashboard-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   background-color: var(--users-secondary-100, #E7DFD0);
   overflow: hidden;
   font-family: 'DM Sans', sans-serif;
   text-align: left;
+}
+
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .dashboard-layout button,
@@ -26,14 +33,14 @@
   z-index: 10;
 }
 
-.sidebar-header {
-  padding: 24px;
+.topbar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: white;
 }
 
-.sidebar-header .logo-icon {
+.topbar-brand .logo-icon {
   width: 32px;
   height: 32px;
   display: grid;
@@ -46,7 +53,7 @@
   gap: 2px;
 }
 
-.sidebar-header .logo-quadrant {
+.topbar-brand .logo-quadrant {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,7 +62,7 @@
   color: white;
 }
 
-.sidebar-header .logo-text {
+.topbar-brand .logo-text {
   font-family: 'DM Serif Display', serif;
   font-size: 24px;
   font-weight: 500;
@@ -146,7 +153,7 @@
   background-color: var(--admin-primary-900, #1A2E1C);
   height: 60px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   padding: 0 24px;
 }
