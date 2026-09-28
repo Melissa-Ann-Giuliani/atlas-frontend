@@ -268,3 +268,17 @@
   font-weight: 500;
   margin-bottom: 20px;
 }
+
+.alert-success {
+  background-color: #edf7ed;
+  color: #1e4620;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #c8e6c9;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
