@@ -4,17 +4,15 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 
+import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+
 const FilterIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-  </svg>
+  <FilterAltRoundedIcon style={{ fontSize: 16 }} />
 );
 
 const SearchIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"></circle>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-  </svg>
+  <SearchRoundedIcon style={{ fontSize: 16 }} />
 );
 
 
@@ -31,10 +29,10 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   const center = size / 2;
   const radius = center - thickness / 2;
   const circumference = 2 * Math.PI * radius;
-  
+
   const total = data.reduce((sum, item) => sum + item.value, 0);
   let currentOffset = 0;
-  
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {data.map((item, index) => {
@@ -42,7 +40,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
         const strokeDasharray = `${valueRatio * circumference} ${circumference}`;
         const strokeDashoffset = -currentOffset;
         currentOffset += valueRatio * circumference;
-        
+
         return (
           <circle
             key={index}
@@ -115,134 +113,134 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
         {/* Main Content */}
         <main className="main-content">
           <div className="content-area">
-          <div className="filter-bar">
-            <button className="filter-btn">
-              <FilterIcon />
-              <span>Filtros</span>
-            </button>
-            <div className="search-input-wrapper">
-              <input type="text" placeholder="Ingrese valor" className="search-input" />
-              <SearchIcon />
+            <div className="filter-bar">
+              <button className="filter-btn">
+                <FilterIcon />
+                <span>Filtros</span>
+              </button>
+              <div className="search-input-wrapper">
+                <input type="text" placeholder="Ingrese valor" className="search-input" />
+                <SearchIcon />
+              </div>
             </div>
+
+            {!data ? (
+              <div className="loading-state">Cargando tablero...</div>
+            ) : (
+              <div className="dashboard-grid">
+                {/* Main Card */}
+                <div className="card main-card">
+                  <div className="card-header main-card-header">
+                    <h2>Fac. de Filosofía, Humanidades y Artes</h2>
+                  </div>
+                  <div className="card-content main-card-content">
+                    <div className="legend-section">
+                      <ul className="legend-list">
+                        {data.unitTypes.map((item: DonutData, idx: number) => (
+                          <li key={idx} className="legend-item">
+                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                            <span className="legend-label">{item.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button className="details-btn">Ver Detalles</button>
+                    </div>
+                    <div className="chart-section">
+                      <DonutChart
+                        data={data.unitTypes}
+                        size={240}
+                        thickness={40}
+                        centerText={data.totalDocentes.toString()}
+                        centerSubtext="Docentes"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub Cards */}
+                <div className="sub-cards-container">
+                  {/* Centros */}
+                  <div className="card sub-card">
+                    <div className="card-header sub-card-header">
+                      <h3>Centros</h3>
+                    </div>
+                    <div className="card-content sub-card-content">
+                      <ul className="legend-list compact">
+                        {data.centros.map((item: DonutData, idx: number) => (
+                          <li key={idx} className="legend-item">
+                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                            <span className="legend-label">{item.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="chart-section-sm">
+                        <DonutChart
+                          data={data.centros}
+                          size={140}
+                          thickness={25}
+                          centerText={data.centros.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
+                          centerSubtext="Docentes"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Departamentos */}
+                  <div className="card sub-card">
+                    <div className="card-header sub-card-header">
+                      <h3>Departamentos</h3>
+                    </div>
+                    <div className="card-content sub-card-content">
+                      <ul className="legend-list compact">
+                        {data.departamentos.map((item: DonutData, idx: number) => (
+                          <li key={idx} className="legend-item">
+                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                            <span className="legend-label">{item.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="chart-section-sm">
+                        <DonutChart
+                          data={data.departamentos}
+                          size={140}
+                          thickness={25}
+                          centerText={data.departamentos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
+                          centerSubtext="Docentes"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Institutos */}
+                  <div className="card sub-card">
+                    <div className="card-header sub-card-header">
+                      <h3>Institutos</h3>
+                    </div>
+                    <div className="card-content sub-card-content">
+                      <ul className="legend-list compact">
+                        {data.institutos.map((item: DonutData, idx: number) => (
+                          <li key={idx} className="legend-item">
+                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                            <span className="legend-label">{item.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="chart-section-sm">
+                        <DonutChart
+                          data={data.institutos}
+                          size={140}
+                          thickness={25}
+                          centerText={data.institutos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
+                          centerSubtext="Docentes"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-
-          {!data ? (
-            <div className="loading-state">Cargando tablero...</div>
-          ) : (
-            <div className="dashboard-grid">
-              {/* Main Card */}
-              <div className="card main-card">
-                <div className="card-header main-card-header">
-                  <h2>Fac. de Filosofía, Humanidades y Artes</h2>
-                </div>
-                <div className="card-content main-card-content">
-                  <div className="legend-section">
-                    <ul className="legend-list">
-                      {data.unitTypes.map((item: DonutData, idx: number) => (
-                        <li key={idx} className="legend-item">
-                          <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                          <span className="legend-label">{item.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <button className="details-btn">Ver Detalles</button>
-                  </div>
-                  <div className="chart-section">
-                    <DonutChart 
-                      data={data.unitTypes} 
-                      size={240} 
-                      thickness={40} 
-                      centerText={data.totalDocentes.toString()} 
-                      centerSubtext="Docentes" 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sub Cards */}
-              <div className="sub-cards-container">
-                {/* Centros */}
-                <div className="card sub-card">
-                  <div className="card-header sub-card-header">
-                    <h3>Centros</h3>
-                  </div>
-                  <div className="card-content sub-card-content">
-                    <ul className="legend-list compact">
-                      {data.centros.map((item: DonutData, idx: number) => (
-                        <li key={idx} className="legend-item">
-                          <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                          <span className="legend-label">{item.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="chart-section-sm">
-                      <DonutChart 
-                        data={data.centros} 
-                        size={140} 
-                        thickness={25} 
-                        centerText={data.centros.reduce((acc: number, val: any) => acc + val.value, 0).toString()} 
-                        centerSubtext="Docentes" 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Departamentos */}
-                <div className="card sub-card">
-                  <div className="card-header sub-card-header">
-                    <h3>Departamentos</h3>
-                  </div>
-                  <div className="card-content sub-card-content">
-                    <ul className="legend-list compact">
-                      {data.departamentos.map((item: DonutData, idx: number) => (
-                        <li key={idx} className="legend-item">
-                          <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                          <span className="legend-label">{item.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="chart-section-sm">
-                      <DonutChart 
-                        data={data.departamentos} 
-                        size={140} 
-                        thickness={25} 
-                        centerText={data.departamentos.reduce((acc: number, val: any) => acc + val.value, 0).toString()} 
-                        centerSubtext="Docentes" 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Institutos */}
-                <div className="card sub-card">
-                  <div className="card-header sub-card-header">
-                    <h3>Institutos</h3>
-                  </div>
-                  <div className="card-content sub-card-content">
-                    <ul className="legend-list compact">
-                      {data.institutos.map((item: DonutData, idx: number) => (
-                        <li key={idx} className="legend-item">
-                          <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                          <span className="legend-label">{item.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="chart-section-sm">
-                      <DonutChart 
-                        data={data.institutos} 
-                        size={140} 
-                        thickness={25} 
-                        centerText={data.institutos.reduce((acc: number, val: any) => acc + val.value, 0).toString()} 
-                        centerSubtext="Docentes" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
+        </main>
       </div>
     </div>
   );
