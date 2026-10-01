@@ -34,7 +34,8 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   let currentOffset = 0;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>
+      <circle cx={center} cy={center} r={radius - thickness / 2 + 1} fill="#FFFFFF" />
       {data.map((item, index) => {
         const valueRatio = total > 0 ? item.value / total : 0;
         const strokeDasharray = `${valueRatio * circumference} ${circumference}`;
@@ -148,7 +149,7 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                     <div className="chart-section">
                       <DonutChart
                         data={data.unitTypes}
-                        size={240}
+                        size={200}
                         thickness={40}
                         centerText={data.totalDocentes.toString()}
                         centerSubtext="Docentes"
@@ -165,19 +166,21 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <h3>Centros</h3>
                     </div>
                     <div className="card-content sub-card-content">
-                      <ul className="legend-list compact">
-                        {data.centros.map((item: DonutData, idx: number) => (
-                          <li key={idx} className="legend-item">
-                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                            <span className="legend-label">{item.label}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="legend-wrapper-sm">
+                        <ul className="legend-list compact">
+                          {data.centros.map((item: DonutData, idx: number) => (
+                            <li key={idx} className="legend-item">
+                              <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                              <span className="legend-label">{item.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.centros}
-                          size={140}
-                          thickness={25}
+                          size={120}
+                          thickness={18}
                           centerText={data.centros.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                         />
@@ -191,19 +194,21 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <h3>Departamentos</h3>
                     </div>
                     <div className="card-content sub-card-content">
-                      <ul className="legend-list compact">
-                        {data.departamentos.map((item: DonutData, idx: number) => (
-                          <li key={idx} className="legend-item">
-                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                            <span className="legend-label">{item.label}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="legend-wrapper-sm">
+                        <ul className="legend-list compact">
+                          {data.departamentos.map((item: DonutData, idx: number) => (
+                            <li key={idx} className="legend-item">
+                              <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                              <span className="legend-label">{item.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.departamentos}
-                          size={140}
-                          thickness={25}
+                          size={120}
+                          thickness={18}
                           centerText={data.departamentos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                         />
@@ -217,19 +222,21 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <h3>Institutos</h3>
                     </div>
                     <div className="card-content sub-card-content">
-                      <ul className="legend-list compact">
-                        {data.institutos.map((item: DonutData, idx: number) => (
-                          <li key={idx} className="legend-item">
-                            <span className="legend-color" style={{ backgroundColor: item.color }}></span>
-                            <span className="legend-label">{item.label}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="legend-wrapper-sm">
+                        <ul className="legend-list compact">
+                          {data.institutos.map((item: DonutData, idx: number) => (
+                            <li key={idx} className="legend-item">
+                              <span className="legend-color" style={{ backgroundColor: item.color }}></span>
+                              <span className="legend-label">{item.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.institutos}
-                          size={140}
-                          thickness={25}
+                          size={120}
+                          thickness={18}
                           centerText={data.institutos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                         />

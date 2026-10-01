@@ -1,6 +1,6 @@
 import React from 'react';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import ListRoundedIcon from '@mui/icons-material/ListRounded';
+import ViewListRoundedIcon from '@mui/icons-material/ViewListRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
@@ -9,31 +9,31 @@ import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoub
 
 // SVG Icons
 const HomeIcon = () => (
-  <HomeRoundedIcon style={{ fontSize: 20 }} />
+  <HomeRoundedIcon style={{ fontSize: 24 }} />
 );
 
 const ListIcon = () => (
-  <ListRoundedIcon style={{ fontSize: 20 }} />
+  <ViewListRoundedIcon style={{ fontSize: 24 }} />
 );
 
 const DocsIcon = () => (
-  <DescriptionRoundedIcon style={{ fontSize: 20 }} />
+  <DescriptionRoundedIcon style={{ fontSize: 24 }} />
 );
 
 const SettingsIcon = () => (
-  <SettingsRoundedIcon style={{ fontSize: 20 }} />
+  <SettingsRoundedIcon style={{ fontSize: 24 }} />
 );
 
 const HistoryIcon = () => (
-  <HistoryRoundedIcon style={{ fontSize: 20 }} />
+  <HistoryRoundedIcon style={{ fontSize: 24 }} />
 );
 
 const HelpIcon = () => (
-  <HelpRoundedIcon style={{ fontSize: 24 }} />
+  <HelpRoundedIcon style={{ fontSize: 28 }} />
 );
 
 const CollapseIcon = () => (
-  <KeyboardDoubleArrowLeftRoundedIcon style={{ fontSize: 24 }} />
+  <KeyboardDoubleArrowLeftRoundedIcon style={{ fontSize: 32 }} />
 );
 
 export type SidebarItem = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial';
