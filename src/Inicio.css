@@ -206,60 +206,7 @@
   flex-direction: column;
 }
 
-/* Filters */
-.filter-bar {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  background-color: var(--users-secondary-200, #D7CAB2);
-  padding: 8px 12px;
-  border-radius: 8px;
-  align-items: center;
-}
 
-.filter-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--admin-primary-900, #1A2E1C);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.filter-btn:hover {
-  background-color: var(--admin-primary-800, #2A4B2F);
-}
-
-.search-input-wrapper {
-  position: relative;
-  flex: 1;
-  max-width: 400px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 16px;
-  padding-right: 40px;
-  border: none;
-  border-radius: 24px;
-  font-size: 14px;
-  background-color: var(--users-secondary-50, #F6F3EE);
-  box-sizing: border-box;
-}
-
-.search-input-wrapper svg {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #666;
-}
 
 /* Cards */
 .dashboard-grid {
