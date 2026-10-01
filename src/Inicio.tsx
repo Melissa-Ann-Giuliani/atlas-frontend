@@ -25,7 +25,15 @@ interface DonutData {
 }
 
 // Chart Component
-const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext }: { data: DonutData[], size?: number, thickness?: number, centerText: string, centerSubtext: string }) => {
+const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext, onMouseMove, onMouseLeave }: { 
+  data: DonutData[], 
+  size?: number, 
+  thickness?: number, 
+  centerText: string, 
+  centerSubtext: string,
+  onMouseMove?: (e: React.MouseEvent, label: string, value: number, color: string) => void,
+  onMouseLeave?: () => void
+}) => {
   const center = size / 2;
   const radius = center - thickness / 2;
   const circumference = 2 * Math.PI * radius;
@@ -45,6 +53,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
         return (
           <circle
             key={index}
+            className="donut-segment"
             cx={center}
             cy={center}
             r={radius}
@@ -54,14 +63,16 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
             transform={`rotate(-90 ${center} ${center})`}
-            style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
+            style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease, opacity 0.2s ease', cursor: 'pointer' }}
+            onMouseMove={(e) => onMouseMove && onMouseMove(e, item.label, item.value, item.color)}
+            onMouseLeave={() => onMouseLeave && onMouseLeave()}
           />
         );
       })}
-      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.18} fontWeight="bold" fill="#1f2937">
+      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.18} fontWeight="bold" fill="#1f2937" pointerEvents="none">
         {centerText}
       </text>
-      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.08} fill="#6b7280">
+      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.08} fill="#6b7280" pointerEvents="none">
         {centerSubtext}
       </text>
     </svg>
@@ -71,6 +82,21 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
 export default function Inicio({ onLogout }: { onLogout?: () => void }) {
   // Mock Data mimicking the backend RF-04 API response
   const [data, setData] = useState<any>(null);
+  const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
+
+  const handleMouseMove = (e: React.MouseEvent, label: string, value: number, color: string) => {
+    setTooltip({
+      x: e.clientX,
+      y: e.clientY,
+      label,
+      value,
+      color
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltip(null);
+  };
 
   useEffect(() => {
     // In a real scenario, this would be: 
@@ -89,16 +115,29 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
           { label: 'Tornambé Centro de Creación', value: 50, color: '#fbbf24' }
         ],
         departamentos: [
-          { label: 'Artes Visuales', value: 100, color: '#ef4444' },
-          { label: 'Física, Química y Tec.', value: 50, color: '#10b981' },
-          { label: 'Filosofía y Cs. de la Edu.', value: 150, color: '#fbbf24' },
-          { label: 'Geografía', value: 50, color: '#eab308' }
+          { label: 'Artes Visuales', value: 100, color: '#7F072D' },
+          { label: 'Filosofía y Cs. de la Edu.', value: 150, color: '#FA4A3B' },
+          { label: 'Física, Química y Tec.', value: 50, color: '#FFC801' },
+          { label: 'Geografía', value: 50, color: '#F9E83A' },
+          { label: 'Historia', value: 50, color: '#FFB605' },
+          { label: 'Lengua y Lit. Inglesa', value: 50, color: '#BC0032' },
+          { label: 'Letras', value: 50, color: '#F0F6BA' },
+          { label: 'Matemática', value: 50, color: '#FF8728' },
+          { label: 'Música', value: 50, color: '#5B0A2B' },
+          { label: 'Turismo', value: 50, color: '#FFD703' }
         ],
         institutos: [
-          { label: 'Ciencias Básicas - ICB', value: 70, color: '#a855f7' },
-          { label: 'Geografía Aplicada', value: 40, color: '#38bdf8' },
-          { label: 'Instituto de Filosofía', value: 60, color: '#2dd4bf' },
-          { label: 'Investig. Arqueológ. y Museo', value: 30, color: '#f43f5e' }
+          { label: 'Ciencias Básicas - ICB', value: 70, color: '#BC88FF' },
+          { label: 'Geografía Aplicada', value: 40, color: '#08485E' },
+          { label: 'Instituto de Est. Musicales', value: 50, color: '#3CB0CD' },
+          { label: 'Instituto de Exp. Visual', value: 50, color: '#75D5F3' },
+          { label: 'Instituto de Filosofía', value: 60, color: '#B4E7F8' },
+          { label: 'Instituto de Inv. Ling. y Filolog.', value: 50, color: '#ADFFBC' },
+          { label: 'Investig. Aqueológ. y Museo', value: 30, color: '#1BEE9A' },
+          { label: 'Investig. en Cs. de la Edu.', value: 50, color: '#21C063' },
+          { label: 'Investig. en Ed. en Cs. Exper.', value: 50, color: '#229631' },
+          { label: 'Investig. en Historia Reg. y Arg.', value: 50, color: '#0C5A23' },
+          { label: 'Litertura - Ricardo Güiraldes', value: 50, color: '#8A38F5' }
         ]
       });
     }, 500); // simulate loading
@@ -107,6 +146,18 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
   return (
     <div className="dashboard-layout">
       <Topbar onLogout={onLogout} />
+
+      {tooltip && (
+        <div className="chart-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '10px', height: '10px', backgroundColor: tooltip.color, borderRadius: '50%' }}></span>
+            <span>{tooltip.label}</span>
+          </div>
+          <div style={{ marginTop: '4px', paddingLeft: '16px' }}>
+            <strong>{tooltip.value}</strong> docentes asignados
+          </div>
+        </div>
+      )}
 
       <div className="dashboard-body">
         <Sidebar activeItem="inicio" />
@@ -153,6 +204,8 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                         thickness={40}
                         centerText={data.totalDocentes.toString()}
                         centerSubtext="Docentes"
+                        onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseLeave}
                       />
                     </div>
                   </div>
@@ -179,10 +232,12 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.centros}
-                          size={120}
-                          thickness={18}
+                          size={100}
+                          thickness={20}
                           centerText={data.centros.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
+                          onMouseMove={handleMouseMove}
+                          onMouseLeave={handleMouseLeave}
                         />
                       </div>
                     </div>
@@ -207,10 +262,12 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.departamentos}
-                          size={120}
-                          thickness={18}
+                          size={100}
+                          thickness={20}
                           centerText={data.departamentos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
+                          onMouseMove={handleMouseMove}
+                          onMouseLeave={handleMouseLeave}
                         />
                       </div>
                     </div>
@@ -235,10 +292,12 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                       <div className="chart-section-sm">
                         <DonutChart
                           data={data.institutos}
-                          size={120}
-                          thickness={18}
+                          size={100}
+                          thickness={20}
                           centerText={data.institutos.reduce((acc: number, val: any) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
+                          onMouseMove={handleMouseMove}
+                          onMouseLeave={handleMouseLeave}
                         />
                       </div>
                     </div>

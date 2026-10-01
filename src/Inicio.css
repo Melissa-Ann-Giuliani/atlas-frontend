@@ -265,7 +265,7 @@
 .dashboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   flex: 1;
   min-height: 0;
 }
@@ -315,7 +315,7 @@
 }
 
 .sub-card-header {
-  padding: 8px 16px;
+  padding: 4px 16px;
 }
 
 .card-content {
@@ -347,7 +347,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .legend-item {
@@ -433,11 +433,12 @@
 }
 
 .legend-wrapper-sm::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(123, 195, 60, 0.4);
+  border-radius: 4px;
 }
 
 .legend-wrapper-sm::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--admin-primary-800, #2A4B2F);
   border-radius: 4px;
 }
 
@@ -492,4 +493,26 @@
 
 .logo-quadrant.green-dark {
   background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+/* Tooltip specific styles */
+.donut-segment:hover {
+  opacity: 0.8;
+}
+
+.chart-tooltip {
+  position: fixed;
+  background: white;
+  color: #1f2937;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  transform: translate(-50%, -100%);
+  margin-top: -15px;
+  white-space: nowrap;
 }
