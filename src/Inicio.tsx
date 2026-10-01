@@ -164,12 +164,32 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
   };
 
   useEffect(() => {
-    // In a real scenario, this would be: 
-    // fetch('/api/inicio/mapa-docente').then(res => res.json()).then(setData)
-    
-    // Simulate factor based on applied filters count to update graphs
+    // ---- BACKEND INTEGRATION (Commented out for now until DB has data) ----
+    /*
+    const queryParams = new URLSearchParams();
+    appliedFilters.forEach(filter => {
+      const [categoryName, optionLabel] = filter.split(': ');
+      if (categoryName && optionLabel) {
+        const category = availableFilters.find(c => c.name === categoryName);
+        if (category) {
+          const option = category.options.find(o => o.label === optionLabel);
+          if (option) queryParams.append(`${category.id}Id`, option.id);
+        }
+      }
+    });
+
+    fetch(`http://localhost:8080/api/inicio/mapa-docente?${queryParams.toString()}`, {
+      credentials: 'omit' // or 'include' based on your auth
+    })
+      .then(res => res.json())
+      .then(fetchedData => setData(fetchedData))
+      .catch(err => console.error("Error fetching teaching map data:", err));
+    */
+    // ------------------------------------------------------------------------
+
+    // ---- MOCK DATA (Simulates backend response) ----
     const factor = appliedFilters.length > 0 ? (1 / (appliedFilters.length + 1)) : 1;
-    const applyFactor = (val) => Math.max(1, Math.round(val * factor));
+    const applyFactor = (val: number) => Math.max(1, Math.round(val * factor));
 
     setTimeout(() => {
       setData({
@@ -191,7 +211,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
           { label: 'Geografía', value: applyFactor(50), color: '#F9E83A' },
           { label: 'Historia', value: applyFactor(50), color: '#FFB605' },
           { label: 'Lengua y Lit. Inglesa', value: applyFactor(50), color: '#BC0032' },
-          { label: 'Letras', value: applyFactor(50), color: '#F0F6BA' },
+          { label: 'Letras', value: applyFactor(50), color: '#A2A832' },
           { label: 'Matemática', value: applyFactor(50), color: '#FF8728' },
           { label: 'Música', value: applyFactor(50), color: '#5B0A2B' },
           { label: 'Turismo', value: applyFactor(50), color: '#FFD703' }
@@ -210,8 +230,8 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
           { label: 'Litertura - Ricardo Güiraldes', value: applyFactor(50), color: '#8A38F5' }
         ]
       });
-    }, 500); // simulate loading
-  }, [appliedFilters]);
+    }, 500);
+  }, [appliedFilters, availableFilters]);
 
   return (
     <div className="dashboard-layout">
