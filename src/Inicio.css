@@ -460,15 +460,10 @@
 
 .chart-section-sm {
   height: 100%;
-  /* takes available height */
   max-height: 120px;
-  /* never bigger than 120px */
   min-height: 80px;
-  /* never smaller than 80px on tiny screens */
   aspect-ratio: 1 / 1;
-  /* width follows height */
   flex-shrink: 1;
-  /* allow it to shrink when needed */
   margin-top: auto;
 }
 

@@ -25,14 +25,15 @@ interface DonutData {
 }
 
 // Chart Component
-const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext, onMouseMove, onMouseLeave }: { 
+const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext, onMouseMove, onMouseLeave, onClick }: { 
   data: DonutData[], 
   size?: number, 
   thickness?: number, 
   centerText: string, 
   centerSubtext: string,
   onMouseMove?: (e: React.MouseEvent, label: string, value: number, color: string) => void,
-  onMouseLeave?: () => void
+  onMouseLeave?: () => void,
+  onClick?: (label: string, value: number, color: string) => void
 }) => {
   const center = size / 2;
   const radius = center - thickness / 2;
@@ -66,6 +67,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
             style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease, opacity 0.2s ease', cursor: 'pointer' }}
             onMouseMove={(e) => onMouseMove && onMouseMove(e, item.label, item.value, item.color)}
             onMouseLeave={() => onMouseLeave && onMouseLeave()}
+            onClick={() => onClick && onClick(item.label, item.value, item.color)}
           />
         );
       })}
@@ -79,10 +81,16 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   );
 };
 
-export default function Inicio({ onLogout }: { onLogout?: () => void }) {
+export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: () => void, onNavigateToListado?: (filter: string) => void }) {
   // Mock Data mimicking the backend RF-04 API response
   const [data, setData] = useState<any>(null);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
+
+  const handleChartClick = (label: string) => {
+    if (onNavigateToListado) {
+      onNavigateToListado(label);
+    }
+  };
 
   const handleMouseMove = (e: React.MouseEvent, label: string, value: number, color: string) => {
     setTooltip({
@@ -206,6 +214,7 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                         centerSubtext="Docentes"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
+                        onClick={handleChartClick}
                       />
                     </div>
                   </div>
@@ -238,6 +247,7 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
+                          onClick={handleChartClick}
                         />
                       </div>
                     </div>
@@ -268,6 +278,7 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
+                          onClick={handleChartClick}
                         />
                       </div>
                     </div>
@@ -298,6 +309,7 @@ export default function Inicio({ onLogout }: { onLogout?: () => void }) {
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
+                          onClick={handleChartClick}
                         />
                       </div>
                     </div>
