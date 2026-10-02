@@ -101,7 +101,7 @@
 
 .logo-text {
   font-family: 'DM Serif Display', serif;
-  color: #2a4b3c;
+  color: var(--admin-primary-50);
   font-size: 64px;
   margin: 0;
   font-weight: normal;
