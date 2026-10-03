@@ -520,11 +520,65 @@
     flex: 1 1 0;
     width: 100%;
     min-height: 60px;
-    max-height: none;
+    max-height: 140px;
+  }
+
+  .legend-list.compact .legend-label {
+    font-size: 16px;
+  }
+
+  .legend-list.compact .legend-color {
+    width: 16px;
+    height: 16px;
   }
 
   .chart-section-sm {
     max-width: 100%;
+    max-height: 180px;
     flex: 2 1 0;
+  }
+
+  .chart-section {
+    max-height: 270px;
+  }
+
+  .details-btn {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .sub-card-content {
+    padding: 16px 60px;
+  }
+
+  .legend-wrapper-sm {
+    flex: 0.8 1 0;
+    min-height: 80px;
+    max-height: 100px;
+  }
+
+  .legend-list.compact .legend-label {
+    font-size: 16px;
+  }
+
+  .legend-list.compact .legend-color {
+    width: 16px;
+    height: 16px;
+  }
+
+  .chart-section-sm {
+    flex: 3 1 0;
+    max-height: 250px;
+  }
+
+  .chart-section {
+    max-height: 280px;
+  }
+
+  .details-btn {
+    font-size: 18px;
+    padding: 10px 20px;
   }
 }
