@@ -509,7 +509,7 @@
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1540px) {
   .sub-card-content {
     flex-direction: column;
     justify-content: center;
