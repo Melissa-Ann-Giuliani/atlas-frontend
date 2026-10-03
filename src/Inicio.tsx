@@ -65,7 +65,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
       <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.18} fontWeight="bold" fill="#1f2937" pointerEvents="none">
         {centerText}
       </text>
-      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.08} fill="#6b7280" pointerEvents="none">
+      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.1} fill="#6b7280" pointerEvents="none">
         {centerSubtext}
       </text>
     </svg>
