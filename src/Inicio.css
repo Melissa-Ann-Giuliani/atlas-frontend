@@ -347,6 +347,8 @@
   font-size: 12px;
 }
 
+
+
 .details-btn {
   background-color: #333;
   color: white;
@@ -378,19 +380,19 @@
 }
 
 .sub-card-content {
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  padding: 16px 40px;
+  justify-content: space-between;
+  padding: 16px 24px;
   gap: 16px;
   flex: 1;
   min-height: 0;
 }
 
 .legend-wrapper-sm {
-  width: 100%;
-  flex: 1;
+  flex: 1.2 1 0;
   overflow-y: auto;
-  min-height: 0;
+  max-height: 100%;
   padding-right: 4px;
 }
 
@@ -418,19 +420,25 @@
 }
 
 .chart-section {
-  align-self: stretch;
+  align-self: center;
   aspect-ratio: 1 / 1;
-  max-height: 200px;
-  flex-shrink: 0;
+  height: 100%;
+  max-height: 260px;
+  max-width: 100%;
+  flex-shrink: 1;
+  min-height: 0;
+  min-width: 0;
 }
 
 .chart-section-sm {
-  height: 100%;
-  max-height: 120px;
-  min-height: 80px;
   aspect-ratio: 1 / 1;
-  flex-shrink: 1;
-  margin-top: auto;
+  max-height: 140px;
+  max-width: 140px;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
 }
 
 .loading-state {
@@ -476,4 +484,47 @@
   transform: translate(-50%, -100%);
   margin-top: -15px;
   white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .legend-label {
+    font-size: 18px;
+  }
+
+  .legend-list.compact .legend-label {
+    font-size: 14px;
+  }
+
+  .legend-list.compact .legend-color {
+    width: 14px;
+    height: 14px;
+  }
+
+  .chart-section {
+    max-height: 200px;
+  }
+
+  .sub-card-header h3 {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .sub-card-content {
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 40px;
+  }
+
+  .legend-wrapper-sm {
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 60px;
+    max-height: none;
+  }
+
+  .chart-section-sm {
+    max-width: 100%;
+    flex: 2 1 0;
+  }
 }

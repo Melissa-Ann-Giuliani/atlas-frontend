@@ -16,11 +16,11 @@ interface DonutData {
 }
 
 // Chart Component
-const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext, onMouseMove, onMouseLeave, onClick }: { 
-  data: DonutData[], 
-  size?: number, 
-  thickness?: number, 
-  centerText: string, 
+const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtext, onMouseMove, onMouseLeave, onClick }: {
+  data: DonutData[],
+  size?: number,
+  thickness?: number,
+  centerText: string,
   centerSubtext: string,
   onMouseMove?: (e: React.MouseEvent, label: string, value: number, color: string) => void,
   onMouseLeave?: () => void,
@@ -90,7 +90,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
       try {
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
-        
+
         const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/caracteres`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL}/api/categorias`, { headers }),
@@ -143,7 +143,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
         console.error("Error fetching filter options:", err);
       }
     };
-    
+
     fetchFilters();
   }, []);
 
@@ -253,7 +253,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
         {/* Main Content */}
         <main className="main-content">
           <div className="content-area">
-            <FilterBar 
+            <FilterBar
               availableFilters={availableFilters}
               appliedFilters={appliedFilters}
               onAddFilter={handleAddFilter}

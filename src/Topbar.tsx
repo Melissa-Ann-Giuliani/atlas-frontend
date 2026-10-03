@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiSun, FiMoon, FiLogOut } from "react-icons/fi";
 
 // SVG Icons
@@ -25,7 +25,7 @@ export default function Topbar({ onLogout }: TopbarProps) {
     // Optionally sync with localStorage or system preference
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
       setIsDark(true);
       document.body.classList.add('dark-theme');

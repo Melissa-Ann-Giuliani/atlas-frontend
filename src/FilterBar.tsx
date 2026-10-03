@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FiFilter, FiSearch, FiX, FiChevronLeft, FiType } from "react-icons/fi";
+import { useState, useRef, useEffect } from 'react';
+import { FiFilter, FiSearch, FiX, FiChevronLeft } from "react-icons/fi";
 import './FilterBar.css';
 
 const FilterIcon = () => (
@@ -18,9 +18,6 @@ const BackIcon = () => (
   <FiChevronLeft size={14} />
 );
 
-const TextIcon = () => (
-  <FiType size={16} style={{ border: '1px solid currentColor', borderRadius: '4px', padding: '1px' }} />
-);
 
 export interface FilterOption {
   id: string;
