@@ -83,49 +83,69 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
   } | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]); // added some mock filters for demo
-  const [availableFilters] = useState<FilterCategory[]>([
-    {
-      id: 'caracter',
-      name: 'Caracter',
-      options: [
-        { id: '1', label: 'Efectivo' },
-        { id: '2', label: 'Extraordinario' },
-        { id: '3', label: 'Interino' },
-        { id: '4', label: 'Suplente Constituido' },
-        { id: '5', label: 'Suplente Reemplazante' }
-      ]
-    },
-    {
-      id: 'categoria',
-      name: 'Categoría',
-      options: [
-        { id: '1', label: 'Profesor Titular' },
-        { id: '2', label: 'Profesor Asociado' },
-        { id: '3', label: 'Profesor Adjunto' },
-        { id: '4', label: 'Jefe de Trabajos Prácticos' },
-        { id: '5', label: 'Ayudante de Primera' }
-      ]
-    },
-    {
-      id: 'dedicacion',
-      name: 'Dedicación',
-      options: [
-        { id: '1', label: 'Exclusivo' },
-        { id: '2', label: 'Semi-Exclusivo' },
-        { id: '3', label: 'Simple' }
-      ]
-    },
-    {
-      id: 'origen',
-      name: 'Origen',
-      options: [
-        { id: '1', label: 'Planta' },
-        { id: '2', label: 'Extensión' },
-        { id: '3', label: 'Gestión' },
-        { id: '4', label: 'Investigación' }
-      ]
-    }
-  ]); // Mock categorized filters
+  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_URL}/api/caracteres`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/categorias`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/dedicaciones`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/tipos-unidad`, { headers })
+        ]);
+
+        const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
+          resCaracteres.ok ? resCaracteres.json() : [],
+          resCategorias.ok ? resCategorias.json() : [],
+          resDedicaciones.ok ? resDedicaciones.json() : [],
+          resTiposUnidad.ok ? resTiposUnidad.json() : []
+        ]);
+
+        setAvailableFilters([
+          {
+            id: 'caracter',
+            name: 'Caracter',
+            options: caracteres.map((item: any) => ({
+              id: (item.caracterId || item.id)?.toString() || '',
+              label: item.caracterNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'categoria',
+            name: 'Categoría',
+            options: categorias.map((item: any) => ({
+              id: (item.categoriaId || item.id)?.toString() || '',
+              label: item.categoriaNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'dedicacion',
+            name: 'Dedicación',
+            options: dedicaciones.map((item: any) => ({
+              id: (item.dedicacionId || item.id)?.toString() || '',
+              label: item.dedicacionNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'tipoUnidad',
+            name: 'Tipo de Unidad',
+            options: tiposUnidad.map((item: any) => ({
+              id: (item.tipoUnidadId || item.id)?.toString() || '',
+              label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
+            }))
+          }
+        ]);
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
+      }
+    };
+    
+    fetchFilters();
+  }, []);
 
   const handleAddFilter = (newFilter: string) => {
     if (!appliedFilters.includes(newFilter)) {
@@ -188,24 +208,23 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
       })
       .then(fetchedData => {
         console.log("=== BACKEND JSON DATA ===", fetchedData);
-        const COLORS = [
-          '#3b82f6', '#8b5cf6', '#10b981', '#f472b6', '#fbbf24', '#7F072D', 
-          '#FA4A3B', '#FFC801', '#F9E83A', '#FFB605', '#BC0032', '#A2A832', 
-          '#FF8728', '#5B0A2B', '#FFD703', '#BC88FF', '#08485E', '#3CB0CD', 
-          '#75D5F3', '#B4E7F8', '#ADFFBC', '#1BEE9A', '#21C063', '#229631', 
-          '#0C5A23', '#8A38F5'
-        ];
-        const addColors = (items: any[]) => items?.map((item, idx) => ({
+        const CENTROS_COLORS = ['#e87a98', '#00b171', '#efc562', '#f4a261', '#e76f51'];
+        const DEPARTAMENTOS_COLORS = ['#f24c3d', '#7d0f36', '#fdc500', '#e9f5b9', '#f97316', '#ef4444', '#b91c1c'];
+        const INSTITUTOS_COLORS = ['#b388ff', '#68d8d6', '#22b2da', '#1e4a5d', '#ed2b59', '#312e81', '#3b82f6', '#0ea5e9'];
+        const DEFAULT_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f472b6', '#fbbf24'];
+
+        const addColors = (items: any[], palette: string[]) => items?.map((item, idx) => ({
           ...item,
-          color: item.color || COLORS[idx % COLORS.length]
+          color: item.color || palette[idx % palette.length]
         })) || [];
+
         // Apply colors and update state directly from the flattened backend data
         setData({
           totalDocentes: fetchedData.totalDocentes || 0,
-          unitTypes: addColors(fetchedData.unitTypes || []),
-          centros: addColors(fetchedData.centros || []),
-          departamentos: addColors(fetchedData.departamentos || []),
-          institutos: addColors(fetchedData.institutos || [])
+          unitTypes: addColors(fetchedData.unitTypes || [], DEFAULT_COLORS),
+          centros: addColors(fetchedData.centros || [], CENTROS_COLORS),
+          departamentos: addColors(fetchedData.departamentos || [], DEPARTAMENTOS_COLORS),
+          institutos: addColors(fetchedData.institutos || [], INSTITUTOS_COLORS)
         });
       })
       .catch(err => console.error("Error fetching teaching map data:", err));
