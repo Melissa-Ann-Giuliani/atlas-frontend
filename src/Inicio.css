@@ -24,13 +24,32 @@
 
 /* Sidebar */
 .sidebar {
-  width: 240px;
+  width: 220px;
   background-color: var(--admin-primary-800, #2A4B2F);
   color: white;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
   z-index: 10;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .help-btn span {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  padding: 12px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .help-btn {
+  justify-content: center;
+  width: 100%;
 }
 
 .topbar-brand {
@@ -80,8 +99,8 @@
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 24px;
+  gap: 20px;
+  padding: 12px 48px;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   font-size: 16px;

@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
-import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import { FiSun, FiMoon, FiLogOut } from "react-icons/fi";
 
 // SVG Icons
 const SunIcon = () => (
-  <LightModeRoundedIcon style={{ fontSize: 20 }} />
+  <FiSun size={20} />
 );
 
 const MoonIcon = () => (
-  <DarkModeRoundedIcon style={{ fontSize: 20 }} />
+  <FiMoon size={20} />
 );
 
 const LogoutIcon = () => (
-  <LogoutRoundedIcon style={{ fontSize: 20 }} />
+  <FiLogOut size={20} />
 );
 
 interface TopbarProps {

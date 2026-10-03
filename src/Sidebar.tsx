@@ -1,39 +1,35 @@
-import React from 'react';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import ViewListRoundedIcon from '@mui/icons-material/ViewListRounded';
-import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
-import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
-import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftRounded';
+import React, { useState } from 'react';
+import { FiHome, FiList, FiFileText, FiBookOpen, FiClock, FiHelpCircle, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
 
 // SVG Icons
 const HomeIcon = () => (
-  <HomeRoundedIcon style={{ fontSize: 24 }} />
+  <FiHome size={24} />
 );
 
 const ListIcon = () => (
-  <ViewListRoundedIcon style={{ fontSize: 24 }} />
+  <FiList size={24} />
 );
 
 const DocsIcon = () => (
-  <DescriptionRoundedIcon style={{ fontSize: 24 }} />
+  <FiFileText size={24} />
 );
 
 const SettingsIcon = () => (
-  <SettingsRoundedIcon style={{ fontSize: 24 }} />
+  <FiBookOpen size={24} />
 );
 
 const HistoryIcon = () => (
-  <HistoryRoundedIcon style={{ fontSize: 24 }} />
+  <FiClock size={24} />
 );
 
 const HelpIcon = () => (
-  <HelpRoundedIcon style={{ fontSize: 28 }} />
+  <FiHelpCircle size={28} />
 );
 
-const CollapseIcon = () => (
-  <KeyboardDoubleArrowLeftRoundedIcon style={{ fontSize: 32 }} />
+const CollapseIcon = ({ isCollapsed }: { isCollapsed: boolean }) => (
+  isCollapsed ?
+    <FiChevronsRight size={32} /> :
+    <FiChevronsLeft size={32} />
 );
 
 export type SidebarItem = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial';
@@ -43,8 +39,10 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeItem }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
 
       <nav className="sidebar-nav">
         <a href="#" className={`nav-item ${activeItem === 'inicio' ? 'active' : ''}`}>
@@ -70,8 +68,8 @@ export default function Sidebar({ activeItem }: SidebarProps) {
       </nav>
 
       <div className="sidebar-collapse">
-        <button className="collapse-btn">
-          <CollapseIcon />
+        <button className="collapse-btn" onClick={() => setIsCollapsed(!isCollapsed)}>
+          <CollapseIcon isCollapsed={isCollapsed} />
         </button>
       </div>
 

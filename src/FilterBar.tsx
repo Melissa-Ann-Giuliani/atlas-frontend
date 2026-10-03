@@ -1,29 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
-import TitleRoundedIcon from '@mui/icons-material/TitleRounded';
+import { FiFilter, FiSearch, FiX, FiChevronLeft, FiType } from "react-icons/fi";
 import './FilterBar.css';
 
 const FilterIcon = () => (
-  <FilterAltRoundedIcon style={{ fontSize: 16 }} />
+  <FiFilter size={16} />
 );
 
 const SearchIcon = () => (
-  <SearchRoundedIcon style={{ fontSize: 16 }} />
+  <FiSearch size={16} />
 );
 
 const CloseIcon = () => (
-  <CloseRoundedIcon style={{ fontSize: 14 }} />
+  <FiX size={14} />
 );
 
 const BackIcon = () => (
-  <ArrowBackIosNewRoundedIcon style={{ fontSize: 14 }} />
+  <FiChevronLeft size={14} />
 );
 
 const TextIcon = () => (
-  <TitleRoundedIcon style={{ fontSize: 16, border: '1px solid currentColor', borderRadius: '4px', padding: '1px' }} />
+  <FiType size={16} style={{ border: '1px solid currentColor', borderRadius: '4px', padding: '1px' }} />
 );
 
 export interface FilterOption {
