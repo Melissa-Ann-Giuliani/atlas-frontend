@@ -83,50 +83,69 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
   } | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]); // added some mock filters for demo
-  const [availableFilters] = useState<FilterCategory[]>([
-    {
-      id: 'caracter',
-      name: 'Caracter',
-      options: [
-        { id: '1', label: 'Efectivo' },
-        { id: '2', label: 'Extraordinario' },
-        { id: '3', label: 'Interino' },
-        { id: '4', label: 'Suplente Constituido' },
-        { id: '5', label: 'Suplente Reemplazante' }
-      ]
-    },
-    {
-      id: 'categoria',
-      name: 'Categoría',
-      options: [
-        { id: '1', label: 'Adjunto' },
-        { id: '2', label: 'Asociado' },
-        { id: '3', label: 'Auxiliar de 1º' },
-        { id: '4', label: 'Auxiliar de 2º' },
-        { id: '5', label: 'Jefe de T. Prác.' },
-        { id: '6', label: 'Titular' }
-      ]
-    },
-    {
-      id: 'dedicacion',
-      name: 'Dedicación',
-      options: [
-        { id: '1', label: 'Exclusivo' },
-        { id: '2', label: 'Semi-Exclusivo' },
-        { id: '3', label: 'Simple' }
-      ]
-    },
-    {
-      id: 'origen',
-      name: 'Origen',
-      options: [
-        { id: '1', label: 'Planta' },
-        { id: '2', label: 'Extensión' },
-        { id: '3', label: 'Gestión' },
-        { id: '4', label: 'Investigación' }
-      ]
-    }
-  ]); // Mock categorized filters
+  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_URL}/api/caracteres`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/categorias`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/dedicaciones`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/tipos-unidad`, { headers })
+        ]);
+
+        const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
+          resCaracteres.ok ? resCaracteres.json() : [],
+          resCategorias.ok ? resCategorias.json() : [],
+          resDedicaciones.ok ? resDedicaciones.json() : [],
+          resTiposUnidad.ok ? resTiposUnidad.json() : []
+        ]);
+
+        setAvailableFilters([
+          {
+            id: 'caracter',
+            name: 'Caracter',
+            options: caracteres.map((item: any) => ({
+              id: (item.caracterId || item.id)?.toString() || '',
+              label: item.caracterNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'categoria',
+            name: 'Categoría',
+            options: categorias.map((item: any) => ({
+              id: (item.categoriaId || item.id)?.toString() || '',
+              label: item.categoriaNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'dedicacion',
+            name: 'Dedicación',
+            options: dedicaciones.map((item: any) => ({
+              id: (item.dedicacionId || item.id)?.toString() || '',
+              label: item.dedicacionNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'tipoUnidad',
+            name: 'Tipo de Unidad',
+            options: tiposUnidad.map((item: any) => ({
+              id: (item.tipoUnidadId || item.id)?.toString() || '',
+              label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
+            }))
+          }
+        ]);
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
+      }
+    };
+    
+    fetchFilters();
+  }, []);
 
   const handleAddFilter = (newFilter: string) => {
     if (!appliedFilters.includes(newFilter)) {
@@ -164,8 +183,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
   };
 
   useEffect(() => {
-    // ---- BACKEND INTEGRATION (Commented out for now until DB has data) ----
-    /*
+    // ---- BACKEND INTEGRATION ----
     const queryParams = new URLSearchParams();
     appliedFilters.forEach(filter => {
       const [categoryName, optionLabel] = filter.split(': ');
@@ -178,59 +196,39 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
       }
     });
 
-    fetch(`http://localhost:8080/api/inicio/mapa-docente?${queryParams.toString()}`, {
-      credentials: 'omit' // or 'include' based on your auth
+    const token = localStorage.getItem('token');
+    fetch(`${import.meta.env.VITE_API_URL}/api/inicio/mapa-docente?${queryParams.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     })
-      .then(res => res.json())
-      .then(fetchedData => setData(fetchedData))
+      .then(res => {
+        if (!res.ok) throw new Error('Error en la respuesta del servidor');
+        return res.json();
+      })
+      .then(fetchedData => {
+        console.log("=== BACKEND JSON DATA ===", fetchedData);
+        const CENTROS_COLORS = ['#e87a98', '#00b171', '#efc562', '#f4a261', '#e76f51'];
+        const DEPARTAMENTOS_COLORS = ['#f24c3d', '#7d0f36', '#fdc500', '#e9f5b9', '#f97316', '#ef4444', '#b91c1c'];
+        const INSTITUTOS_COLORS = ['#b388ff', '#68d8d6', '#22b2da', '#1e4a5d', '#ed2b59', '#312e81', '#3b82f6', '#0ea5e9'];
+        const DEFAULT_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f472b6', '#fbbf24'];
+
+        const addColors = (items: any[], palette: string[]) => items?.map((item, idx) => ({
+          ...item,
+          color: item.color || palette[idx % palette.length]
+        })) || [];
+
+        // Apply colors and update state directly from the flattened backend data
+        setData({
+          totalDocentes: fetchedData.totalDocentes || 0,
+          unitTypes: addColors(fetchedData.unitTypes || [], DEFAULT_COLORS),
+          centros: addColors(fetchedData.centros || [], CENTROS_COLORS),
+          departamentos: addColors(fetchedData.departamentos || [], DEPARTAMENTOS_COLORS),
+          institutos: addColors(fetchedData.institutos || [], INSTITUTOS_COLORS)
+        });
+      })
       .catch(err => console.error("Error fetching teaching map data:", err));
-    */
     // ------------------------------------------------------------------------
-
-    // ---- MOCK DATA (Simulates backend response) ----
-    const factor = appliedFilters.length > 0 ? (1 / (appliedFilters.length + 1)) : 1;
-    const applyFactor = (val: number) => Math.max(1, Math.round(val * factor));
-
-    setTimeout(() => {
-      setData({
-        totalDocentes: applyFactor(700),
-        unitTypes: [
-          { label: 'Centros', value: applyFactor(150), color: '#3b82f6' },
-          { label: 'Departamentos', value: applyFactor(350), color: '#8b5cf6' },
-          { label: 'Institutos', value: applyFactor(200), color: '#10b981' }
-        ],
-        centros: [
-          { label: 'Creación. Art. Coral', value: applyFactor(50), color: '#f472b6' },
-          { label: 'Creación. Art. Orq.', value: applyFactor(50), color: '#10b981' },
-          { label: 'Tornambé Centro de Creación', value: applyFactor(50), color: '#fbbf24' }
-        ],
-        departamentos: [
-          { label: 'Artes Visuales', value: applyFactor(100), color: '#7F072D' },
-          { label: 'Filosofía y Cs. de la Edu.', value: applyFactor(150), color: '#FA4A3B' },
-          { label: 'Física, Química y Tec.', value: applyFactor(50), color: '#FFC801' },
-          { label: 'Geografía', value: applyFactor(50), color: '#F9E83A' },
-          { label: 'Historia', value: applyFactor(50), color: '#FFB605' },
-          { label: 'Lengua y Lit. Inglesa', value: applyFactor(50), color: '#BC0032' },
-          { label: 'Letras', value: applyFactor(50), color: '#A2A832' },
-          { label: 'Matemática', value: applyFactor(50), color: '#FF8728' },
-          { label: 'Música', value: applyFactor(50), color: '#5B0A2B' },
-          { label: 'Turismo', value: applyFactor(50), color: '#FFD703' }
-        ],
-        institutos: [
-          { label: 'Ciencias Básicas - ICB', value: applyFactor(70), color: '#BC88FF' },
-          { label: 'Geografía Aplicada', value: applyFactor(40), color: '#08485E' },
-          { label: 'Instituto de Est. Musicales', value: applyFactor(50), color: '#3CB0CD' },
-          { label: 'Instituto de Exp. Visual', value: applyFactor(50), color: '#75D5F3' },
-          { label: 'Instituto de Filosofía', value: applyFactor(60), color: '#B4E7F8' },
-          { label: 'Instituto de Inv. Ling. y Filolog.', value: applyFactor(50), color: '#ADFFBC' },
-          { label: 'Investig. Aqueológ. y Museo', value: applyFactor(30), color: '#1BEE9A' },
-          { label: 'Investig. en Cs. de la Edu.', value: applyFactor(50), color: '#21C063' },
-          { label: 'Investig. en Ed. en Cs. Exper.', value: applyFactor(50), color: '#229631' },
-          { label: 'Investig. en Historia Reg. y Arg.', value: applyFactor(50), color: '#0C5A23' },
-          { label: 'Litertura - Ricardo Güiraldes', value: applyFactor(50), color: '#8A38F5' }
-        ]
-      });
-    }, 500);
   }, [appliedFilters, availableFilters]);
 
   return (
@@ -286,10 +284,10 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
                     </div>
                     <div className="chart-section">
                       <DonutChart
-                        data={data.unitTypes}
+                        data={data.unitTypes || []}
                         size={200}
                         thickness={40}
-                        centerText={data.totalDocentes.toString()}
+                        centerText={(data.totalDocentes || 0).toString()}
                         centerSubtext="Docentes"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
@@ -319,10 +317,10 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
                       </div>
                       <div className="chart-section-sm">
                         <DonutChart
-                          data={data.centros}
+                          data={data.centros || []}
                           size={100}
                           thickness={20}
-                          centerText={data.centros.reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
+                          centerText={(data.centros || []).reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
@@ -350,10 +348,10 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
                       </div>
                       <div className="chart-section-sm">
                         <DonutChart
-                          data={data.departamentos}
+                          data={data.departamentos || []}
                           size={100}
                           thickness={20}
-                          centerText={data.departamentos.reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
+                          centerText={(data.departamentos || []).reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
@@ -381,10 +379,10 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
                       </div>
                       <div className="chart-section-sm">
                         <DonutChart
-                          data={data.institutos}
+                          data={data.institutos || []}
                           size={100}
                           thickness={20}
-                          centerText={data.institutos.reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
+                          centerText={(data.institutos || []).reduce((acc: number, val: DonutData) => acc + val.value, 0).toString()}
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}

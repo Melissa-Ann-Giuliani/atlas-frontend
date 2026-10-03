@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Login.css';
 
-export default function Login() {
+export default function Login({ onLogin }: { onLogin: () => void }) {
   const [view, setView] = useState<'login' | 'forgot-password'>('login');
   
   // Login states
@@ -18,7 +18,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,8 +33,11 @@ export default function Login() {
       }
 
       const data = await response.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
       setErrorMessage('');
-      alert('Sesión iniciada correctamente.');
+      onLogin();
     } catch (err) {
       setErrorMessage('Error de conexión con el servidor.');
     }
@@ -50,7 +53,7 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/reset-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

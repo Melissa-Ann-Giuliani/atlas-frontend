@@ -5,6 +5,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      }
+    }
+  },
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),
@@ -14,8 +22,8 @@ export default defineConfig({
         enabled: true
       },
       manifest: {
-        name: 'Atlas Frontend App',
-        short_name: 'Atlas',
+        name: 'ATLAS',
+        short_name: 'ATLAS',
         description: 'Atlas Frontend Progressive Web App',
         theme_color: '#2A4B2F',
         background_color: '#2A4B2F',
