@@ -1,0 +1,223 @@
+.listado-content-area {
+  padding: 20px;
+  background-color: var(--users-secondary-100, #E7DFD0);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listado-inner-container {
+  background-color: var(--users-secondary-50, #fcfaf6);
+  border: 1px solid var(--users-secondary-400, #c8b796);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: stretch;
+}
+
+.listado-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.listado-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #1A2E1C;
+  margin: 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.listado-filter-wrapper {
+  flex: 0 0 50%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Adjusting FilterBar specifically for listado to fit the 50% width neatly */
+.listado-filter-wrapper .filter-bar {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.listado-tabs {
+  display: flex;
+  border: 1px solid var(--admin-primary-800);
+  border-radius: 20px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 6px 16px;
+  border: none;
+  background-color: transparent;
+  color: var(--admin-primary-800);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid var(--admin-primary-800);
+}
+
+.tab-btn:last-child {
+  border-right: none;
+}
+
+.tab-btn.active {
+  background-color: var(--admin-primary-800);
+  color: white;
+}
+
+.tab-btn:hover:not(.active) {
+  background-color: rgba(72, 92, 74, 0.1);
+}
+
+.listado-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--admin-primary-800);
+  overflow: hidden;
+}
+
+.listado-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.listado-table th,
+.listado-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.listado-table th:last-child,
+.listado-table td:last-child {
+  border-right: none;
+}
+
+.listado-table th {
+  background-color: var(--admin-primary-800);
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.listado-table tr:nth-child(even) {
+  background-color: #f3ebda;
+}
+
+.listado-table tr:nth-child(odd) {
+  background-color: #d7cab2;
+}
+
+.listado-table tr:last-child td {
+  border-bottom: none;
+}
+
+.listado-table td {
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.listado-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 0;
+  gap: 16px;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background-color: white;
+  color: #1f2937;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.page-btn:hover:not(.dots) {
+  background-color: #f3f4f6;
+}
+
+.page-btn.active {
+  background-color: var(--admin-primary-800);
+  color: white;
+}
+
+.page-btn.dots {
+  background-color: transparent;
+  cursor: default;
+}
+
+@media (min-width: 1024px) {
+  .listado-content-area {
+    padding: 28px;
+    gap: 20px;
+  }
+  .listado-inner-container {
+    padding: 20px;
+    gap: 16px;
+  }
+  .listado-title {
+    font-size: 40px;
+  }
+  .tab-btn {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+  .listado-table th,
+  .listado-table td {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  .pagination-info {
+    font-size: 14px;
+  }
+  .page-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (min-width: 1540px) {
+  .listado-title {
+    font-size: 48px;
+  }
+  .tab-btn {
+    font-size: 15px;
+    padding: 8px 24px;
+  }
+  .listado-table th,
+  .listado-table td {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}
