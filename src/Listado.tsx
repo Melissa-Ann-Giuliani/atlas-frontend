@@ -52,17 +52,65 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
   }, []);
 
   useEffect(() => {
-    // Mock fetching filters
-    setAvailableFilters([
-      {
-        id: 'caracter',
-        name: 'Caracter',
-        options: [
-          { id: '1', label: 'Efectivo' },
-          { id: '2', label: 'Interino' }
-        ]
+    const fetchFilters = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/caracteres`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/categorias`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/dedicaciones`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/tipos-unidad`, { headers })
+        ]);
+
+        const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
+          resCaracteres.ok ? resCaracteres.json() : [],
+          resCategorias.ok ? resCategorias.json() : [],
+          resDedicaciones.ok ? resDedicaciones.json() : [],
+          resTiposUnidad.ok ? resTiposUnidad.json() : []
+        ]);
+
+        setAvailableFilters([
+          {
+            id: 'caracter',
+            name: 'Caracter',
+            options: caracteres.map((item: any) => ({
+              id: (item.caracterId || item.id)?.toString() || '',
+              label: item.caracterNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'categoria',
+            name: 'Categoría',
+            options: categorias.map((item: any) => ({
+              id: (item.categoriaId || item.id)?.toString() || '',
+              label: item.categoriaNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'dedicacion',
+            name: 'Dedicación',
+            options: dedicaciones.map((item: any) => ({
+              id: (item.dedicacionId || item.id)?.toString() || '',
+              label: item.dedicacionNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
+            id: 'tipoUnidad',
+            name: 'Tipo de Unidad',
+            options: tiposUnidad.map((item: any) => ({
+              id: (item.tipoUnidadId || item.id)?.toString() || '',
+              label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
+            }))
+          }
+        ]);
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
       }
-    ]);
+    };
+
+    fetchFilters();
   }, []);
 
   const handleAddFilter = (newFilter: string) => {
@@ -89,6 +137,22 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
         if (searchTerm) {
           params.append('search', searchTerm);
         }
+
+        appliedFilters.forEach(filter => {
+          const [categoryName, optionLabel] = filter.split(': ');
+          if (categoryName && optionLabel) {
+            const category = availableFilters.find(c => c.name === categoryName);
+            if (category) {
+              const option = category.options.find(o => o.label === optionLabel);
+              if (option) {
+                // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
+                // so the backend can use whichever it is actually looking for.
+                params.append(`${category.id}Id`, option.id);
+                params.append(category.id, option.label);
+              }
+            }
+          }
+        });
 
         const token = localStorage.getItem('token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -159,7 +223,30 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
 
             <div className="listado-inner-container">
               <div className="listado-header-row">
-                <h1 className="listado-title">Listado de Docentes</h1>
+                <div className="listado-header-left">
+                  <h1 className="listado-title">Listado de Docentes</h1>
+                  <div className="listado-tabs">
+                    <button
+                      className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('docentes')}
+                    >
+                      Docentes
+                    </button>
+                    <button
+                      className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('cargos')}
+                    >
+                      Cargos
+                    </button>
+                    <button
+                      className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('licencias')}
+                    >
+                      Licencias
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="listado-filter-wrapper">
                   <FilterBar
                     availableFilters={availableFilters}
@@ -172,27 +259,6 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                     }}
                   />
                 </div>
-              </div>
-
-              <div className="listado-tabs">
-                <button
-                  className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('docentes')}
-                >
-                  Docentes
-                </button>
-                <button
-                  className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('cargos')}
-                >
-                  Cargos
-                </button>
-                <button
-                  className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('licencias')}
-                >
-                  Licencias
-                </button>
               </div>
 
               <div className="listado-table-container">

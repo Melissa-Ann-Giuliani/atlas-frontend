@@ -22,7 +22,13 @@
 .listado-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.listado-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .listado-title {
@@ -182,25 +188,31 @@
     padding: 28px;
     gap: 20px;
   }
+
   .listado-inner-container {
     padding: 20px;
     gap: 16px;
   }
+
   .listado-title {
     font-size: 40px;
   }
+
   .tab-btn {
     font-size: 14px;
     padding: 8px 20px;
   }
+
   .listado-table th,
   .listado-table td {
     padding: 12px 14px;
     font-size: 14px;
   }
+
   .pagination-info {
     font-size: 14px;
   }
+
   .page-btn {
     width: 32px;
     height: 32px;
@@ -211,10 +223,12 @@
   .listado-title {
     font-size: 48px;
   }
+
   .tab-btn {
     font-size: 15px;
     padding: 8px 24px;
   }
+
   .listado-table th,
   .listado-table td {
     padding: 12px 16px;
