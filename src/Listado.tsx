@@ -15,7 +15,7 @@ interface Docente {
   estado: string;
 }
 
-export default function Listado({ onLogout, onNavigate }: { onLogout?: () => void, onNavigate?: (page: any) => void }) {
+export default function Listado({ onLogout, onNavigate }: { onLogout?: () => void, onNavigate?: (page: any, data?: any) => void }) {
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
   const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -285,7 +285,7 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                       </tr>
                     ) : (
                       docentesData.map((docente, idx) => (
-                        <tr key={idx}>
+                        <tr key={idx} onClick={() => onNavigate && onNavigate('docente_detalle', docente)} style={{ cursor: 'pointer' }}>
                           <td>{docente.nombre}</td>
                           <td>{docente.origen}</td>
                           <td>{docente.unidad}</td>
