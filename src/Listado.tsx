@@ -25,6 +25,10 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [docentesData, setDocentesData] = useState<Docente[]>([]);
 
   // Rows per page based on screen height
   const [rowsPerPage, setRowsPerPage] = useState(12);
@@ -41,7 +45,7 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
       }
       setCurrentPage(1); // Reset to page 1 on resize to prevent out of bounds
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -73,23 +77,45 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
     setCurrentPage(1);
   };
 
-  // Expanded mock data for table to demonstrate pagination
-  const docentesData: Docente[] = Array.from({ length: 45 }).map((_, i) => ({
-    nombre: `Docente ${i + 1}`,
-    origen: i % 3 === 0 ? 'Investigación' : i % 5 === 0 ? 'Extensión' : 'Planta',
-    unidad: 'Artes Visuales',
-    categoria: 'Titular',
-    dedicacion: i % 2 === 0 ? 'Exclusivo' : 'Simple',
-    caracter: 'Efectivo',
-    estado: 'Activo'
-  }));
+  useEffect(() => {
+    const fetchDocentes = async () => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: (currentPage - 1).toString(),
+          size: rowsPerPage.toString()
+        });
 
-  const totalActivos = docentesData.filter(d => d.estado === 'Activo').length;
-  const totalPages = Math.ceil(totalActivos / rowsPerPage);
-  
+        if (searchTerm) {
+          params.append('search', searchTerm);
+        }
+
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/docentes?${params.toString()}`, {
+          headers
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDocentesData(data.content || []);
+          setTotalElements(data.totalElements || 0);
+          setTotalPages(data.totalPages || 1);
+        } else {
+          console.error("Failed to fetch docentes, status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching docentes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDocentes();
+  }, [currentPage, rowsPerPage, searchTerm, appliedFilters]);
+
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, totalActivos);
-  const displayedDocentes = docentesData.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -109,8 +135,8 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
 
     for (let i = startPage; i <= endPage; i++) {
       buttons.push(
-        <button 
-          key={i} 
+        <button
+          key={i}
           className={`page-btn ${currentPage === i ? 'active' : ''}`}
           onClick={() => goToPage(i)}
         >
@@ -183,30 +209,42 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                     </tr>
                   </thead>
                   <tbody>
-                    {displayedDocentes.map((docente, idx) => (
-                      <tr key={idx}>
-                        <td>{docente.nombre}</td>
-                        <td>{docente.origen}</td>
-                        <td>{docente.unidad}</td>
-                        <td>{docente.categoria}</td>
-                        <td>{docente.dedicacion}</td>
-                        <td>{docente.caracter}</td>
-                        <td>{docente.estado}</td>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>Cargando docentes...</td>
                       </tr>
-                    ))}
+                    ) : docentesData.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron docentes</td>
+                      </tr>
+                    ) : (
+                      docentesData.map((docente, idx) => (
+                        <tr key={idx}>
+                          <td>{docente.nombre}</td>
+                          <td>{docente.origen}</td>
+                          <td>{docente.unidad}</td>
+                          <td>{docente.categoria}</td>
+                          <td>{docente.dedicacion}</td>
+                          <td>{docente.caracter}</td>
+                          <td>{docente.estado}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             <div className="listado-pagination">
-              <span className="pagination-info">{startIndex + 1}-{endIndex} docentes de {totalActivos}</span>
+              <span className="pagination-info">
+                {totalElements > 0 ? `${startIndex + 1}-${endIndex} docentes de ${totalElements}` : '0 docentes'}
+              </span>
               <div className="pagination-controls">
                 <button className="page-btn" onClick={() => goToPage(1)} disabled={currentPage === 1}><FiChevronsLeft /></button>
                 <button className="page-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}><FiChevronLeft /></button>
-                
+
                 {renderPageButtons()}
-                
+
                 {totalPages > 3 && currentPage < totalPages - 1 && (
                   <button className="page-btn dots">...</button>
                 )}
