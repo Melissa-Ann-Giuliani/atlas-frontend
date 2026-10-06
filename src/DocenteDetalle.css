@@ -1,7 +1,10 @@
 .docente-detalle-area {
   padding: 32px;
-  background-color: #f7f6f2; /* background color from images */
-  min-height: 100vh;
+  background-color: var(--users-secondary-100);
+  /* background color from images */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .detalle-top-nav {
@@ -28,23 +31,30 @@
 .detalle-card-container {
   background-color: #e9e3d3;
   border-radius: 12px;
+  border: 1px solid var(--users-secondary-500);
   padding: 0;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .detalle-header {
-  padding: 32px 40px;
+  padding: 20px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: var(--users-secondary-200);
   border-bottom: 1px solid #dcd5c4;
 }
 
 .docente-name {
   margin: 0;
-  font-size: 32px;
-  font-family: 'Playfair Display', serif; /* Assuming serif for titles based on image */
+  font-size: 40px;
+  font-family: 'Playfair Display', serif;
+  /* Assuming serif for titles based on image */
   color: #1a231f;
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -52,7 +62,7 @@
 }
 
 .docente-department {
-  margin: 12px 0 0 0;
+  margin: 2px 0 0 0;
   font-size: 18px;
   color: #555;
 }
@@ -64,15 +74,15 @@
 }
 
 .status-badge.active-status {
-  background-color: #2b5b3a;
-  color: white;
+  background-color: var(--admin-primary-800);
+  color: var(--admin-tertiary-300);
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: 100px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .edit-btn {
@@ -85,6 +95,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -97,31 +108,33 @@
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   background-color: #ffffff;
-  min-height: 500px;
+  flex: 1;
+  min-height: 0;
 }
 
 .detalle-col-left {
-  padding: 40px;
-  border-right: 1px solid #eee;
+  padding: 20px 0px 20px 32px;
+  /*border-right: 1px solid #eee;*/
   background-color: #faf9f6;
 }
 
 .detalle-col-right-scrollable {
-  padding: 40px;
-  height: 600px; /* fixed height to enable scrolling */
+  padding: 20px 20px 20px 32px;
+  /* fixed height to enable scrolling */
   overflow-y: auto;
   background-color: #faf9f6;
+  height: 100%;
 }
 
 /* Sections */
 .section-block {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .section-title {
-  margin: 0 0 12px 0;
-  font-size: 24px;
-  font-family: 'Playfair Display', serif;
+  margin: 0 0 4px 0;
+  font-size: 28px;
+  font-family: 'DM Display', serif;
   color: #2b5b3a;
 }
 
@@ -140,7 +153,7 @@
 .section-divider {
   border: none;
   border-top: 1px solid #dcd5c4;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 /* Info Groups */
@@ -148,18 +161,17 @@
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .info-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #777;
   text-transform: uppercase;
 }
 
 .info-value {
-  font-size: 15px;
+  font-size: 16px;
   color: #333;
   font-weight: 500;
 }
@@ -167,7 +179,7 @@
 .info-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 4px;
 }
 
 /* Tables */
@@ -282,7 +294,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .doc-card-top {
@@ -371,4 +383,84 @@
 
 .detalle-col-right-scrollable::-webkit-scrollbar-thumb:hover {
   background: #aaa;
+}
+
+/* Responsive adjustments for smaller screens/heights to avoid scrolling on left column */
+@media (max-width: 1400px), (max-height: 900px) {
+  .docente-detalle-area {
+    padding: 16px;
+  }
+
+  .detalle-top-nav {
+    margin-bottom: 12px;
+  }
+
+  .detalle-header {
+    padding: 12px 24px;
+  }
+
+  .docente-name {
+    font-size: 28px;
+  }
+
+  .docente-department {
+    font-size: 14px;
+  }
+
+  .status-badge.active-status {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .edit-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .detalle-col-left {
+    padding: 16px 0px 16px 24px;
+  }
+
+  .detalle-col-right-scrollable {
+    padding: 16px 24px 16px 24px;
+  }
+
+  .section-block {
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .info-group {
+    margin-bottom: 12px;
+  }
+
+  .info-label {
+    font-size: 12px;
+  }
+
+  .info-value {
+    font-size: 14px;
+  }
+
+  .actividades-table th,
+  .actividades-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .documentos-container {
+    padding: 16px;
+  }
+
+  .doc-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .empty-state-card {
+    padding: 24px;
+  }
 }
