@@ -7,6 +7,7 @@ import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from '
 
 interface Docente {
   nombre: string;
+  apellido?: string;
   origen: string;
   unidad: string;
   categoria: string;
@@ -286,7 +287,7 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                     ) : (
                       docentesData.map((docente, idx) => (
                         <tr key={idx} onClick={() => onNavigate && onNavigate('docente_detalle', docente)} style={{ cursor: 'pointer' }}>
-                          <td>{docente.nombre}</td>
+                          <td>{docente.apellido ? `${docente.apellido}, ${docente.nombre}` : docente.nombre}</td>
                           <td>{docente.origen}</td>
                           <td>{docente.unidad}</td>
                           <td>{docente.categoria}</td>

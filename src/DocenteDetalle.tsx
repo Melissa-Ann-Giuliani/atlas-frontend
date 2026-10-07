@@ -11,12 +11,14 @@ import { BiArchiveIn } from 'react-icons/bi';
 
 interface Docente {
   nombre: string;
+  apellido?: string;
   origen: string;
   unidad: string;
   categoria: string;
   dedicacion: string;
   caracter: string;
   estado: string;
+  tipoUnidadNombre?: string;
 }
 
 interface DocenteDetalleProps {
@@ -46,8 +48,12 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
               {/* Header */}
               <div className="detalle-header">
                 <div className="detalle-header-info">
-                  <h1 className="docente-name">{docente.nombre || 'Sandra Castelli'}</h1>
-                  <p className="docente-department">Departamento de Artes Visuales</p>
+                  <h1 className="docente-name">
+                    {docente.apellido ? `${docente.apellido}, ${docente.nombre}` : docente.nombre || 'Sandra Castelli'}
+                  </h1>
+                  <p className="docente-department">
+                    {docente.tipoUnidadNombre || 'Departamento'} de {docente.unidad || 'Artes Visuales'}
+                  </p>
                 </div>
                 <div className="detalle-header-actions">
                   <div className="status-badge active-status">
