@@ -72,7 +72,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   );
 };
 
-export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: () => void, onNavigateToListado?: (filter: string) => void }) {
+export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { onLogout?: () => void, onNavigate?: (page: any) => void, onNavigateToListado?: (filter: string) => void }) {
   // Mock Data mimicking the backend RF-04 API response
   const [data, setData] = useState<{
     totalDocentes: number;
@@ -248,7 +248,7 @@ export default function Inicio({ onLogout, onNavigateToListado }: { onLogout?: (
       )}
 
       <div className="dashboard-body">
-        <Sidebar activeItem="inicio" />
+        <Sidebar activeItem="inicio" onNavigate={onNavigate} />
 
         {/* Main Content */}
         <main className="main-content">

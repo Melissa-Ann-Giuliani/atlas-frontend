@@ -85,82 +85,86 @@ export default function FilterBar({
 
   return (
     <div className="filter-bar">
-      <div className="filter-dropdown-container" ref={dropdownRef}>
-        <button
-          className={`filter-btn ${isDropdownOpen ? 'active' : ''}`}
-          onClick={handleToggleDropdown}
-        >
-          <FilterIcon />
-          <span>Filtros</span>
-        </button>
+      <div className="filter-bar-top">
+        <div className="filter-dropdown-container" ref={dropdownRef}>
+          <button
+            className={`filter-btn ${isDropdownOpen ? 'active' : ''}`}
+            onClick={handleToggleDropdown}
+          >
+            <FilterIcon />
+            <span>Filtros</span>
+          </button>
 
-        {isDropdownOpen && (
-          <div className="filter-dropdown-menu">
-            {!activeCategory ? (
-              // View 1: Categories
-              availableFilters.length > 0 ? (
-                availableFilters.map((category) => (
-                  <div
-                    key={category.id}
-                    className="filter-dropdown-item category-item"
-                    onClick={() => setActiveCategoryId(category.id)}
-                  >
-                    <span>{category.name}</span>
-                    <span className="category-arrow">›</span>
-                  </div>
-                ))
-              ) : (
-                <div className="filter-dropdown-empty">No hay más filtros disponibles</div>
-              )
-            ) : (
-              // View 2: Options within a category
-              <div className="filter-options-view">
-                <div className="filter-options-header" onClick={() => setActiveCategoryId(null)}>
-                  <BackIcon />
-                  <span>{activeCategory.name}</span>
-                </div>
-                <div className="filter-options-list">
-                  {activeCategory.options.map((option) => (
+          {isDropdownOpen && (
+            <div className="filter-dropdown-menu">
+              {!activeCategory ? (
+                // View 1: Categories
+                availableFilters.length > 0 ? (
+                  availableFilters.map((category) => (
                     <div
-                      key={option.id}
-                      className="filter-dropdown-item option-item"
-                      onClick={() => handleFilterSelect(activeCategory.name, option.label)}
+                      key={category.id}
+                      className="filter-dropdown-item category-item"
+                      onClick={() => setActiveCategoryId(category.id)}
                     >
-
-                      <span className="option-label-col">{option.label}</span>
+                      <span>{category.name}</span>
+                      <span className="category-arrow">›</span>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <div className="filter-dropdown-empty">No hay más filtros disponibles</div>
+                )
+              ) : (
+                // View 2: Options within a category
+                <div className="filter-options-view">
+                  <div className="filter-options-header" onClick={() => setActiveCategoryId(null)}>
+                    <BackIcon />
+                    <span>{activeCategory.name}</span>
+                  </div>
+                  <div className="filter-options-list">
+                    {activeCategory.options.map((option) => (
+                      <div
+                        key={option.id}
+                        className="filter-dropdown-item option-item"
+                        onClick={() => handleFilterSelect(activeCategory.name, option.label)}
+                      >
+
+                        <span className="option-label-col">{option.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            placeholder="Ingrese valor"
+            className="search-input"
+            onChange={(e) => onSearch && onSearch(e.target.value)}
+          />
+          <SearchIcon />
+        </div>
       </div>
 
-      <div className="search-input-wrapper">
-        <input
-          type="text"
-          placeholder="Ingrese valor"
-          className="search-input"
-          onChange={(e) => onSearch && onSearch(e.target.value)}
-        />
-        <SearchIcon />
-      </div>
-
-      <div className="applied-filters-container">
-        {appliedFilters.map((filter, idx) => (
-          <div key={idx} className="filter-chip">
-            <span className="filter-chip-text">{filter}</span>
-            <button
-              className="filter-chip-close"
-              onClick={() => onRemoveFilter && onRemoveFilter(filter)}
-              aria-label={`Remove filter ${filter}`}
-            >
-              <CloseIcon />
-            </button>
-          </div>
-        ))}
-      </div>
+      {appliedFilters.length > 0 && (
+        <div className="applied-filters-container">
+          {appliedFilters.map((filter, idx) => (
+            <div key={idx} className="filter-chip">
+              <span className="filter-chip-text">{filter}</span>
+              <button
+                className="filter-chip-close"
+                onClick={() => onRemoveFilter && onRemoveFilter(filter)}
+                aria-label={`Remove filter ${filter}`}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

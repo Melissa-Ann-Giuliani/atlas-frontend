@@ -36,32 +36,40 @@ export type SidebarItem = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'histo
 
 interface SidebarProps {
   activeItem: SidebarItem;
+  onNavigate?: (item: SidebarItem) => void;
 }
 
-export default function Sidebar({ activeItem }: SidebarProps) {
+export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleNavClick = (e: React.MouseEvent, item: SidebarItem) => {
+    e.preventDefault();
+    if (onNavigate) {
+      onNavigate(item);
+    }
+  };
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
 
       <nav className="sidebar-nav">
-        <a href="#" className={`nav-item ${activeItem === 'inicio' ? 'active' : ''}`}>
+        <a href="#" className={`nav-item ${activeItem === 'inicio' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'inicio')}>
           <HomeIcon />
           <span>Inicio</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'listado' ? 'active' : ''}`}>
+        <a href="#" className={`nav-item ${activeItem === 'listado' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'listado')}>
           <ListIcon />
           <span>Listado</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'tramites' ? 'active' : ''}`}>
+        <a href="#" className={`nav-item ${activeItem === 'tramites' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'tramites')}>
           <DocsIcon />
           <span>Trámites</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'gestion' ? 'active' : ''}`}>
+        <a href="#" className={`nav-item ${activeItem === 'gestion' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'gestion')}>
           <SettingsIcon />
           <span>Gestión</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'historial' ? 'active' : ''}`}>
+        <a href="#" className={`nav-item ${activeItem === 'historial' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'historial')}>
           <HistoryIcon />
           <span>Historial</span>
         </a>
