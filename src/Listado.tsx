@@ -18,8 +18,17 @@ interface Docente {
 }
 
 export default function Listado({ onLogout, onNavigate }: { onLogout?: () => void, onNavigate?: (page: any, data?: any) => void }) {
-  const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
-  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<string[]>(['Estado: Activo']);
+  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([
+    {
+      id: 'estado',
+      name: 'Estado',
+      options: [
+        { id: 'Activo', label: 'Activo' },
+        { id: 'Licencia', label: 'Licencia' }
+      ]
+    }
+  ]);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Tab state
@@ -74,6 +83,14 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
         ]);
 
         setAvailableFilters([
+          {
+            id: 'estado',
+            name: 'Estado',
+            options: [
+              { id: 'Activo', label: 'Activo' },
+              { id: 'Licencia', label: 'Licencia' }
+            ]
+          },
           {
             id: 'caracter',
             name: 'Caracter',
