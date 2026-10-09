@@ -5,7 +5,7 @@ import Topbar from './Topbar';
 import { FiChevronLeft } from 'react-icons/fi';
 import { FiCheckCircle } from 'react-icons/fi';
 import { FiEdit3 } from 'react-icons/fi';
-import { FaFilePdf, FaImage, FaHistory, FaCalendarAlt, FaPaperclip } from 'react-icons/fa';
+import { FaFilePdf, FaImage, FaHistory, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
 import { BiArchiveIn } from 'react-icons/bi';
 
@@ -139,6 +139,21 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
   const designacion = detalle?.designacionesYCargos?.[0]; // Mostrar el primer cargo/designación
   const actividades = detalle?.actividadesActuales || [];
   const licencias = detalle?.licenciasActuales || [];
+  const documentosAdjuntos: any[] = []; // Dummy array until backend is implemented
+
+  const getDocIcon = (type?: string, name?: string) => {
+    const lowerType = type?.toLowerCase() || '';
+    const lowerName = name?.toLowerCase() || '';
+
+    if (lowerType.includes('pdf') || lowerName.endsWith('.pdf')) {
+      return { icon: <FaFilePdf />, className: 'pdf-icon' };
+    } else if (lowerType.includes('word') || lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) {
+      return { icon: <FaFileWord />, className: 'word-icon' };
+    } else if (lowerType.includes('image') || lowerName.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
+      return { icon: <FaImage />, className: 'img-icon' };
+    }
+    return { icon: <FaFileAlt />, className: 'generic-icon' };
+  };
 
   return (
     <div className="dashboard-layout">
@@ -183,31 +198,33 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                 {/* Left Column */}
                 <div className="detalle-col-left">
 
-                  <div className="section-block">
+                  <div className="section-block-left">
                     <h2 className="section-title">Datos Personales</h2>
                     <hr className="section-divider" />
+                    <div className="info-grid-2">
+                      <div className="info-group">
+                        <span className="info-label">DNI</span>
+                        <span className="info-value">{datosPersonales?.dni || 'No especificado'}</span>
+                      </div>
 
-                    <div className="info-group">
-                      <span className="info-label">DNI</span>
-                      <span className="info-value">{datosPersonales?.dni || 'No especificado'}</span>
+                      <div className="info-group">
+                        <span className="info-label">EMAIL INSTITUCIONAL</span>
+                        <span className="info-value">{datosPersonales?.emailInstitucional || 'No especificado'}</span>
+                      </div>
+
+                      <div className="info-group">
+                        <span className="info-label">TELÉFONO</span>
+                        <span className="info-value">
+                          {datosPersonales?.telefonos && datosPersonales.telefonos.length > 0
+                            ? datosPersonales.telefonos.join(', ')
+                            : 'No especificado'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="info-group">
-                      <span className="info-label">EMAIL INSTITUCIONAL</span>
-                      <span className="info-value">{datosPersonales?.emailInstitucional || 'No especificado'}</span>
-                    </div>
-
-                    <div className="info-group">
-                      <span className="info-label">TELÉFONO</span>
-                      <span className="info-value">
-                        {datosPersonales?.telefonos && datosPersonales.telefonos.length > 0
-                          ? datosPersonales.telefonos.join(', ')
-                          : 'No especificado'}
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="section-block">
+                  <div className="section-block-left">
                     <h2 className="section-title">Designación y Cargo</h2>
                     <hr className="section-divider" />
 
@@ -260,7 +277,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                 <div className="detalle-col-right-scrollable">
 
                   {/* Actividades Actuales */}
-                  <div className="section-block right-section">
+                  <div className="section-block-right">
                     <h2 className="section-title">Actividades Actuales</h2>
                     <hr className="section-divider" />
 
@@ -300,7 +317,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   </div>
 
                   {/* Licencias Actuales */}
-                  <div className="section-block right-section">
+                  <div className="section-block-right">
                     <div className="section-title-row">
                       <h2 className="section-title">Licencias Actuales</h2>
                       <FaHistory className="history-icon" />
@@ -340,7 +357,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   </div>
 
                   {/* Documentación Adjunta */}
-                  <div className="section-block right-section">
+                  <div className="section-block-right">
                     <h2 className="section-title">Documentación Adjunta</h2>
                     <hr className="section-divider" />
 
@@ -354,39 +371,30 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
 
                       <div className="documentos-grid">
 
-                        {/* Doc 1 */}
-                        <div className="doc-card">
-                          <div className="doc-card-top">
-                            <div className="doc-icon pdf-icon">
-                              <FaFilePdf />
-                            </div>
-                            <HiOutlineDownload className="download-icon" />
+                        {documentosAdjuntos.length > 0 ? (
+                          documentosAdjuntos.map((doc, index) => {
+                            const { icon, className } = getDocIcon(doc.type, doc.name);
+                            return (
+                              <div className="doc-card" key={index}>
+                                <div className="doc-card-top">
+                                  <div className={`doc-icon ${className}`}>
+                                    {icon}
+                                  </div>
+                                  <HiOutlineDownload className="download-icon" />
+                                </div>
+                                <div className="doc-card-bottom">
+                                  <h5 className="doc-name">{doc.name}</h5>
+                                  <p className="doc-meta">{doc.size} • {doc.date}</p>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="doc-empty-slot" style={{ gridColumn: '1 / -1' }}>
+                            <BiArchiveIn className="empty-slot-icon" />
+                            <p>No hay documentación adjunta de momento.</p>
                           </div>
-                          <div className="doc-card-bottom">
-                            <h5 className="doc-name">Resolución_Aprobación...</h5>
-                            <p className="doc-meta">2.4 MB • 10 Oct 2025</p>
-                          </div>
-                        </div>
-
-                        {/* Doc 2 */}
-                        <div className="doc-card">
-                          <div className="doc-card-top">
-                            <div className="doc-icon img-icon">
-                              <FaImage />
-                            </div>
-                            <HiOutlineDownload className="download-icon" />
-                          </div>
-                          <div className="doc-card-bottom">
-                            <h5 className="doc-name">Certificado_Medico...</h5>
-                            <p className="doc-meta">1.1 MB • 08 Oct 2025</p>
-                          </div>
-                        </div>
-
-                        {/* Empty Doc slot */}
-                        <div className="doc-empty-slot">
-                          <BiArchiveIn className="empty-slot-icon" />
-                          <p>No hay más documentos adjuntos.</p>
-                        </div>
+                        )}
 
                       </div>
                     </div>

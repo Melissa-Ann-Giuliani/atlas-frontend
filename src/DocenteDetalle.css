@@ -113,9 +113,11 @@
 }
 
 .detalle-col-left {
-  padding: 20px 0px 20px 32px;
+  padding: 20px 20px 20px 32px;
   /*border-right: 1px solid #eee;*/
   background-color: #faf9f6;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .detalle-col-right-scrollable {
@@ -127,7 +129,11 @@
 }
 
 /* Sections */
-.section-block {
+.section-block-left {
+  margin-bottom: 8px;
+}
+
+.section-block-right {
   margin-bottom: 32px;
 }
 
@@ -323,6 +329,16 @@
   color: #059669;
 }
 
+.word-icon {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.generic-icon {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
 .download-icon {
   color: #777;
   cursor: pointer;
@@ -366,27 +382,34 @@
   font-size: 12px;
 }
 
-/* Custom Scrollbar for Right Column */
+/* Custom Scrollbar for Columns */
+.detalle-col-left::-webkit-scrollbar,
 .detalle-col-right-scrollable::-webkit-scrollbar {
   width: 8px;
 }
 
+.detalle-col-left::-webkit-scrollbar-track,
 .detalle-col-right-scrollable::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
+.detalle-col-left::-webkit-scrollbar-thumb,
 .detalle-col-right-scrollable::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #7ba688;
+  /* A pleasant green */
   border-radius: 4px;
 }
 
+.detalle-col-left::-webkit-scrollbar-thumb:hover,
 .detalle-col-right-scrollable::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: #2b5b3a;
+  /* Darker green on hover matching the section titles */
 }
 
 /* Responsive adjustments for smaller screens/heights to avoid scrolling on left column */
-@media (max-width: 1400px), (max-height: 900px) {
+@media (max-width: 1400px),
+(max-height: 900px) {
   .docente-detalle-area {
     padding: 16px;
   }
@@ -423,10 +446,6 @@
 
   .detalle-col-right-scrollable {
     padding: 16px 24px 16px 24px;
-  }
-
-  .section-block {
-    margin-bottom: 20px;
   }
 
   .section-title {
