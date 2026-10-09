@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -73,6 +73,15 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
   const [detalle, setDetalle] = useState<DocenteDetailsDTO | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('File selected for upload:', file.name);
+      // Logic to capture the selected file and upload it to the backend will go here
+    }
+  };
 
   useEffect(() => {
     const fetchDetalle = async () => {
@@ -162,7 +171,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   <div className="status-badge active-status">
                     <FiCheckCircle /> {datosPersonales?.estado || docente.estado || 'Activo'}
                   </div>
-                  <button className="edit-btn">
+                  <button className="edit-btn" onClick={() => onNavigate && onNavigate('modificar_docente', docente)}>
                     <FiEdit3 /> Editar Docente
                   </button>
                 </div>
@@ -337,7 +346,8 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
 
                     <div className="documentos-container">
                       <div className="documentos-header">
-                        <button className="add-doc-btn">
+                        <input type="file" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
+                        <button className="add-doc-btn" onClick={() => fileInputRef.current?.click()}>
                           <FaPaperclip /> Agregar Documento
                         </button>
                       </div>

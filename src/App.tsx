@@ -6,7 +6,7 @@ import DocenteDetalle from './DocenteDetalle'
 
 
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'modificar_docente';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
