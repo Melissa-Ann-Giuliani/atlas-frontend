@@ -183,7 +183,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   </p>
                 </div>
                 <div className="detalle-header-actions">
-                  <div className="status-badge active-status">
+                  <div className={`status-badge ${(datosPersonales?.estado || docente.estado)?.toLowerCase().includes('licencia') ? 'licencia-status' : 'active-status'}`}>
                     <FiCheckCircle /> {datosPersonales?.estado || docente.estado || 'Activo'}
                   </div>
                   <button className="edit-btn" onClick={() => onNavigate && onNavigate('modificar_docente', docente)}>
@@ -320,13 +320,13 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   <div className="section-block-right">
                     <div className="section-title-row">
                       <h2 className="section-title">Licencias Actuales</h2>
-                      <FaHistory className="history-icon" />
+                      {/* <FaHistory className="history-icon" /> */}
                     </div>
                     <hr className="section-divider" />
 
                     {licencias.length > 0 ? (
                       <div className="actividades-table-container">
-                        <table className="actividades-table">
+                        <table className="actividades-table licencias-table">
                           <thead>
                             <tr>
                               <th>Motivo</th>
@@ -369,33 +369,37 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                         </button>
                       </div>
 
-                      <div className="documentos-grid">
+                      <div className="documentos-content">
+                        <div className="documentos-grid">
 
-                        {documentosAdjuntos.length > 0 ? (
-                          documentosAdjuntos.map((doc, index) => {
-                            const { icon, className } = getDocIcon(doc.type, doc.name);
-                            return (
-                              <div className="doc-card" key={index}>
-                                <div className="doc-card-top">
-                                  <div className={`doc-icon ${className}`}>
-                                    {icon}
+                          {documentosAdjuntos.length > 0 ? (
+                            documentosAdjuntos.map((doc, index) => {
+                              const { icon, className } = getDocIcon(doc.type, doc.name);
+                              return (
+                                <div className="doc-card" key={index}>
+                                  <div className="doc-card-top">
+                                    <div className={`doc-icon ${className}`}>
+                                      {icon}
+                                    </div>
+                                    <HiOutlineDownload className="download-icon" />
                                   </div>
-                                  <HiOutlineDownload className="download-icon" />
+                                  <div className="doc-card-bottom">
+                                    <h5 className="doc-name">{doc.name}</h5>
+                                    <p className="doc-meta">{doc.size} • {doc.date}</p>
+                                  </div>
                                 </div>
-                                <div className="doc-card-bottom">
-                                  <h5 className="doc-name">{doc.name}</h5>
-                                  <p className="doc-meta">{doc.size} • {doc.date}</p>
-                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="doc-empty-slot" style={{ gridColumn: '1 / -1' }}>
+                              <div className="empty-slot-icon">
+                                <BiArchiveIn />
                               </div>
-                            );
-                          })
-                        ) : (
-                          <div className="doc-empty-slot" style={{ gridColumn: '1 / -1' }}>
-                            <BiArchiveIn className="empty-slot-icon" />
-                            <p>No hay documentación adjunta de momento.</p>
-                          </div>
-                        )}
+                              <p>No hay documentación adjunta de momento.</p>
+                            </div>
+                          )}
 
+                        </div>
                       </div>
                     </div>
                   </div>
