@@ -6,6 +6,7 @@ import FilterBar, { type FilterCategory } from './FilterBar';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 
 interface Docente {
+  usuarioId?: number;
   nombre: string;
   apellido?: string;
   origen: string;
