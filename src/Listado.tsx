@@ -116,6 +116,14 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
             }))
           },
           {
+            id: 'origen',
+            name: 'Origen',
+            options: dedicaciones.map((item: any) => ({
+              id: (item.origenId || item.id)?.toString() || '',
+              label: item.dedicacionNombre || item.nombre || 'Desconocido'
+            }))
+          },
+          {
             id: 'tipoUnidad',
             name: 'Tipo de Unidad',
             options: tiposUnidad.map((item: any) => ({
@@ -265,7 +273,7 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="listado-filter-wrapper">
                   <FilterBar
                     availableFilters={availableFilters}
