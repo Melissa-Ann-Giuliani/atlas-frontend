@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiHome, FiList, FiFileText, FiBookOpen, FiClock, FiHelpCircle, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
+import './Sidebar.css';
 
 // SVG Icons
 const HomeIcon = () => (

@@ -1,0 +1,95 @@
+.topbar {
+  background-color: var(--admin-primary-900, #1A2E1C);
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: var(--admin-tertiary-500, #7BC33C);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.topbar-brand .logo-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  background-color: white;
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 2px;
+  gap: 2px;
+}
+
+.topbar-brand .logo-quadrant {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+}
+
+.topbar-brand .logo-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Logo Specific Colors based on mockup */
+.logo-quadrant.yellow {
+  background-color: var(--btn-caution, #FFC801);
+  color: #000;
+}
+
+.logo-quadrant.green {
+  background-color: var(--admin-tertiary-500, #7BC33C);
+}
+
+.logo-quadrant.green-dark {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}

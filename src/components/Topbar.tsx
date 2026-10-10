@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiSun, FiMoon, FiLogOut } from "react-icons/fi";
+import './Topbar.css';
 
 // SVG Icons
 const SunIcon = () => (

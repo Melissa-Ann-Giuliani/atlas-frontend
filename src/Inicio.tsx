@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Inicio.css';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 
 
-import FilterBar, { type FilterCategory } from './FilterBar';
+import FilterBar, { type FilterCategory } from './components/FilterBar';
 
 
 
@@ -97,6 +97,11 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
           fetch(`${import.meta.env.VITE_API_URL}/api/dedicaciones`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL}/api/tipos-unidad`, { headers })
         ]);
+
+        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401) {
+          if (onLogout) onLogout();
+          return;
+        }
 
         const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
           resCaracteres.ok ? resCaracteres.json() : [],
@@ -203,6 +208,10 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
       }
     })
       .then(res => {
+        if (res.status === 401) {
+          if (onLogout) onLogout();
+          throw new Error('No autorizado');
+        }
         if (!res.ok) throw new Error('Error en la respuesta del servidor');
         return res.json();
       })

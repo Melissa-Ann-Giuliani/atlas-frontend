@@ -21,16 +21,18 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'listado/cargo_detalle') return 'cargo_detalle';
   if (path === 'listado/licencia_detalle') return 'licencia_detalle';
   if (path === 'gestion/modificar_docente') return 'modificar_docente';
-  
+
   const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente'];
   return validPages.includes(path as Page) ? (path as Page) : 'inicio';
 };
+
+import IdleTimeoutModal from './components/IdleTimeoutModal.tsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return !!localStorage.getItem('token');
   });
-  
+
   const [activePage, setActivePage] = useState<Page>(() => {
     return getPageFromPath(window.location.pathname.substring(1));
   });
@@ -61,6 +63,42 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const renewToken = async () => {
+      try {
+        const currentToken = localStorage.getItem('token');
+        if (!currentToken) {
+          handleLogout();
+          return;
+        }
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/renew`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('token', data.token);
+        } else {
+          handleLogout();
+        }
+      } catch (error) {
+        console.error("Error auto-renewing token", error);
+        handleLogout();
+      }
+    };
+
+    // 45 minutes in milliseconds
+    const intervalId = setInterval(renewToken, 45 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleNavigate = (page: Page, data?: any) => {
     setActivePage(page);
     if (page === 'docente_detalle' && data) {
@@ -69,13 +107,21 @@ function App() {
   };
 
   if (isAuthenticated) {
+    let content;
     if (activePage === 'listado') {
-      return <Listado onLogout={handleLogout} onNavigate={handleNavigate} />;
+      content = <Listado onLogout={handleLogout} onNavigate={handleNavigate} />;
+    } else if (activePage === 'docente_detalle' && selectedDocente) {
+      content = <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
+    } else {
+      content = <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
     }
-    if (activePage === 'docente_detalle' && selectedDocente) {
-      return <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
-    }
-    return <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
+
+    return (
+      <>
+        {content}
+        <IdleTimeoutModal onLogout={handleLogout} timeoutSeconds={3600} warningSeconds={60} />
+      </>
+    );
   }
 
   return <Login onLogin={handleLogin} />

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 import { FiChevronLeft } from 'react-icons/fi';
 import { FiCheckCircle } from 'react-icons/fi';
 import { FiEdit3 } from 'react-icons/fi';
@@ -99,6 +99,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
           setDetalle(data);
         } else {
           setError(`No se pudieron cargar los detalles del docente. Estado: ${response.status}`);
+          if (response.status === 401 && onLogout) onLogout();
         }
       } catch (err) {
         console.error(err);

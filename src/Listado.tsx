@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import './Listado.css';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
-import FilterBar, { type FilterCategory } from './FilterBar';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
+import FilterBar, { type FilterCategory } from './components/FilterBar';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 
 interface Docente {
@@ -74,6 +74,11 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
           fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/dedicaciones`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/tipos-unidad`, { headers })
         ]);
+
+        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401) {
+          onLogout();
+          return;
+        }
 
         const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
           resCaracteres.ok ? resCaracteres.json() : [],
@@ -194,6 +199,7 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
           setTotalPages(data.totalPages || 1);
         } else {
           console.error("Failed to fetch docentes, status:", response.status);
+          if (response.status === 401) onLogout();
         }
       } catch (error) {
         console.error("Error fetching docentes:", error);

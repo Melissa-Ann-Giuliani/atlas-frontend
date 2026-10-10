@@ -1,0 +1,102 @@
+.sidebar {
+  width: 220px;
+  background-color: var(--admin-primary-800, #2A4B2F);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  z-index: 10;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .help-btn span {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  padding: 12px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .help-btn {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 48px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background-color: var(--admin-tertiary-600, #7BC33C);
+  color: white;
+  border-radius: 0 24px 24px 0;
+  margin-right: 2px;
+  font-weight: 600;
+}
+
+.sidebar-collapse {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s ease;
+}
+
+.collapse-btn:hover {
+  color: white;
+}
+
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.help-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.help-btn:hover {
+  color: white;
+}
