@@ -3,6 +3,7 @@ import Login from './Login'
 import Inicio from './Inicio'
 import Listado from './Listado'
 import DocenteDetalle from './DocenteDetalle'
+import CargoDetalle from './CargoDetalle'
 
 
 
@@ -37,6 +38,7 @@ function App() {
     return getPageFromPath(window.location.pathname.substring(1));
   });
   const [selectedDocente, setSelectedDocente] = useState<any>(null);
+  const [selectedCargo, setSelectedCargo] = useState<any>(null);
 
   useEffect(() => {
     const currentPath = window.location.pathname.substring(1);
@@ -104,6 +106,9 @@ function App() {
     if (page === 'docente_detalle' && data) {
       setSelectedDocente(data);
     }
+    if (page === 'cargo_detalle' && data) {
+      setSelectedCargo(data);
+    }
   };
 
   if (isAuthenticated) {
@@ -112,6 +117,8 @@ function App() {
       content = <Listado onLogout={handleLogout} onNavigate={handleNavigate} />;
     } else if (activePage === 'docente_detalle' && selectedDocente) {
       content = <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
+    } else if (activePage === 'cargo_detalle' && selectedCargo) {
+      content = <CargoDetalle cargo={selectedCargo} onLogout={handleLogout} onNavigate={handleNavigate} />;
     } else {
       content = <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
     }

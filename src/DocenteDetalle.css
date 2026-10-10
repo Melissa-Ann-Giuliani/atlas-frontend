@@ -73,9 +73,7 @@
   gap: 16px;
 }
 
-.status-badge.active-status {
-  background-color: var(--admin-primary-800);
-  color: var(--admin-tertiary-300);
+.status-badge {
   padding: 8px 16px;
   border-radius: 100px;
   display: flex;
@@ -85,18 +83,15 @@
   font-size: 16px;
 }
 
+.status-badge.active-status {
+  background-color: var(--admin-primary-800);
+  color: var(--admin-tertiary-300);
+
+}
+
 .status-badge.licencia-status {
   background-color: #eed675;
-  /* Darker muted yellow */
   color: #6b4f1b;
-  /* Darker text to match */
-  padding: 8px 16px;
-  border-radius: 100px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 16px;
 }
 
 .edit-btn {

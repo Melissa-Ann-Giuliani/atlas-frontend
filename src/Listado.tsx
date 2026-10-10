@@ -389,11 +389,11 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                         </tr>
                       ) : (
                         cargosData.map((cargo, idx) => (
-                          <tr key={idx}>
+                          <tr key={idx} onClick={() => onNavigate && onNavigate('cargo_detalle', cargo)} style={{ cursor: 'pointer' }}>
                             <td>{cargo.numero}</td>
                             <td>{cargo.fechaCreacion ? new Date(cargo.fechaCreacion).toLocaleDateString() : ''}</td>
                             <td>{cargo.estado}</td>
-                            <td>{cargo.apellidoNombre}</td>
+                            <td>{cargo.estado === 'Libre' ? '-' : cargo.apellidoNombre}</td>
                             <td>{cargo.categoria}</td>
                             <td>{cargo.dedicacion}</td>
                             <td>{cargo.caracter}</td>

@@ -1,0 +1,402 @@
+.cargo-detalle-area {
+  padding: 24px 32px;
+  background-color: var(--users-secondary-100);
+  min-height: 100vh;
+}
+
+.detalle-top-nav {
+  margin-bottom: 24px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.cargo-detalle-card-container {
+  background-color: #faf9f6;
+  border-radius: 12px;
+  border: 1px solid var(--users-secondary-500);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.cargo-detalle-header {
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--users-secondary-200);
+  border-bottom: 1px solid #dcd5c4;
+}
+
+.cargo-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cargo-title {
+  margin: 0;
+  font-size: 40px;
+  font-family: 'Playfair Display', serif;
+  color: #1a231f;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.cargo-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 18px;
+  color: #555;
+  font-weight: normal;
+}
+
+.cargo-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.status-badge.asignado-status {
+  background-color: var(--admin-primary-800);
+  color: var(--admin-tertiary-300);
+}
+
+.status-badge.libre-status {
+  background-color: #eed675;
+  color: #6b4f1b;
+}
+
+.edit-btn {
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-btn:hover {
+  background-color: #1a1a1a;
+}
+
+.cargo-body-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 32px;
+}
+
+.cargo-col-left,
+.cargo-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cargo-section-block {
+  background-color: transparent;
+}
+
+.cargo-section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin: 0 0 16px 0;
+}
+
+.cargo-section-divider {
+  border: none;
+  height: 1px;
+  background-color: #d3ccbf;
+  margin-bottom: 24px;
+}
+
+.cargo-info-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.cargo-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cargo-info-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.cargo-info-value {
+  font-size: 14px;
+  color: #111;
+  font-weight: 500;
+}
+
+.actividades-vinculadas-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #d2ded1;
+}
+
+.actividades-vinculadas-table th {
+  background-color: #d2ded1;
+  color: var(--color-primary-dark);
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.actividades-vinculadas-table td {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+  color: #333;
+}
+
+.actividades-vinculadas-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Right column card */
+.designacion-card {
+  background-color: #e6e2d6;
+  /* slight variation for designación card */
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #d3ccbf;
+  margin-bottom: 24px;
+}
+
+.designacion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5a4b3c;
+  /* Brownish */
+  margin-bottom: 16px;
+}
+
+.designacion-info-box {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Tree UI */
+.cargo-tree-section {
+  padding: 24px;
+  background-color: transparent;
+}
+
+.tree-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.tree-card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tree-card-icon {
+  color: #666;
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.tree-card-content h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.tree-card-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.tree-node-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.tree-line-top,
+.tree-line-bottom {
+  width: 1px;
+  height: 20px;
+  background-color: #ccc;
+}
+
+.tree-node {
+  background-color: #d2ded1;
+  color: var(--color-primary-dark);
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.subcargos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subcargo-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #eee;
+}
+
+.subcargo-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.subcargo-icon {
+  color: var(--color-primary);
+}
+
+.subcargo-arrow {
+  color: #aaa;
+}
+
+/* Documentación section */
+.doc-section-container {
+  margin: 0 32px 32px 32px;
+  background-color: var(--color-primary-dark);
+  border-radius: 12px;
+  padding: 2px;
+}
+
+.doc-section-header {
+  background-color: var(--color-primary-dark);
+  border-radius: 10px 10px 0 0;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: white;
+  margin: 0;
+}
+
+.doc-add-btn {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.doc-section-body {
+  background-color: white;
+  border-radius: 0 0 10px 10px;
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+}
+
+/* Reuse doc cards from DocenteDetalle or similar */
+.doc-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doc-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-card-bottom h5 {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.doc-card-bottom p {
+  margin: 0;
+  font-size: 11px;
+  color: #888;
+}
