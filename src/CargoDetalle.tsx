@@ -95,155 +95,161 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
                 </div>
               </div>
 
-              <div className="cargo-body-two-cols">
+              <div className="cargo-card-content">
+                <div className="cargo-body-two-cols">
 
-                {/* Left Column */}
-                <div className="cargo-col-left">
+                  {/* Left Column */}
+                  <div className="cargo-col-left">
 
-                  <div className="cargo-section-block">
-                    <h3 className="cargo-section-title">Datos Administrativos</h3>
-                    <hr className="cargo-section-divider" />
+                    <div className="cargo-section-block">
+                      <h3 className="cargo-section-title">Datos Administrativos</h3>
+                      <hr className="cargo-section-divider" />
 
-                    <div className="cargo-info-grid-2">
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">ASIGNADO A</span>
-                        <span className="cargo-info-value">{cargo.apellidoNombre || 'No asignado'}</span>
-                      </div>
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">DNI</span>
-                        <span className="cargo-info-value">23.456.789</span>
-                      </div>
+                      <div className="cargo-info-grid-2">
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">ASIGNADO A</span>
+                          <span className="cargo-info-value">{cargo.apellidoNombre || 'No asignado'}</span>
+                        </div>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">DNI</span>
+                          <span className="cargo-info-value">23.456.789</span>
+                        </div>
 
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">N° RESOLUCIÓN</span>
-                        <span className="cargo-info-value">2046-48</span>
-                      </div>
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">FECHA DE CREACIÓN</span>
-                        <span className="cargo-info-value">{formatDate(cargo.fechaCreacion)}</span>
-                      </div>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">N° RESOLUCIÓN</span>
+                          <span className="cargo-info-value">2046-48</span>
+                        </div>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">FECHA DE CREACIÓN</span>
+                          <span className="cargo-info-value">{formatDate(cargo.fechaCreacion)}</span>
+                        </div>
 
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">DEDICACIÓN</span>
-                        <span className="cargo-info-value">{cargo.dedicacion || 'Exclusiva (40hs)'}</span>
-                      </div>
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">CARÁCTER</span>
-                        <span className="cargo-info-value">{cargo.caracter || 'Efectivo'}</span>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">DEDICACIÓN</span>
+                          <span className="cargo-info-value">{cargo.dedicacion || 'Exclusiva (40hs)'}</span>
+                        </div>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">CARÁCTER</span>
+                          <span className="cargo-info-value">{cargo.caracter || 'Efectivo'}</span>
+                        </div>
                       </div>
                     </div>
+
+                    <div className="cargo-section-block">
+                      <h3 className="cargo-section-title">Actividades Vinculadas</h3>
+                      <hr className="cargo-section-divider" />
+
+                      <div className="cargo-actividades-table-container">
+                        <table className="cargo-actividades-table">
+                          <thead>
+                            <tr>
+                              <th>Materia / Proyecto</th>
+                              <th>Origen</th>
+                              <th>Horas</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {actividadesVinculadas.map((act, idx) => (
+                              <tr key={idx}>
+                                <td>{act.materia}</td>
+                                <td>{act.origen}</td>
+                                <td>{act.horas}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
                   </div>
 
-                  <div className="cargo-section-block">
-                    <h3 className="cargo-section-title">Actividades Vinculadas</h3>
+                  {/* Right Column */}
+                  <div className="cargo-col-right">
 
-                    <table className="actividades-vinculadas-table">
-                      <thead>
-                        <tr>
-                          <th>Materia / Proyecto</th>
-                          <th>Origen</th>
-                          <th>Horas</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {actividadesVinculadas.map((act, idx) => (
-                          <tr key={idx}>
-                            <td>{act.materia}</td>
-                            <td>{act.origen}</td>
-                            <td>{act.horas}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                </div>
-
-                {/* Right Column */}
-                <div className="cargo-col-right">
-
-                  <div className="designacion-card">
-                    <div className="designacion-card-title">
-                      <FiLink /> Designación Vinculada
-                    </div>
-
-                    <div className="designacion-info-box">
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">N° RESOLUCIÓN</span>
-                        <span className="cargo-info-value">RES-CS-2021-045</span>
+                    <div className="designacion-card">
+                      <div className="designacion-card-title">
+                        <FiLink /> Designación Vinculada
                       </div>
-                      <div className="cargo-info-group">
-                        <span className="cargo-info-label">PERÍODO</span>
-                        <span className="cargo-info-value">01/04/2025 - 31/03/2027</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="cargo-tree-section">
-                    <div className="tree-title">Cargo Predecesor</div>
-                    <div className="tree-card">
-                      <BsArrowUp className="tree-card-icon" />
-                      <div className="tree-card-content">
-                        <h5>Jefe de Trabajos Prácticos (JTP)</h5>
-                        <p>Vinculado el 15/03/2026</p>
+                      <div className="designacion-info-box">
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">N° RESOLUCIÓN</span>
+                          <span className="cargo-info-value">RES-CS-2021-045</span>
+                        </div>
+                        <div className="cargo-info-group">
+                          <span className="cargo-info-label">PERÍODO</span>
+                          <span className="cargo-info-value">01/04/2025 - 31/03/2027</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="tree-node-container">
-                      <div className="tree-line-top"></div>
-                      <div className="tree-node">{cargo.numero || '4532'}</div>
-                      <div className="tree-line-bottom"></div>
-                    </div>
+                    <div className="cargo-tree-section">
+                      <div className="tree-title">Cargo Predecesor</div>
+                      <div className="tree-card">
+                        <BsArrowUp className="tree-card-icon" />
+                        <div className="tree-card-content">
+                          <h5>Jefe de Trabajos Prácticos (JTP)</h5>
+                          <p>Vinculado el 15/03/2026</p>
+                        </div>
+                      </div>
 
-                    <div className="tree-title">Subcargos Activos</div>
-                    <div className="subcargos-list">
-                      {subcargos.map((sub, idx) => (
-                        <div className="subcargo-card" key={idx}>
-                          <div className="subcargo-card-left">
-                            <BsArrowReturnRight className="subcargo-icon" />
-                            <span>{sub.nombre}</span>
+                      <div className="tree-node-container">
+                        <div className="tree-line-top"></div>
+                        <div className="tree-node">{cargo.numero || '4532'}</div>
+                        <div className="tree-line-bottom"></div>
+                      </div>
+
+                      <div className="tree-title">Subcargos Activos</div>
+                      <div className="subcargos-list">
+                        {subcargos.map((sub, idx) => (
+                          <div className="subcargo-card" key={idx}>
+                            <div className="subcargo-card-left">
+                              <BsArrowReturnRight className="subcargo-icon" />
+                              <span>{sub.nombre}</span>
+                            </div>
+                            <MdKeyboardArrowRight className="subcargo-arrow" />
                           </div>
-                          <MdKeyboardArrowRight className="subcargo-arrow" />
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
+
                   </div>
 
                 </div>
 
-              </div>
+                {/* Documentación Adjunta */}
+                <div className="doc-section-container">
+                  <div className="doc-section-header">
+                    <h3 className="doc-section-title">Documentación Adjunta</h3>
+                    <input type="file" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
+                    <button className="doc-add-btn" onClick={() => fileInputRef.current?.click()}>
+                      <FaPaperclip /> Agregar Documento
+                    </button>
+                  </div>
 
-              {/* Documentación Adjunta */}
-              <div className="doc-section-container">
-                <div className="doc-section-header">
-                  <h3 className="doc-section-title">Documentación Adjunta</h3>
-                  <input type="file" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
-                  <button className="doc-add-btn" onClick={() => fileInputRef.current?.click()}>
-                    <FaPaperclip /> Agregar Documento
-                  </button>
-                </div>
-
-                <div className="doc-section-body">
-                  {documentosAdjuntos.length > 0 ? (
-                    documentosAdjuntos.map((doc, index) => (
-                      <div className="doc-card" key={index}>
-                        <div className="doc-card-top">
-                          <FaFilePdf style={{ color: '#ff4d4f', fontSize: '24px' }} />
-                          <HiOutlineDownload style={{ color: '#666', fontSize: '20px', cursor: 'pointer' }} />
+                  <div className="doc-section-body">
+                    {documentosAdjuntos.length > 0 ? (
+                      documentosAdjuntos.map((doc, index) => (
+                        <div className="doc-card" key={index}>
+                          <div className="doc-card-top">
+                            <FaFilePdf style={{ color: '#ff4d4f', fontSize: '24px' }} />
+                            <HiOutlineDownload style={{ color: '#666', fontSize: '20px', cursor: 'pointer' }} />
+                          </div>
+                          <div className="doc-card-bottom">
+                            <h5>{doc.name}</h5>
+                            <p>{doc.size} • {doc.date}</p>
+                          </div>
                         </div>
-                        <div className="doc-card-bottom">
-                          <h5>{doc.name}</h5>
-                          <p>{doc.size} • {doc.date}</p>
-                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '24px', width: '100%', textAlign: 'center', color: '#666', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <BiArchiveIn style={{ fontSize: '32px', color: '#aaa' }} />
+                        <p style={{ margin: 0, fontSize: '14px' }}>No hay documentación adjunta de momento.</p>
                       </div>
-                    ))
-                  ) : (
-                    <div style={{ padding: '24px', width: '100%', textAlign: 'center', color: '#666', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <BiArchiveIn style={{ fontSize: '32px', color: '#aaa' }} />
-                      <p style={{ margin: 0, fontSize: '14px' }}>No hay documentación adjunta de momento.</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+
               </div>
 
             </div>
