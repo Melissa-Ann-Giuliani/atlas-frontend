@@ -53,23 +53,23 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
 
       <nav className="sidebar-nav">
-        <a href="#" className={`nav-item ${activeItem === 'inicio' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'inicio')}>
+        <a href="/inicio" className={`nav-item ${activeItem === 'inicio' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'inicio')}>
           <HomeIcon />
           <span>Inicio</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'listado' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'listado')}>
+        <a href="/listado" className={`nav-item ${activeItem === 'listado' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'listado')}>
           <ListIcon />
           <span>Listado</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'tramites' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'tramites')}>
+        <a href="/tramites" className={`nav-item ${activeItem === 'tramites' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'tramites')}>
           <DocsIcon />
           <span>Trámites</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'gestion' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'gestion')}>
+        <a href="/gestion" className={`nav-item ${activeItem === 'gestion' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'gestion')}>
           <SettingsIcon />
           <span>Gestión</span>
         </a>
-        <a href="#" className={`nav-item ${activeItem === 'historial' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'historial')}>
+        <a href="/historial" className={`nav-item ${activeItem === 'historial' ? 'active' : ''}`} onClick={(e) => handleNavClick(e, 'historial')}>
           <HistoryIcon />
           <span>Historial</span>
         </a>
