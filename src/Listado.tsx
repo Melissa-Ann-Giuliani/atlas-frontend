@@ -28,7 +28,19 @@ interface Docente {
   estado: string;
 }
 
-export default function Listado({ onLogout, onNavigate }: { onLogout?: () => void, onNavigate?: (page: any, data?: any) => void }) {
+interface ListadoProps {
+  onLogout?: () => void;
+  onNavigate?: (page: any, data?: any) => void;
+  initialTab?: 'docentes' | 'cargos' | 'licencias';
+  onTabChange?: (tab: 'docentes' | 'cargos' | 'licencias') => void;
+}
+
+export default function Listado({
+  onLogout,
+  onNavigate,
+  initialTab = 'docentes',
+  onTabChange
+}: ListadoProps) {
   const [docentesFilters, setDocentesFilters] = useState<string[]>(['Estado: Activo']);
   const [cargosFilters, setCargosFilters] = useState<string[]>(['Estado: Asignado']);
   const [licenciasFilters, setLicenciasFilters] = useState<string[]>([]);
@@ -45,7 +57,22 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
   const [searchTerm, setSearchTerm] = useState('');
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'docentes' | 'cargos' | 'licencias'>('docentes');
+  const [activeTab, setActiveTab] = useState<'docentes' | 'cargos' | 'licencias'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+      setCurrentPage(1);
+    }
+  }, [initialTab]);
+
+  const handleTabChange = (tab: 'docentes' | 'cargos' | 'licencias') => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   const appliedFilters = activeTab === 'docentes' ? docentesFilters : activeTab === 'cargos' ? cargosFilters : licenciasFilters;
 
@@ -319,19 +346,19 @@ export default function Listado({ onLogout, onNavigate }: { onLogout?: () => voi
                   <div className="listado-tabs">
                     <button
                       className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
-                      onClick={() => { setActiveTab('docentes'); setCurrentPage(1); }}
+                      onClick={() => handleTabChange('docentes')}
                     >
                       Docentes
                     </button>
                     <button
                       className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
-                      onClick={() => { setActiveTab('cargos'); setCurrentPage(1); }}
+                      onClick={() => handleTabChange('cargos')}
                     >
                       Cargos
                     </button>
                     <button
                       className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
-                      onClick={() => { setActiveTab('licencias'); setCurrentPage(1); }}
+                      onClick={() => handleTabChange('licencias')}
                     >
                       Licencias
                     </button>

@@ -37,20 +37,55 @@ function App() {
   const [activePage, setActivePage] = useState<Page>(() => {
     return getPageFromPath(window.location.pathname.substring(1));
   });
-  const [selectedDocente, setSelectedDocente] = useState<any>(null);
-  const [selectedCargo, setSelectedCargo] = useState<any>(null);
+  const [selectedDocente, setSelectedDocente] = useState<any>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_selected_docente');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [selectedCargo, setSelectedCargo] = useState<any>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_selected_cargo');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [listadoTab, setListadoTab] = useState<'docentes' | 'cargos' | 'licencias'>(() => {
+    const saved = sessionStorage.getItem('atlas_listado_tab');
+    if (saved === 'cargos' || saved === 'licencias' || saved === 'docentes') {
+      return saved;
+    }
+    return 'docentes';
+  });
+
+  const updateListadoTab = (tab: 'docentes' | 'cargos' | 'licencias') => {
+    setListadoTab(tab);
+    sessionStorage.setItem('atlas_listado_tab', tab);
+    if (activePage === 'listado') {
+      window.history.replaceState({ page: 'listado', tab }, '', window.location.href);
+    }
+  };
 
   useEffect(() => {
     const currentPath = window.location.pathname.substring(1);
     const targetPath = getPathFromPage(activePage);
     if (currentPath !== targetPath) {
-      window.history.pushState({}, '', `/${targetPath}`);
+      window.history.pushState({ page: activePage, tab: listadoTab }, '', `/${targetPath}`);
     }
-  }, [activePage]);
+  }, [activePage, listadoTab]);
 
   useEffect(() => {
-    const handlePopState = () => {
-      setActivePage(getPageFromPath(window.location.pathname.substring(1)));
+    const handlePopState = (event: PopStateEvent) => {
+      const page = getPageFromPath(window.location.pathname.substring(1));
+      setActivePage(page);
+      if (event.state?.tab) {
+        setListadoTab(event.state.tab);
+        sessionStorage.setItem('atlas_listado_tab', event.state.tab);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -62,6 +97,9 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    sessionStorage.removeItem('atlas_selected_docente');
+    sessionStorage.removeItem('atlas_selected_cargo');
+    sessionStorage.removeItem('atlas_listado_tab');
     setIsAuthenticated(false);
   };
 
@@ -102,19 +140,38 @@ function App() {
   }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNavigate = (page: Page, data?: any) => {
+    if (activePage === 'inicio' && page === 'listado' && !data?.tab) {
+      updateListadoTab('docentes');
+    }
     setActivePage(page);
     if (page === 'docente_detalle' && data) {
       setSelectedDocente(data);
+      sessionStorage.setItem('atlas_selected_docente', JSON.stringify(data));
+      updateListadoTab('docentes');
     }
     if (page === 'cargo_detalle' && data) {
       setSelectedCargo(data);
+      sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(data));
+      updateListadoTab('cargos');
+    }
+    if (page === 'listado') {
+      if (data?.tab) {
+        updateListadoTab(data.tab);
+      }
     }
   };
 
   if (isAuthenticated) {
     let content;
     if (activePage === 'listado') {
-      content = <Listado onLogout={handleLogout} onNavigate={handleNavigate} />;
+      content = (
+        <Listado
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          initialTab={listadoTab}
+          onTabChange={updateListadoTab}
+        />
+      );
     } else if (activePage === 'docente_detalle' && selectedDocente) {
       content = <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
     } else if (activePage === 'cargo_detalle' && selectedCargo) {

@@ -182,19 +182,22 @@
   font-weight: 500;
 }
 
-.cargo-actividades-table-container {
+.cargo-actividades-table-container,
+.actividades-vinculadas-table-container {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
   background: white;
 }
 
-.cargo-actividades-table {
+.cargo-actividades-table,
+.actividades-vinculadas-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.cargo-actividades-table th {
+.cargo-actividades-table th,
+.actividades-vinculadas-table th {
   background-color: #dceddb;
   color: #2b5b3a;
   text-align: left;
@@ -203,7 +206,8 @@
   font-size: 14px;
 }
 
-.cargo-actividades-table td {
+.cargo-actividades-table td,
+.actividades-vinculadas-table td {
   padding: 16px;
   border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
@@ -504,7 +508,9 @@
   }
 
   .cargo-actividades-table th,
-  .cargo-actividades-table td {
+  .cargo-actividades-table td,
+  .actividades-vinculadas-table th,
+  .actividades-vinculadas-table td {
     padding: 10px 12px;
     font-size: 13px;
   }

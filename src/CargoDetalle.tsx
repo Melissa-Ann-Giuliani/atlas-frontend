@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './CargoDetalle.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
@@ -20,6 +20,44 @@ interface Cargo {
   caracter: string;
 }
 
+interface ActividadData {
+  materiaProyecto: string;
+  origen: string;
+  horas: number;
+  estado?: string;
+}
+
+interface CargoPredecesorData {
+  numero: number;
+  estado: string;
+  categoria: string;
+}
+
+interface SubcargoData {
+  numero: number;
+  estado: string;
+  categoria: string;
+}
+
+interface CargoDetailDTO {
+  numero: number;
+  categoria: string;
+  estado: string;
+  asignadoANombre: string;
+  asignadoADni: number;
+  nroResolucionDesignacion: number;
+  fechaCreacion: string;
+  dedicacion: string;
+  caracter: string;
+  designacionNroResolucion: number;
+  designacionFechaInicio: string;
+  designacionFechaFin: string;
+  actividadesVinculadas: ActividadData[];
+  cargoPredecesor?: CargoPredecesorData;
+  subcargosActivos: SubcargoData[];
+  documentacionAdjunta?: string[];
+}
+
 interface CargoDetalleProps {
   cargo: Cargo;
   onLogout?: () => void;
@@ -27,6 +65,9 @@ interface CargoDetalleProps {
 }
 
 export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetalleProps) {
+  const [detalle, setDetalle] = useState<CargoDetailDTO | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,8 +77,40 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
     }
   };
 
+  useEffect(() => {
+    const fetchDetalle = async () => {
+      if (!cargo?.id) {
+        setError('No se proporcionó un ID válido para el cargo.');
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos/${cargo.id}`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          setDetalle(data);
+        } else {
+          setError(`No se pudieron cargar los detalles del cargo. Estado: ${response.status}`);
+          if (response.status === 401 && onLogout) onLogout();
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Ocurrió un error al cargar los detalles.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDetalle();
+  }, [cargo?.id]);
+
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'DD/MM/AAAA';
+    if (!dateString) return 'No especificado';
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
     try {
       return new Date(dateString).toLocaleDateString();
     } catch {
@@ -45,19 +118,45 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
     }
   };
 
-  // Mock data to match Figma since these might not be in the Cargo model yet
-  const actividadesVinculadas = [
-    { materia: 'Historia del Arte Moderno II', origen: 'Planta', horas: 8 },
-    { materia: 'Seminario de Tesis', origen: 'Planta', horas: 4 },
-    { materia: 'Prácticas Contemporáneas', origen: 'Investigación', horas: 12 },
-  ];
+  const getDocIcon = (type?: string, name?: string) => {
+    const lowerType = type?.toLowerCase() || '';
+    const lowerName = name?.toLowerCase() || '';
 
-  const subcargos = [
-    { nombre: `JTP (${cargo.numero}-A)` },
-    { nombre: `JTP (${cargo.numero}-B)` }
-  ];
+    if (lowerType.includes('pdf') || lowerName.endsWith('.pdf')) {
+      return { icon: <FaFilePdf />, className: 'pdf-icon' };
+    } else if (lowerType.includes('word') || lowerName.endsWith('.doc') || lowerName.endsWith('.docx')) {
+      return { icon: <FaFileWord />, className: 'word-icon' };
+    } else if (lowerType.includes('image') || lowerName.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
+      return { icon: <FaImage />, className: 'img-icon' };
+    }
+    return { icon: <FaFileAlt />, className: 'generic-icon' };
+  };
 
-  const documentosAdjuntos: any[] = []; // Empty for now
+  if (isLoading) {
+    return (
+      <div className="dashboard-layout">
+        <Topbar onLogout={onLogout} />
+        <div className="dashboard-body">
+          <Sidebar activeItem="listado" onNavigate={onNavigate} />
+          <main className="main-content">
+            <div className="content-area cargo-detalle-area" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <h2>Cargando detalles del cargo...</h2>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  const documentosAdjuntos: any[] = detalle?.documentacionAdjunta || [];
+
+  const handleBack = () => {
+    if (onNavigate) {
+      onNavigate('listado', { tab: 'cargos' });
+    } else {
+      window.history.back();
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -70,7 +169,7 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
           <div className="content-area cargo-detalle-area">
 
             <div className="detalle-top-nav">
-              <button className="back-button" onClick={() => onNavigate && onNavigate('listado')}>
+              <button className="back-button" onClick={handleBack}>
                 <FiChevronLeft /> Volver a Listado
               </button>
             </div>
@@ -80,20 +179,26 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
               {/* Header */}
               <div className="cargo-detalle-header">
                 <div className="cargo-header-info">
-                  <h1 className="cargo-title">Cargo N°{cargo.numero || '----'}</h1>
+                  <h1 className="cargo-title">Cargo N°{detalle?.numero ?? cargo.numero ?? '----'}</h1>
                   <h2 className="cargo-subtitle">
-                    {cargo.categoria}
+                    {detalle?.categoria || cargo.categoria || 'Sin Categoría'}
                   </h2>
                 </div>
                 <div className="cargo-header-actions">
-                  <div className={`status-badge asignado-status`}>
-                    <FiCheckCircle /> {cargo.estado || 'Asignado'}
+                  <div className={`status-badge ${(detalle?.estado || cargo.estado)?.toLowerCase() === 'asignado' ? 'asignado-status' : 'active-status'}`}>
+                    <FiCheckCircle /> {detalle?.estado || cargo.estado || 'Asignado'}
                   </div>
                   <button className="edit-btn">
                     <FiEdit3 /> Editar Cargo
                   </button>
                 </div>
               </div>
+
+              {error && (
+                <div style={{ color: 'red', margin: '16px 32px 0 32px', padding: '12px', backgroundColor: '#fee', borderRadius: '8px' }}>
+                  {error}
+                </div>
+              )}
 
               <div className="cargo-card-content">
                 <div className="cargo-body-two-cols">
@@ -108,29 +213,31 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
                       <div className="cargo-info-grid-2">
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">ASIGNADO A</span>
-                          <span className="cargo-info-value">{cargo.apellidoNombre || 'No asignado'}</span>
+                          <span className="cargo-info-value">{detalle?.asignadoANombre || cargo.apellidoNombre || 'No asignado'}</span>
                         </div>
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">DNI</span>
-                          <span className="cargo-info-value">23.456.789</span>
+                          <span className="cargo-info-value">{detalle?.asignadoADni || 'No asignado'}</span>
                         </div>
 
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">N° RESOLUCIÓN</span>
-                          <span className="cargo-info-value">2046-48</span>
+                          <span className="cargo-info-value">
+                            {detalle?.nroResolucionDesignacion || detalle?.designacionNroResolucion ? `RES-${detalle.nroResolucionDesignacion || detalle.designacionNroResolucion}` : 'No especificado'}
+                          </span>
                         </div>
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">FECHA DE CREACIÓN</span>
-                          <span className="cargo-info-value">{formatDate(cargo.fechaCreacion)}</span>
+                          <span className="cargo-info-value">{formatDate(detalle?.fechaCreacion || cargo.fechaCreacion)}</span>
                         </div>
 
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">DEDICACIÓN</span>
-                          <span className="cargo-info-value">{cargo.dedicacion || 'Exclusiva (40hs)'}</span>
+                          <span className="cargo-info-value">{detalle?.dedicacion || cargo.dedicacion || 'No especificado'}</span>
                         </div>
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">CARÁCTER</span>
-                          <span className="cargo-info-value">{cargo.caracter || 'Efectivo'}</span>
+                          <span className="cargo-info-value">{detalle?.caracter || cargo.caracter || 'No especificado'}</span>
                         </div>
                       </div>
                     </div>
@@ -149,13 +256,21 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
                             </tr>
                           </thead>
                           <tbody>
-                            {actividadesVinculadas.map((act, idx) => (
-                              <tr key={idx}>
-                                <td>{act.materia}</td>
-                                <td>{act.origen}</td>
-                                <td>{act.horas}</td>
+                            {detalle?.actividadesVinculadas && detalle.actividadesVinculadas.length > 0 ? (
+                              detalle.actividadesVinculadas.map((act, idx) => (
+                                <tr key={idx}>
+                                  <td>{act.materiaProyecto}</td>
+                                  <td>{act.origen || 'No especificado'}</td>
+                                  <td>{act.horas} hs</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={3} style={{ textAlign: 'center', padding: '16px', color: '#666' }}>
+                                  No hay actividades vinculadas registradas
+                                </td>
                               </tr>
-                            ))}
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -174,42 +289,60 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
                       <div className="designacion-info-box">
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">N° RESOLUCIÓN</span>
-                          <span className="cargo-info-value">RES-CS-2021-045</span>
+                          <span className="cargo-info-value">
+                            {detalle?.designacionNroResolucion || detalle?.nroResolucionDesignacion ? `RES-${detalle.designacionNroResolucion || detalle.nroResolucionDesignacion}` : 'Sin designación'}
+                          </span>
                         </div>
                         <div className="cargo-info-group">
                           <span className="cargo-info-label">PERÍODO</span>
-                          <span className="cargo-info-value">01/04/2025 - 31/03/2027</span>
+                          <span className="cargo-info-value">
+                            {detalle?.designacionFechaInicio
+                              ? `${formatDate(detalle.designacionFechaInicio)} - ${detalle.designacionFechaFin ? formatDate(detalle.designacionFechaFin) : 'Actualidad'}`
+                              : 'Sin designación activa'}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="cargo-tree-section">
-                      <div className="tree-title">Cargo Predecesor</div>
-                      <div className="tree-card">
-                        <BsArrowUp className="tree-card-icon" />
-                        <div className="tree-card-content">
-                          <h5>Jefe de Trabajos Prácticos (JTP)</h5>
-                          <p>Vinculado el 15/03/2026</p>
+                      <div className="tree-title">Cargo Predecesor / Origen</div>
+                      {detalle?.cargoPredecesor ? (
+                        <div className="tree-card">
+                          <BsArrowUp className="tree-card-icon" />
+                          <div className="tree-card-content">
+                            <h5>Cargo N°{detalle.cargoPredecesor.numero} {detalle.cargoPredecesor.categoria ? `(${detalle.cargoPredecesor.categoria})` : ''}</h5>
+                            <p>Estado: {detalle.cargoPredecesor.estado}</p>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div style={{ padding: '12px 16px', background: '#f5f3ee', borderRadius: '8px', border: '1px dashed #ccc', color: '#777', fontSize: '13px' }}>
+                          Sin cargo predecesor ni origen de división
+                        </div>
+                      )}
 
                       <div className="tree-node-container">
                         <div className="tree-line-top"></div>
-                        <div className="tree-node">{cargo.numero || '4532'}</div>
+                        <div className="tree-node">{detalle?.numero ?? cargo.numero ?? '----'}</div>
                         <div className="tree-line-bottom"></div>
                       </div>
 
                       <div className="tree-title">Subcargos Activos</div>
                       <div className="subcargos-list">
-                        {subcargos.map((sub, idx) => (
-                          <div className="subcargo-card" key={idx}>
-                            <div className="subcargo-card-left">
-                              <BsArrowReturnRight className="subcargo-icon" />
-                              <span>{sub.nombre}</span>
+                        {detalle?.subcargosActivos && detalle.subcargosActivos.length > 0 ? (
+                          detalle.subcargosActivos.map((sub, idx) => (
+                            <div className="subcargo-card" key={idx}>
+                              <div className="subcargo-card-left">
+                                <BsArrowReturnRight className="subcargo-icon" />
+                                <span>Cargo N°{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} • {sub.estado}</span>
+                              </div>
+                              <MdKeyboardArrowRight className="subcargo-arrow" />
                             </div>
-                            <MdKeyboardArrowRight className="subcargo-arrow" />
+                          ))
+                        ) : (
+                          <div style={{ padding: '12px 16px', background: '#f5f3ee', borderRadius: '8px', border: '1px dashed #ccc', color: '#777', fontSize: '13px' }}>
+                            No posee subcargos derivados
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
 
@@ -229,18 +362,23 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
 
                   <div className="doc-section-body">
                     {documentosAdjuntos.length > 0 ? (
-                      documentosAdjuntos.map((doc, index) => (
-                        <div className="doc-card" key={index}>
-                          <div className="doc-card-top">
-                            <FaFilePdf style={{ color: '#ff4d4f', fontSize: '24px' }} />
-                            <HiOutlineDownload style={{ color: '#666', fontSize: '20px', cursor: 'pointer' }} />
+                      documentosAdjuntos.map((doc, index) => {
+                        const { icon, className } = getDocIcon(doc.type, doc.name);
+                        return (
+                          <div className="doc-card" key={index}>
+                            <div className="doc-card-top">
+                              <div className={`doc-icon ${className || ''}`}>
+                                {icon}
+                              </div>
+                              <HiOutlineDownload style={{ color: '#666', fontSize: '20px', cursor: 'pointer' }} />
+                            </div>
+                            <div className="doc-card-bottom">
+                              <h5>{doc.name}</h5>
+                              <p>{doc.size} • {doc.date}</p>
+                            </div>
                           </div>
-                          <div className="doc-card-bottom">
-                            <h5>{doc.name}</h5>
-                            <p>{doc.size} • {doc.date}</p>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div style={{ padding: '24px', width: '100%', textAlign: 'center', color: '#666', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <BiArchiveIn style={{ fontSize: '32px', color: '#aaa' }} />
