@@ -26,7 +26,7 @@
 }
 
 .gestion-content-area {
-  padding: 28px 36px;
+  padding: 28px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -37,8 +37,8 @@
 .gestion-container-card {
   background-color: var(--users-secondary-50, #F6F3EE);
   border: 1px solid #D7CAB2;
-  border-radius: 14px;
-  padding: 32px 40px 48px;
+  border-radius: 8px;
+  padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
@@ -46,9 +46,8 @@
   box-sizing: border-box;
 }
 
-/* Page Title with double underline */
 .gestion-header {
-  margin-bottom: 24px;
+  margin-bottom: 0px;
 }
 
 .gestion-title {
@@ -59,7 +58,7 @@
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline double;
+  text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 6px;
 }
@@ -67,7 +66,8 @@
 .gestion-divider {
   border: none;
   border-top: 1px solid #D7CAB2;
-  margin: 16px 0 36px 0;
+  margin-inline: 16px;
+  margin-bottom: 24px;
   width: 100%;
 }
 
@@ -75,7 +75,7 @@
 .gestion-cards-container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
@@ -118,17 +118,32 @@
 }
 
 /* Staggered entrance animations for cards */
-.gestion-card:nth-child(1) { animation-delay: 0.04s; }
-.gestion-card:nth-child(2) { animation-delay: 0.09s; }
-.gestion-card:nth-child(3) { animation-delay: 0.14s; }
-.gestion-cards-row-bottom .gestion-card:nth-child(1) { animation-delay: 0.19s; }
-.gestion-cards-row-bottom .gestion-card:nth-child(2) { animation-delay: 0.24s; }
+.gestion-card:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.gestion-card:nth-child(2) {
+  animation-delay: 0.09s;
+}
+
+.gestion-card:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.gestion-cards-row-bottom .gestion-card:nth-child(1) {
+  animation-delay: 0.19s;
+}
+
+.gestion-cards-row-bottom .gestion-card:nth-child(2) {
+  animation-delay: 0.24s;
+}
 
 @keyframes cardEntrance {
   from {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -148,7 +163,7 @@
   font-weight: 500;
   color: #FFFFFF;
   letter-spacing: 0.4px;
-  text-decoration: underline double;
+  text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
 }
@@ -176,7 +191,7 @@
 
 /* Card Body */
 .gestion-card-body {
-  padding: 16px 20px;
+  padding: 8px 16px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -214,8 +229,8 @@
   box-sizing: border-box;
   position: relative;
   transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1),
-              background-color 0.22s ease,
-              box-shadow 0.22s ease;
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .gestion-option:hover {
@@ -240,7 +255,7 @@
   min-width: 10px;
   border-radius: 50%;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.25s ease;
+    box-shadow 0.25s ease;
 }
 
 /* Dot Color Variants */
@@ -294,7 +309,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 110px;
 }
 
@@ -322,9 +337,9 @@
   font-size: 15px;
   font-weight: 600;
   transition: background-color 0.22s ease,
-              color 0.22s ease,
-              transform 0.22s cubic-bezier(0.2, 0, 0, 1),
-              box-shadow 0.22s ease;
+    color 0.22s ease,
+    transform 0.22s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.22s ease;
 }
 
 .vencimientos-arrow {
@@ -356,6 +371,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
+
   .gestion-cards-row-top,
   .gestion-cards-row-bottom {
     flex-wrap: wrap;
