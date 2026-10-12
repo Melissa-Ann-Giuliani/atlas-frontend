@@ -19,6 +19,7 @@ export interface Licencia {
   fechaFinActual?: string;
   diasUsados?: number;
   diasTotales?: number;
+  cantidadDias?: number;
   estado?: string;
   categoria?: string;
   dedicacion?: string;
@@ -46,6 +47,7 @@ interface LicenciaDetalleProps {
 export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate }: LicenciaDetalleProps) {
   const [detalle, setDetalle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -130,7 +132,13 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      console.log('File selected for upload:', file.name);
+      const newDoc = {
+        name: file.name,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+        type: file.type.includes('pdf') ? 'pdf' : file.type.includes('image') ? 'image' : 'generic'
+      };
+      setUploadedDocs((prev) => [...prev, newDoc]);
     }
   };
 
@@ -144,9 +152,96 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
   const fechaFinEstimada = detalle?.fechaFinEstimada || detalle?.fechaFinEstim || detalle?.fechaFin || licencia.fechaFinEstimada || licencia.fechaFin || '2026-11-15';
   const fechaFinActual = detalle?.fechaFinActual || detalle?.fechaFin || licencia.fechaFinActual || null;
 
-  const diasUsados = detalle?.cantidadDias ?? detalle?.diasUsados ?? licencia.diasUsados ?? 12;
-  const diasTotales = detalle?.motivoDiasCorresp ?? detalle?.diasTotales ?? licencia.diasTotales ?? 30;
-  const progressPercent = Math.min(100, Math.max(10, Math.round((diasUsados / Math.max(diasTotales, diasUsados, 1)) * 100)));
+  // Calculate total duration in days assigned to this licencia
+  const getDaysBetween = (startStr?: string, endStr?: string): number | null => {
+    if (!startStr || !endStr) return null;
+    try {
+      const sParts = startStr.split('T')[0].split('-');
+      const eParts = endStr.split('T')[0].split('-');
+      if (sParts.length === 3 && eParts.length === 3) {
+        const s = new Date(Number(sParts[0]), Number(sParts[1]) - 1, Number(sParts[2]));
+        const e = new Date(Number(eParts[0]), Number(eParts[1]) - 1, Number(eParts[2]));
+        if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
+          const diffMs = e.getTime() - s.getTime();
+          const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+          return diffDays > 0 ? diffDays : null;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return null;
+  };
+
+  // Calculate elapsed days used from fechaInicio to today (or fechaFinActual)
+  const calculateDiasUsados = (
+    startStr?: string,
+    endActualStr?: string | null,
+    endEstimadaStr?: string,
+    maxTotal?: number
+  ): number => {
+    if (!startStr) return 0;
+    try {
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const startParts = startStr.split('T')[0].split('-');
+      if (startParts.length !== 3) return 0;
+      const startDate = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]));
+
+      if (todayDate.getTime() < startDate.getTime()) {
+        return 0;
+      }
+
+      let endDate: Date | null = null;
+      if (endActualStr) {
+        const actParts = endActualStr.split('T')[0].split('-');
+        if (actParts.length === 3) {
+          endDate = new Date(Number(actParts[0]), Number(actParts[1]) - 1, Number(actParts[2]));
+        }
+      } else if (endEstimadaStr) {
+        const estParts = endEstimadaStr.split('T')[0].split('-');
+        if (estParts.length === 3) {
+          endDate = new Date(Number(estParts[0]), Number(estParts[1]) - 1, Number(estParts[2]));
+        }
+      }
+
+      const effectiveEndDate = endDate && todayDate.getTime() > endDate.getTime()
+        ? endDate
+        : todayDate;
+
+      const diffMs = effectiveEndDate.getTime() - startDate.getTime();
+      const usedDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+      const result = Math.max(0, usedDays);
+
+      return maxTotal ? Math.min(result, maxTotal) : result;
+    } catch {
+      return 0;
+    }
+  };
+
+  // Total days assigned to this specific licencia
+  const diasTotalesCalculados = getDaysBetween(fechaInicio, fechaFinEstimada) || getDaysBetween(fechaInicio, fechaFinActual);
+  const diasTotales =
+    diasTotalesCalculados ??
+    detalle?.cantidadDias ??
+    licencia?.cantidadDias ??
+    detalle?.diasTotales ??
+    licencia?.diasTotales ??
+    30;
+
+  // Days used so far for this licencia (dynamically calculated from activation date to days passed)
+  const diasUsados = calculateDiasUsados(
+    fechaInicio,
+    fechaFinActual,
+    fechaFinEstimada,
+    diasTotales
+  );
+
+  // Percentage completed of the progress bar
+  const progressPercent = diasTotales > 0
+    ? Math.min(100, Math.max(0, Math.round((diasUsados / diasTotales) * 100)))
+    : 0;
 
   // Designación / Cargo
   const primaryCargo = (detalle?.cargosDetalle && detalle.cargosDetalle.length > 0)
@@ -262,24 +357,10 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
   };
 
   // Documentos
-  const defaultDocs = [
-    {
-      name: 'Resolución_Aprobación...',
-      size: '2.4 MB',
-      date: '10 Oct 2023',
-      type: 'pdf'
-    },
-    {
-      name: 'Certificado_Medico...',
-      size: '1.1 MB',
-      date: '08 Oct 2023',
-      type: 'image'
-    }
-  ];
-
-  const docs = (detalle?.documentacionAdjunta && detalle.documentacionAdjunta.length > 0)
+  const apiDocs = (detalle?.documentacionAdjunta && detalle.documentacionAdjunta.length > 0)
     ? detalle.documentacionAdjunta
-    : (detalle?.documentos || licencia.documentos || defaultDocs);
+    : (detalle?.documentos || licencia.documentos || []);
+  const docs = [...apiDocs, ...uploadedDocs];
 
   return (
     <div className="dashboard-layout">
@@ -300,29 +381,29 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
 
             {/* Main Details Card */}
             <div className="licencia-detalle-card-container">
-              <div className="licencia-card-content">
 
-                {/* Card Header */}
-                <div className="licencia-detalle-header">
-                  <div className="licencia-header-info">
-                    <h1 className="licencia-title">
-                      Licencia N° {id}
-                    </h1>
-                    <h2 className="licencia-subtitle">
-                      N° Resolución: {nroResolucion}
-                    </h2>
-                  </div>
-
-                  <div className="licencia-header-actions">
-                    <div className={`licencia-status-badge ${estado?.toLowerCase() || 'activa'}`}>
-                      <FiCheckCircle /> {estado}
-                    </div>
-                    <button className="licencia-edit-btn" onClick={() => console.log('Edit clicked')}>
-                      <FiEdit3 /> Editar Licencia
-                    </button>
-                  </div>
+              {/* Card Header */}
+              <div className="licencia-detalle-header">
+                <div className="licencia-header-info">
+                  <h1 className="licencia-title">
+                    Licencia N° {id}
+                  </h1>
+                  <h2 className="licencia-subtitle">
+                    N° Resolución: {nroResolucion}
+                  </h2>
                 </div>
 
+                <div className="licencia-header-actions">
+                  <div className={`licencia-status-badge ${estado?.toLowerCase() || 'activa'}`}>
+                    <FiCheckCircle /> {estado}
+                  </div>
+                  <button className="licencia-edit-btn" onClick={() => console.log('Edit clicked')}>
+                    <FiEdit3 /> Editar Licencia
+                  </button>
+                </div>
+              </div>
+
+              <div className="licencia-card-content">
                 {/* Body Content */}
                 <div className="licencia-body-container">
 
@@ -370,7 +451,10 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
                         <span className="licencia-field-label">Días Usados</span>
                         <div className="licencia-dias-container">
                           <span className="licencia-field-value">{diasUsados} días</span>
-                          <div className="licencia-progress-track">
+                          <div
+                            className="licencia-progress-track"
+                            title={`${diasUsados} de ${diasTotales} días usados (${progressPercent}%)`}
+                          >
                             <div
                               className="licencia-progress-bar"
                               style={{ width: `${progressPercent}%` }}
@@ -472,35 +556,36 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
                   </div>
 
                   <div className="licencia-doc-body">
-                    {docs.map((doc: any, idx: number) => {
-                      const isPdf = doc.type === 'pdf' || doc.name?.toLowerCase().endsWith('.pdf');
-                      const isImage = doc.type === 'image' || doc.name?.match(/\.(jpg|jpeg|png|svg)$/i);
-                      return (
-                        <div className="licencia-doc-card" key={idx}>
-                          <div className="licencia-doc-top">
-                            <div className={`licencia-doc-icon-wrapper ${isPdf ? 'pdf' : isImage ? 'image' : 'generic'}`}>
-                              {isPdf ? <FaFilePdf /> : isImage ? <FaImage /> : <FaFileAlt />}
+                    {docs && docs.length > 0 ? (
+                      docs.map((doc: any, idx: number) => {
+                        const isPdf = doc.type === 'pdf' || doc.name?.toLowerCase().endsWith('.pdf');
+                        const isImage = doc.type === 'image' || doc.name?.match(/\.(jpg|jpeg|png|svg)$/i);
+                        return (
+                          <div className="licencia-doc-card" key={idx}>
+                            <div className="licencia-doc-top">
+                              <div className={`licencia-doc-icon-wrapper ${isPdf ? 'pdf' : isImage ? 'image' : 'generic'}`}>
+                                {isPdf ? <FaFilePdf /> : isImage ? <FaImage /> : <FaFileAlt />}
+                              </div>
+                              <HiOutlineDownload
+                                className="licencia-doc-download"
+                                title="Descargar documento"
+                              />
                             </div>
-                            <HiOutlineDownload
-                              className="licencia-doc-download"
-                              title="Descargar documento"
-                            />
+                            <div className="licencia-doc-bottom">
+                              <h5 title={doc.name}>{doc.name}</h5>
+                              <p>{doc.size} • {doc.date}</p>
+                            </div>
                           </div>
-                          <div className="licencia-doc-bottom">
-                            <h5 title={doc.name}>{doc.name}</h5>
-                            <p>{doc.size} • {doc.date}</p>
-                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="licencia-doc-empty-slot">
+                        <div className="licencia-empty-slot-icon">
+                          <BiArchiveIn />
                         </div>
-                      );
-                    })}
-
-                    {/* Empty state card as seen in Figma */}
-                    <div className="licencia-doc-empty-slot">
-                      <div className="licencia-empty-slot-icon">
-                        <BiArchiveIn />
+                        <p>No hay documentación adjunta de momento.</p>
                       </div>
-                      <p>No hay más documentos adjuntos.</p>
-                    </div>
+                    )}
                   </div>
                 </div>
 

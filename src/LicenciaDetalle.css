@@ -46,6 +46,27 @@
   display: flex;
   flex-direction: column;
   background-color: #faf9f6;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
+}
+
+/* Custom Scrollbar for Column */
+.licencia-card-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.licencia-card-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.licencia-card-content::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.licencia-card-content::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
 }
 
 /* Header */
@@ -135,7 +156,7 @@
 
 /* Two Columns Section */
 .licencia-body-container {
-  padding: 32px;
+  padding: 20px 32px;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -240,8 +261,8 @@
 }
 
 .licencia-progress-track {
-  width: 72px;
-  height: 8px;
+  width: 130px;
+  height: 10px;
   background-color: #C4C6C3;
   border-radius: 999px;
   overflow: hidden;
@@ -250,8 +271,9 @@
 
 .licencia-progress-bar {
   height: 100%;
-  background-color: var(--admin-primary-800);
+  background-color: var(--admin-primary-900, #1A2E1C);
   border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
 /* Vínculos Body */
@@ -471,30 +493,36 @@
 }
 
 .licencia-doc-empty-slot {
-  background-color: #E7DFD0;
-  border: 1px solid #D5CCA2;
+  background-color: #ffffff;
+  border: 1px dashed #dcd5c4;
   border-radius: 8px;
-  flex: 1;
-  min-width: 260px;
-  padding: 24px;
+  width: 100%;
+  padding: 32px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  text-align: center;
+  gap: 12px;
 }
 
 .licencia-empty-slot-icon {
-  font-size: 32px;
-  color: #554832;
+  background-color: #e9e3d3;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 22px;
 }
 
 .licencia-doc-empty-slot p {
   margin: 0;
-  font-size: 13.5px;
-  color: #554832;
-  font-weight: 600;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
 }
 
 @media (max-width: 1024px) {
