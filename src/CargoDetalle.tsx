@@ -198,6 +198,9 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
   const subcargosList = (detalle?.subcargosActivos && detalle.subcargosActivos.length > 0)
     ? detalle.subcargosActivos
     : (detalle?.cargosSubdivididos || []);
+  const hasPredecessor = Boolean(parentCargo);
+  const hasSubcargos = Boolean(subcargosList && subcargosList.length > 0);
+  const showTreeSection = hasPredecessor || hasSubcargos;
 
   const handleBack = () => {
     if (onBack) {
@@ -355,59 +358,57 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                       </div>
                     </div>
 
-                    <div className="cargo-tree-section">
-                      <div className="tree-title">Cargo Predecesor / Origen</div>
-                      {parentCargo ? (
-                        <div
-                          className={`tree-card ${navigatingNumero === parentCargo.numero ? 'loading' : ''}`}
-                          onClick={() => handleCargoClick(parentCargo.numero, parentCargo.id, { estado: parentCargo.estado, categoria: parentCargo.categoria })}
-                          title={`Ver detalle del Cargo N°${parentCargo.numero}`}
-                        >
-                          <div className="tree-card-left">
-                            <BsArrowUp className="tree-card-icon" />
-                            <div className="tree-card-content">
-                              <h5>Cargo N°{parentCargo.numero} {parentCargo.categoria ? `(${parentCargo.categoria})` : ''}</h5>
-                              <p>Estado: {parentCargo.estado}</p>
-                            </div>
-                          </div>
-                          <MdKeyboardArrowRight className="subcargo-arrow" />
-                        </div>
-                      ) : (
-                        <div style={{ padding: '12px 16px', background: '#f5f3ee', borderRadius: '8px', border: '1px dashed #ccc', color: '#777', fontSize: '13px' }}>
-                          Sin cargo predecesor ni origen de división
-                        </div>
-                      )}
-
-                      <div className="tree-node-container">
-                        <div className="tree-line-top"></div>
-                        <div className="tree-node">{detalle?.numero ?? cargo.numero ?? '----'}</div>
-                        <div className="tree-line-bottom"></div>
-                      </div>
-
-                      <div className="tree-title">Subcargos Activos</div>
-                      <div className="subcargos-list">
-                        {subcargosList && subcargosList.length > 0 ? (
-                          subcargosList.map((sub, idx) => (
+                    {showTreeSection && (
+                      <div className="cargo-tree-section">
+                        {hasPredecessor && parentCargo && (
+                          <>
+                            <div className="tree-title">Cargo Predecesor / Origen</div>
                             <div
-                              className={`subcargo-card ${navigatingNumero === sub.numero ? 'loading' : ''}`}
-                              key={idx}
-                              onClick={() => handleCargoClick(sub.numero, sub.id, { estado: sub.estado, categoria: sub.categoria })}
-                              title={`Ver detalle del Cargo N°${sub.numero}`}
+                              className={`tree-card ${navigatingNumero === parentCargo.numero ? 'loading' : ''}`}
+                              onClick={() => handleCargoClick(parentCargo.numero, parentCargo.id, { estado: parentCargo.estado, categoria: parentCargo.categoria })}
+                              title={`Ver detalle del Cargo N°${parentCargo.numero}`}
                             >
-                              <div className="subcargo-card-left">
-                                <BsArrowReturnRight className="subcargo-icon" />
-                                <span>Cargo N°{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} • {sub.estado}</span>
+                              <div className="tree-card-left">
+                                <BsArrowUp className="tree-card-icon" />
+                                <div className="tree-card-content">
+                                  <h5>Cargo N°{parentCargo.numero} {parentCargo.categoria ? `(${parentCargo.categoria})` : ''}</h5>
+                                  <p>Estado: {parentCargo.estado}</p>
+                                </div>
                               </div>
                               <MdKeyboardArrowRight className="subcargo-arrow" />
                             </div>
-                          ))
-                        ) : (
-                          <div style={{ padding: '12px 16px', background: '#f5f3ee', borderRadius: '8px', border: '1px dashed #ccc', color: '#777', fontSize: '13px' }}>
-                            No posee subcargos derivados
-                          </div>
+                          </>
+                        )}
+
+                        <div className="tree-node-container" style={{ marginBottom: hasSubcargos ? undefined : 0 }}>
+                          {hasPredecessor && <div className="tree-line-top"></div>}
+                          <div className="tree-node">{detalle?.numero ?? cargo.numero ?? '----'}</div>
+                          {hasSubcargos && <div className="tree-line-bottom"></div>}
+                        </div>
+
+                        {hasSubcargos && (
+                          <>
+                            <div className="tree-title">Subcargos Activos</div>
+                            <div className="subcargos-list">
+                              {subcargosList.map((sub, idx) => (
+                                <div
+                                  className={`subcargo-card ${navigatingNumero === sub.numero ? 'loading' : ''}`}
+                                  key={idx}
+                                  onClick={() => handleCargoClick(sub.numero, sub.id, { estado: sub.estado, categoria: sub.categoria })}
+                                  title={`Ver detalle del Cargo N°${sub.numero}`}
+                                >
+                                  <div className="subcargo-card-left">
+                                    <BsArrowReturnRight className="subcargo-icon" />
+                                    <span>Cargo N°{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} • {sub.estado}</span>
+                                  </div>
+                                  <MdKeyboardArrowRight className="subcargo-arrow" />
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
-                    </div>
+                    )}
 
                   </div>
 
