@@ -248,7 +248,7 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
 
                     {/* Column 1: Datos de la Licencia */}
                     <div className="licencia-section-card">
-                      <div className="licencia-section-header">
+                      <div className="licencia-section-header header-datos">
                         <h3 className="licencia-section-title">Datos de la Licencia</h3>
                         <span className="licencia-motivo-pill">
                           Motivo: {motivo}
@@ -300,7 +300,7 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
 
                     {/* Column 2: Vínculos */}
                     <div className="licencia-section-card">
-                      <div className="licencia-section-header">
+                      <div className="licencia-section-header header-vinculos">
                         <h3 className="licencia-section-title">Vínculos</h3>
                       </div>
 
@@ -350,7 +350,7 @@ export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate
 
                   {/* Bottom Row: Documentación Adjunta */}
                   <div className="licencia-doc-section">
-                    <div className="licencia-section-header">
+                    <div className="licencia-section-header header-documentacion">
                       <h3 className="licencia-section-title">Documentación Adjunta</h3>
                       <input
                         type="file"

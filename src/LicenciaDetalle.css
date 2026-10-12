@@ -159,12 +159,23 @@
 }
 
 .licencia-section-header {
-  background-color: var(--admin-primary-800);
-  padding: 14px 24px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   min-height: 54px;
+}
+
+.licencia-section-header.header-datos {
+  background-color: var(--admin-primary-900, #1A2E1C);
+}
+
+.licencia-section-header.header-vinculos {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.licencia-section-header.header-documentacion {
+  background-color: var(--admin-primary-700, #3F6F45);
 }
 
 .licencia-section-title {
@@ -176,9 +187,9 @@
 }
 
 .licencia-motivo-pill {
-  background-color: #ffffff;
-  color: #2A4B2F;
-  border: 1.5px solid #79B481;
+  background: var(--Admin-Primary-50, #EFF6F0);
+  color: #6FAE36;
+  border: 1.5px solid #6FAE36;
   font-size: 13px;
   font-weight: 700;
   padding: 4px 14px;
