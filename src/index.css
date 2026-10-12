@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
 :root {
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.5;
@@ -116,7 +118,8 @@
   --btn-warning: #DE7200;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;

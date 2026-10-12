@@ -4,6 +4,7 @@ import Inicio from './Inicio'
 import Listado from './Listado'
 import DocenteDetalle from './DocenteDetalle'
 import CargoDetalle from './CargoDetalle'
+import LicenciaDetalle from './LicenciaDetalle'
 
 
 
@@ -225,7 +226,7 @@ function App() {
         if (
           cargoHistory.length > 0 &&
           (cargoHistory[cargoHistory.length - 1].numero === data.numero ||
-           cargoHistory[cargoHistory.length - 1].id === data.id)
+            cargoHistory[cargoHistory.length - 1].id === data.id)
         ) {
           nextHistory = cargoHistory.slice(0, -1);
         } else {
@@ -277,7 +278,11 @@ function App() {
         />
       );
     } else if (activePage === 'docente_detalle' && selectedDocente) {
-      content = <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
+      content = <DocenteDetalle
+        docente={selectedDocente}
+        onLogout={handleLogout}
+        onNavigate={handleNavigate}
+      />;
     } else if (activePage === 'cargo_detalle' && selectedCargo) {
       content = (
         <CargoDetalle
@@ -289,7 +294,14 @@ function App() {
         />
       );
     } else if (activePage === 'licencia_detalle') {
-      content = (
+      content = selectedLicencia ? (
+        <LicenciaDetalle
+          licencia={selectedLicencia}
+          onBack={() => handleNavigate('listado', { tab: 'licencias' })}
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+        />
+      ) : (
         <Listado
           onLogout={handleLogout}
           onNavigate={handleNavigate}
