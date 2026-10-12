@@ -156,6 +156,14 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
     return { icon: <FaFileAlt />, className: 'generic-icon' };
   };
 
+  const handleBack = () => {
+    if (onNavigate) {
+      onNavigate('listado', { tab: 'docentes' });
+    } else {
+      window.history.back();
+    }
+  };
+
   return (
     <div className="dashboard-layout">
       <Topbar onLogout={onLogout} />
@@ -167,7 +175,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
           <div className="content-area docente-detalle-area">
 
             <div className="detalle-top-nav">
-              <button className="back-button" onClick={() => onNavigate && onNavigate('listado')}>
+              <button className="back-button" onClick={handleBack}>
                 <FiChevronLeft /> Volver a Listado
               </button>
             </div>
