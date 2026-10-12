@@ -5,6 +5,7 @@ import Listado from './Listado'
 import DocenteDetalle from './DocenteDetalle'
 import CargoDetalle from './CargoDetalle'
 import LicenciaDetalle from './LicenciaDetalle'
+import Gestion from './Gestion'
 
 
 
@@ -309,6 +310,8 @@ function App() {
           onTabChange={updateListadoTab}
         />
       );
+    } else if (activePage === 'gestion') {
+      content = <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
     } else {
       content = <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
     }
