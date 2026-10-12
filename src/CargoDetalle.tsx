@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import './CargoDetalle.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
@@ -122,7 +122,34 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
 
   useEffect(() => {
     const fetchDetalle = async () => {
-      if (!cargo?.id) {
+      let resolvedId = cargo?.id;
+
+      if (!resolvedId && cargo?.numero) {
+        try {
+          const token = localStorage.getItem('token');
+          const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos?search=${cargo.numero}`,
+            { headers }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const found = data.content?.find((c: any) => Number(c.numero) === Number(cargo.numero)) || data.content?.[0];
+            if (found && found.id) {
+              resolvedId = found.id;
+              try {
+                sessionStorage.setItem('atlas_selected_cargo', JSON.stringify({ ...cargo, id: resolvedId }));
+              } catch {
+                // ignore
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error resolving cargo ID:', err);
+        }
+      }
+
+      if (!resolvedId) {
         setError('No se proporcionó un ID válido para el cargo.');
         setIsLoading(false);
         return;
@@ -132,7 +159,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
       try {
         const token = localStorage.getItem('token');
         const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos/${cargo.id}`, { headers });
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos/${resolvedId}`, { headers });
         if (response.ok) {
           const data = await response.json();
           setDetalle(data);
@@ -148,7 +175,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
       }
     };
     fetchDetalle();
-  }, [cargo?.id]);
+  }, [cargo?.id, cargo?.numero]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'No especificado';
