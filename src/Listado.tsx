@@ -2,8 +2,19 @@ import { useState, useEffect, useMemo } from 'react';
 import './Listado.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import FilterBar, { type FilterCategory } from './components/FilterBar';
+import FilterBar, { type FilterCategory, type FilterOption } from './components/FilterBar';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+
+interface Licencia {
+  id: number;
+  nroResolucion: string;
+  motivoNombre: string;
+  docenteNombreCompleto: string;
+  fechaInicio: string;
+  fechaFin: string;
+  diasUsados: number;
+  estado: string;
+}
 
 interface Cargo {
   id: number;
@@ -44,6 +55,7 @@ export default function Listado({
   const [docentesFilters, setDocentesFilters] = useState<string[]>(['Estado: Activo']);
   const [cargosFilters, setCargosFilters] = useState<string[]>(['Estado: Asignado']);
   const [licenciasFilters, setLicenciasFilters] = useState<string[]>([]);
+  const [motivosOptions, setMotivosOptions] = useState<FilterOption[]>([]);
   const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([
     {
       id: 'estado',
@@ -77,6 +89,15 @@ export default function Listado({
   const appliedFilters = activeTab === 'docentes' ? docentesFilters : activeTab === 'cargos' ? cargosFilters : licenciasFilters;
 
   const dynamicAvailableFilters = useMemo(() => {
+    if (activeTab === 'licencias') {
+      return [
+        {
+          id: 'motivo',
+          name: 'Motivo',
+          options: motivosOptions
+        }
+      ];
+    }
     return availableFilters.map(filter => {
       if (filter.id === 'estado') {
         if (activeTab === 'cargos') {
@@ -98,7 +119,7 @@ export default function Listado({
       }
       return filter;
     });
-  }, [availableFilters, activeTab]);
+  }, [availableFilters, activeTab, motivosOptions]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -107,6 +128,7 @@ export default function Listado({
   const [isLoading, setIsLoading] = useState(false);
   const [docentesData, setDocentesData] = useState<Docente[]>([]);
   const [cargosData, setCargosData] = useState<Cargo[]>([]);
+  const [licenciasData, setLicenciasData] = useState<Licencia[]>([]);
 
   // Rows per page based on screen height
   const [rowsPerPage, setRowsPerPage] = useState(12);
@@ -133,26 +155,37 @@ export default function Listado({
     const fetchFilters = async () => {
       try {
         const token = localStorage.getItem('token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
+        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad, resMotivos] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/caracteres`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/categorias`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/dedicaciones`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/tipos-unidad`, { headers })
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/tipos-unidad`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/motivos-licencias`, { headers })
         ]);
 
-        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401) {
-          onLogout();
+        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401 || resMotivos.status === 401) {
+          if (onLogout) onLogout();
           return;
         }
 
-        const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
+        const [caracteres, categorias, dedicaciones, tiposUnidad, motivos] = await Promise.all([
           resCaracteres.ok ? resCaracteres.json() : [],
           resCategorias.ok ? resCategorias.json() : [],
           resDedicaciones.ok ? resDedicaciones.json() : [],
-          resTiposUnidad.ok ? resTiposUnidad.json() : []
+          resTiposUnidad.ok ? resTiposUnidad.json() : [],
+          resMotivos.ok ? resMotivos.json() : []
         ]);
+
+        if (Array.isArray(motivos)) {
+          setMotivosOptions(
+            motivos.map((item: any) => ({
+              id: item.id?.toString() || '',
+              label: item.nombre || 'Desconocido'
+            }))
+          );
+        }
 
         setAvailableFilters([
           {
@@ -254,19 +287,29 @@ export default function Listado({
             if (category) {
               const option = category.options.find(o => o.label === optionLabel);
               if (option) {
-                // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
-                // so the backend can use whichever it is actually looking for.
-                params.append(`${category.id}Id`, option.id);
-                params.append(category.id, option.label);
+                if (activeTab === 'licencias') {
+                  if (category.id === 'motivo') {
+                    params.append('motivoId', option.id);
+                  }
+                } else {
+                  // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
+                  // so the backend can use whichever it is actually looking for.
+                  params.append(`${category.id}Id`, option.id);
+                  params.append(category.id, option.label);
+                }
               }
             }
           }
         });
 
         const token = localStorage.getItem('token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        const endpoint = activeTab === 'cargos' ? '/api/cargos' : '/api/docentes';
+        const endpoint = activeTab === 'cargos'
+          ? '/api/cargos'
+          : activeTab === 'licencias'
+          ? '/api/licencias'
+          : '/api/docentes';
 
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}${endpoint}?${params.toString()}`, {
           headers
@@ -275,6 +318,8 @@ export default function Listado({
           const data = await response.json();
           if (activeTab === 'cargos') {
             setCargosData(data.content || []);
+          } else if (activeTab === 'licencias') {
+            setLicenciasData(data.content || []);
           } else {
             setDocentesData(data.content || []);
           }
@@ -329,6 +374,16 @@ export default function Listado({
     return buttons;
   };
 
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+    return new Date(dateStr).toLocaleDateString();
+  };
+
   return (
     <div className="dashboard-layout">
       <Topbar onLogout={onLogout} />
@@ -342,7 +397,13 @@ export default function Listado({
             <div className="listado-inner-container">
               <div className="listado-header-row">
                 <div className="listado-header-left">
-                  <h1 className="listado-title">{activeTab === 'cargos' ? 'Listado de Cargos' : 'Listado de Docentes'}</h1>
+                  <h1 className="listado-title">
+                    {activeTab === 'cargos'
+                      ? 'Listado de Cargos'
+                      : activeTab === 'licencias'
+                      ? 'Listado de Licencias'
+                      : 'Listado de Docentes'}
+                  </h1>
                   <div className="listado-tabs">
                     <button
                       className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
@@ -392,6 +453,16 @@ export default function Listado({
                         <th>Dedicación</th>
                         <th>Caracter</th>
                       </tr>
+                    ) : activeTab === 'licencias' ? (
+                      <tr>
+                        <th>N° Resolución</th>
+                        <th>Motivo</th>
+                        <th>Docente</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Días Usados</th>
+                        <th>Estado</th>
+                      </tr>
                     ) : (
                       <tr>
                         <th>Nombre</th>
@@ -424,6 +495,24 @@ export default function Listado({
                             <td>{cargo.categoria}</td>
                             <td>{cargo.dedicacion}</td>
                             <td>{cargo.caracter}</td>
+                          </tr>
+                        ))
+                      )
+                    ) : activeTab === 'licencias' ? (
+                      licenciasData.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron licencias</td>
+                        </tr>
+                      ) : (
+                        licenciasData.map((licencia, idx) => (
+                          <tr key={idx} onClick={() => onNavigate && onNavigate('licencia_detalle', licencia)} style={{ cursor: 'pointer' }}>
+                            <td>{licencia.nroResolucion}</td>
+                            <td>{licencia.motivoNombre}</td>
+                            <td>{licencia.docenteNombreCompleto}</td>
+                            <td>{formatDate(licencia.fechaInicio)}</td>
+                            <td>{formatDate(licencia.fechaFin)}</td>
+                            <td>{licencia.diasUsados ?? '-'}</td>
+                            <td>{licencia.estado}</td>
                           </tr>
                         ))
                       )

@@ -1,0 +1,532 @@
+.licencia-detalle-area {
+  padding: 32px;
+  background-color: var(--users-secondary-100);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.licencia-top-nav {
+  margin-bottom: 24px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.licencia-detalle-card-container {
+  background-color: #faf9f6;
+  border-radius: 12px;
+  border: 1px solid var(--users-secondary-500);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.licencia-card-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #faf9f6;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
+}
+
+/* Custom Scrollbar for Column */
+.licencia-card-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.licencia-card-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.licencia-card-content::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.licencia-card-content::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
+/* Header */
+.licencia-detalle-header {
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--users-secondary-200);
+  border-bottom: 1px solid #dcd5c4;
+}
+
+.licencia-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.licencia-title {
+  margin: 0;
+  font-size: 38px;
+  font-family: 'Playfair Display', serif;
+  color: #1a231f;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  font-weight: 700;
+}
+
+.licencia-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 20px;
+  color: #1a231f;
+  font-weight: 700;
+}
+
+.licencia-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.licencia-status-badge {
+  padding: 8px 18px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.licencia-status-badge.activa,
+.licencia-status-badge.activo {
+  background-color: var(--admin-primary-800);
+  color: var(--admin-tertiary-300);
+}
+
+.licencia-status-badge.pendiente {
+  background-color: #eed675;
+  color: #6b4f1b;
+}
+
+.licencia-status-badge.finalizado {
+  background-color: #e2e2e2;
+  color: #555555;
+}
+
+.licencia-edit-btn {
+  background-color: #2b302c;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.licencia-edit-btn:hover {
+  background-color: #1a1e1b;
+}
+
+/* Two Columns Section */
+.licencia-body-container {
+  padding: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.licencia-two-cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+/* Section Card Container with Dark Green Header */
+.licencia-section-card {
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.licencia-section-header {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.licencia-section-header.header-datos {
+  background-color: var(--admin-primary-900, #1A2E1C);
+}
+
+.licencia-section-header.header-vinculos {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.licencia-section-header.header-documentacion {
+  background-color: var(--admin-primary-700, #3F6F45);
+}
+
+.licencia-section-title {
+  margin: 0;
+  font-family: 'DM Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.licencia-motivo-pill {
+  background: var(--Admin-Primary-50, #EFF6F0);
+  color: #6FAE36;
+  border: 1.5px solid #6FAE36;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Body Content of Datos Section */
+.licencia-datos-body {
+  background-color: var(--users-secondary-100, #E7DFD0);
+  padding: 24px 28px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 24px;
+  column-gap: 24px;
+  border-radius: 0 0 10px 10px;
+}
+
+.licencia-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.licencia-field-label {
+  font-size: 12px;
+  color: #555555;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.licencia-field-value {
+  font-size: 15px;
+  color: #1a231f;
+  font-weight: 700;
+}
+
+.licencia-field-value.pendiente {
+  font-style: italic;
+  font-weight: 500;
+  color: #666666;
+}
+
+.licencia-dias-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.licencia-progress-track {
+  width: 130px;
+  height: 10px;
+  background-color: #C4C6C3;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.licencia-progress-bar {
+  height: 100%;
+  background-color: var(--admin-primary-900, #1A2E1C);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Vínculos Body */
+.licencia-vinculos-body {
+  background-color: var(--users-secondary-100, #E7DFD0);
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-radius: 0 0 10px 10px;
+}
+
+.vinculo-card {
+  background-color: #ffffff;
+  border: 1px solid #E5E0D4;
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.vinculo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  border-color: #79B481;
+}
+
+.vinculo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vinculo-card-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a231f;
+}
+
+.vinculo-external-icon {
+  font-size: 17px;
+  color: #555555;
+  transition: color 0.15s;
+}
+
+.vinculo-card:hover .vinculo-external-icon {
+  color: var(--admin-primary-800);
+}
+
+.vinculo-card-text {
+  font-size: 13.5px;
+  color: #333333;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.vinculo-card-subtext {
+  font-size: 12px;
+  color: #666666;
+  font-weight: 500;
+}
+
+.vinculo-docente-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vinculo-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #0c1810;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.vinculo-docente-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vinculo-docente-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a231f;
+}
+
+.vinculo-docente-dni {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* Documentación Adjunta Section */
+.licencia-doc-section {
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.licencia-doc-add-btn {
+  background-color: #2b302c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.licencia-doc-add-btn:hover {
+  background-color: #1a1e1b;
+}
+
+.licencia-doc-body {
+  background-color: var(--users-secondary-100, #E7DFD0);
+  padding: 24px;
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+  flex-wrap: wrap;
+  border-radius: 0 0 10px 10px;
+}
+
+.licencia-doc-card {
+  background-color: #ffffff;
+  border: 1px solid #E5E0D4;
+  border-radius: 8px;
+  padding: 16px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.licencia-doc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.licencia-doc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.licencia-doc-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.licencia-doc-icon-wrapper.pdf {
+  background-color: #FEECEB;
+  color: #E05D52;
+}
+
+.licencia-doc-icon-wrapper.image {
+  background-color: #EFF6F0;
+  color: #4B8653;
+}
+
+.licencia-doc-icon-wrapper.generic {
+  background-color: #EBF5FA;
+  color: #1F66E0;
+}
+
+.licencia-doc-download {
+  color: #666666;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.licencia-doc-download:hover {
+  color: #1a231f;
+}
+
+.licencia-doc-bottom h5 {
+  margin: 0 0 4px 0;
+  font-size: 13.5px;
+  color: #1a231f;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.licencia-doc-bottom p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #777777;
+}
+
+.licencia-doc-empty-slot {
+  background-color: #ffffff;
+  border: 1px dashed #dcd5c4;
+  border-radius: 8px;
+  width: 100%;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.licencia-empty-slot-icon {
+  background-color: #e9e3d3;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 22px;
+}
+
+.licencia-doc-empty-slot p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .licencia-two-cols {
+    grid-template-columns: 1fr;
+  }
+}

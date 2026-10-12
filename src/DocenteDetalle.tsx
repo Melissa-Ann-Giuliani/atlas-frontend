@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import { FiChevronLeft } from 'react-icons/fi';
-import { FiCheckCircle } from 'react-icons/fi';
-import { FiEdit3 } from 'react-icons/fi';
-import { FaFilePdf, FaImage, FaHistory, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
+import { FiChevronLeft, FiCheckCircle, FiEdit3 } from 'react-icons/fi';
+import { FaFilePdf, FaImage, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
 import { BiArchiveIn } from 'react-icons/bi';
 
@@ -13,13 +11,14 @@ interface Docente {
   usuarioId?: number;
   nombre: string;
   apellido?: string;
-  origen: string;
-  unidad: string;
-  categoria: string;
-  dedicacion: string;
-  caracter: string;
-  estado: string;
+  origen?: string;
+  unidad?: string;
+  categoria?: string;
+  dedicacion?: string;
+  caracter?: string;
+  estado?: string;
   tipoUnidadNombre?: string;
+  dni?: number | string;
 }
 
 interface DocenteDetailsDTO {
@@ -79,21 +78,73 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
     const file = event.target.files?.[0];
     if (file) {
       console.log('File selected for upload:', file.name);
-      // Logic to capture the selected file and upload it to the backend will go here
     }
   };
 
   useEffect(() => {
     const fetchDetalle = async () => {
-      if (!docente.usuarioId) {
+      let resolvedId = docente.usuarioId;
+
+      if (!resolvedId) {
+        // Fallback: search by apellido, nombre or DNI to find usuarioId
+        const searchTerms: string[] = [];
+        if (docente.apellido) searchTerms.push(docente.apellido);
+        if (docente.nombre) {
+          const parts = docente.nombre.split(',').map((p) => p.trim());
+          if (parts[0]) searchTerms.push(parts[0]);
+          if (parts[1]) searchTerms.push(parts[1]);
+        }
+        if (docente.dni) {
+          searchTerms.push(String(docente.dni).replace(/\D/g, ''));
+        }
+
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        for (const term of searchTerms) {
+          if (!term) continue;
+          try {
+            const searchRes = await fetch(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/docentes?search=${encodeURIComponent(term)}`,
+              { headers }
+            );
+            if (searchRes.ok) {
+              const searchData = await searchRes.json();
+              const matched = searchData.content?.find((d: any) => {
+                const fullName = `${d.apellido || ''} ${d.nombre || ''}`.toLowerCase();
+                if (docente.apellido && fullName.includes(docente.apellido.toLowerCase())) return true;
+                if (docente.nombre && fullName.includes(docente.nombre.split(',')[0].trim().toLowerCase())) return true;
+                return false;
+              }) || searchData.content?.[0];
+
+              if (matched && (matched.usuarioId || matched.id)) {
+                resolvedId = matched.usuarioId || matched.id;
+                try {
+                  sessionStorage.setItem('atlas_selected_docente', JSON.stringify({ ...docente, usuarioId: resolvedId }));
+                } catch {
+                  // ignore
+                }
+                break;
+              }
+            }
+          } catch (e) {
+            console.error('Failed to resolve docente by search:', e);
+          }
+        }
+      }
+
+      if (!resolvedId) {
         setError('No se proporcionó un ID válido para el docente (usuarioId).');
         setIsLoading(false);
         return;
       }
+
+      setIsLoading(true);
+      setError(null);
       try {
         const token = localStorage.getItem('token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/docentes/${docente.usuarioId}`, { headers });
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/docentes/${resolvedId}`, { headers });
         if (response.ok) {
           const data = await response.json();
           setDetalle(data);
@@ -109,7 +160,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
       }
     };
     fetchDetalle();
-  }, [docente.usuarioId]);
+  }, [docente.usuarioId, docente.nombre, docente.apellido, docente.dni]);
 
   if (isLoading) {
     return (
@@ -133,14 +184,18 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
     if (parts.length === 3) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-    return new Date(dateString).toLocaleDateString();
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return dateString;
+    }
   };
 
   const datosPersonales = detalle?.datosPersonales;
-  const designacion = detalle?.designacionesYCargos?.[0]; // Mostrar el primer cargo/designación
+  const designacion = detalle?.designacionesYCargos?.[0];
   const actividades = detalle?.actividadesActuales || [];
   const licencias = detalle?.licenciasActuales || [];
-  const documentosAdjuntos: any[] = []; // Dummy array until backend is implemented
+  const documentosAdjuntos: any[] = [];
 
   const getDocIcon = (type?: string, name?: string) => {
     const lowerType = type?.toLowerCase() || '';
@@ -201,7 +256,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                 </div>
               </div>
 
-              {error && <div style={{ color: 'red', marginBottom: '20px', padding: '10px', backgroundColor: '#fee' }}>{error}</div>}
+              {error && <div style={{ color: 'red', marginBottom: '20px', padding: '10px', backgroundColor: '#fee', borderRadius: '4px' }}>{error}</div>}
 
               <div className="detalle-body-two-cols">
                 {/* Left Column */}
@@ -213,7 +268,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                     <div className="info-grid-2">
                       <div className="info-group">
                         <span className="info-label">DNI</span>
-                        <span className="info-value">{datosPersonales?.dni || 'No especificado'}</span>
+                        <span className="info-value">{datosPersonales?.dni || docente.dni || 'No especificado'}</span>
                       </div>
 
                       <div className="info-group">
@@ -269,6 +324,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                         <span className="info-label">DEDICACIÓN</span>
                         <span className="info-value">{designacion?.dedicacion || docente.dedicacion || 'No especificado'}</span>
                       </div>
+
                       <div className="info-group">
                         <span className="info-label">CARÁCTER</span>
                         <span className="info-value">{designacion?.caracter || docente.caracter || 'No especificado'}</span>
@@ -329,7 +385,6 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   <div className="section-block-right">
                     <div className="section-title-row">
                       <h2 className="section-title">Licencias Actuales</h2>
-                      {/* <FaHistory className="history-icon" /> */}
                     </div>
                     <hr className="section-divider" />
 
