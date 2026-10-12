@@ -54,6 +54,15 @@ function App() {
     }
   });
 
+  const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_cargo_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [listadoTab, setListadoTab] = useState<'docentes' | 'cargos' | 'licencias'>(() => {
     const saved = sessionStorage.getItem('atlas_listado_tab');
     if (saved === 'cargos' || saved === 'licencias' || saved === 'docentes') {
@@ -74,7 +83,7 @@ function App() {
     const currentPath = window.location.pathname.substring(1);
     const targetPath = getPathFromPage(activePage);
     if (currentPath !== targetPath) {
-      window.history.pushState({ page: activePage, tab: listadoTab }, '', `/${targetPath}`);
+      window.history.pushState({ page: activePage, tab: listadoTab, cargo: selectedCargo, docente: selectedDocente, cargoHistory }, '', `/${targetPath}`);
     }
   }, [activePage, listadoTab]);
 
@@ -82,9 +91,24 @@ function App() {
     const handlePopState = (event: PopStateEvent) => {
       const page = getPageFromPath(window.location.pathname.substring(1));
       setActivePage(page);
+      if (event.state?.cargo) {
+        setSelectedCargo(event.state.cargo);
+        sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(event.state.cargo));
+      }
+      if (event.state?.docente) {
+        setSelectedDocente(event.state.docente);
+        sessionStorage.setItem('atlas_selected_docente', JSON.stringify(event.state.docente));
+      }
       if (event.state?.tab) {
         setListadoTab(event.state.tab);
         sessionStorage.setItem('atlas_listado_tab', event.state.tab);
+      }
+      if (event.state?.cargoHistory !== undefined) {
+        setCargoHistory(event.state.cargoHistory);
+        sessionStorage.setItem('atlas_cargo_history', JSON.stringify(event.state.cargoHistory));
+      } else if (page === 'listado') {
+        setCargoHistory([]);
+        sessionStorage.setItem('atlas_cargo_history', JSON.stringify([]));
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -99,6 +123,7 @@ function App() {
     localStorage.removeItem('token');
     sessionStorage.removeItem('atlas_selected_docente');
     sessionStorage.removeItem('atlas_selected_cargo');
+    sessionStorage.removeItem('atlas_cargo_history');
     sessionStorage.removeItem('atlas_listado_tab');
     setIsAuthenticated(false);
   };
@@ -139,21 +164,81 @@ function App() {
     return () => clearInterval(intervalId);
   }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleBackCargo = () => {
+    if (cargoHistory.length > 0) {
+      const nextHistory = [...cargoHistory];
+      const prevCargo = nextHistory.pop();
+      setCargoHistory(nextHistory);
+      sessionStorage.setItem('atlas_cargo_history', JSON.stringify(nextHistory));
+      if (prevCargo) {
+        setSelectedCargo(prevCargo);
+        sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(prevCargo));
+      }
+      try {
+        window.history.back();
+      } catch {
+        // Fallback si no hay historial disponible en el navegador
+      }
+    } else {
+      handleNavigate('listado', { tab: 'cargos' });
+    }
+  };
+
   const handleNavigate = (page: Page, data?: any) => {
     if (activePage === 'inicio' && page === 'listado' && !data?.tab) {
       updateListadoTab('docentes');
     }
+
+    if (page !== 'cargo_detalle') {
+      setCargoHistory([]);
+      sessionStorage.removeItem('atlas_cargo_history');
+    }
+
     setActivePage(page);
+
     if (page === 'docente_detalle' && data) {
       setSelectedDocente(data);
       sessionStorage.setItem('atlas_selected_docente', JSON.stringify(data));
       updateListadoTab('docentes');
     }
+
     if (page === 'cargo_detalle' && data) {
+      if (activePage === 'cargo_detalle' && selectedCargo && (selectedCargo.id === data.id || selectedCargo.numero === data.numero)) {
+        return;
+      }
+
+      let nextHistory = cargoHistory;
+      if (activePage === 'cargo_detalle' && selectedCargo) {
+        if (
+          cargoHistory.length > 0 &&
+          (cargoHistory[cargoHistory.length - 1].numero === data.numero ||
+           cargoHistory[cargoHistory.length - 1].id === data.id)
+        ) {
+          nextHistory = cargoHistory.slice(0, -1);
+        } else {
+          nextHistory = [...cargoHistory, selectedCargo];
+        }
+        setCargoHistory(nextHistory);
+        sessionStorage.setItem('atlas_cargo_history', JSON.stringify(nextHistory));
+      } else {
+        nextHistory = [];
+        setCargoHistory([]);
+        sessionStorage.setItem('atlas_cargo_history', JSON.stringify([]));
+      }
+
       setSelectedCargo(data);
       sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(data));
       updateListadoTab('cargos');
+
+      if (activePage === 'cargo_detalle') {
+        window.history.pushState(
+          { page: 'cargo_detalle', tab: 'cargos', cargo: data, cargoHistory: nextHistory },
+          '',
+          '/listado/cargo_detalle'
+        );
+      }
     }
+
     if (page === 'listado') {
       if (data?.tab) {
         updateListadoTab(data.tab);
@@ -175,7 +260,15 @@ function App() {
     } else if (activePage === 'docente_detalle' && selectedDocente) {
       content = <DocenteDetalle docente={selectedDocente} onLogout={handleLogout} onNavigate={handleNavigate} />;
     } else if (activePage === 'cargo_detalle' && selectedCargo) {
-      content = <CargoDetalle cargo={selectedCargo} onLogout={handleLogout} onNavigate={handleNavigate} />;
+      content = (
+        <CargoDetalle
+          cargo={selectedCargo}
+          previousCargo={cargoHistory.length > 0 ? cargoHistory[cargoHistory.length - 1] : null}
+          onBack={handleBackCargo}
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+        />
+      );
     } else {
       content = <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
     }

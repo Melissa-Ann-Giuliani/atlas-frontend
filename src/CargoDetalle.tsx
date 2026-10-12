@@ -28,12 +28,14 @@ interface ActividadData {
 }
 
 interface CargoPredecesorData {
+  id?: number;
   numero: number;
   estado: string;
   categoria: string;
 }
 
 interface SubcargoData {
+  id?: number;
   numero: number;
   estado: string;
   categoria: string;
@@ -54,26 +56,67 @@ interface CargoDetailDTO {
   designacionFechaFin: string;
   actividadesVinculadas: ActividadData[];
   cargoPredecesor?: CargoPredecesorData;
+  cargoOrigenDivision?: CargoPredecesorData;
+  cargosSubdivididos?: SubcargoData[];
   subcargosActivos: SubcargoData[];
   documentacionAdjunta?: string[];
 }
 
 interface CargoDetalleProps {
   cargo: Cargo;
+  previousCargo?: Cargo | null;
+  onBack?: () => void;
   onLogout?: () => void;
   onNavigate?: (page: any, data?: any) => void;
 }
 
-export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetalleProps) {
+export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, onNavigate }: CargoDetalleProps) {
   const [detalle, setDetalle] = useState<CargoDetailDTO | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [navigatingNumero, setNavigatingNumero] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       console.log('File selected for upload:', file.name);
+    }
+  };
+
+  const handleCargoClick = async (numero: number, id?: number, extra?: any) => {
+    if (!onNavigate) return;
+    if (navigatingNumero !== null) return;
+
+    setNavigatingNumero(numero);
+
+    try {
+      if (id) {
+        onNavigate('cargo_detalle', { id, numero, ...extra });
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos?search=${numero}`,
+        { headers }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const found = data.content?.find((c: any) => Number(c.numero) === Number(numero));
+        if (found) {
+          onNavigate('cargo_detalle', { ...found, ...extra });
+          return;
+        }
+      }
+      // Fallback si no viene con búsqueda exacta
+      onNavigate('cargo_detalle', { id: numero, numero, ...extra });
+    } catch (err) {
+      console.error('Error al navegar al cargo:', err);
+      onNavigate('cargo_detalle', { id: numero, numero, ...extra });
+    } finally {
+      setNavigatingNumero(null);
     }
   };
 
@@ -84,6 +127,8 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
         setIsLoading(false);
         return;
       }
+      setIsLoading(true);
+      setError(null);
       try {
         const token = localStorage.getItem('token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -149,9 +194,15 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
   }
 
   const documentosAdjuntos: any[] = detalle?.documentacionAdjunta || [];
+  const parentCargo = detalle?.cargoPredecesor || detalle?.cargoOrigenDivision;
+  const subcargosList = (detalle?.subcargosActivos && detalle.subcargosActivos.length > 0)
+    ? detalle.subcargosActivos
+    : (detalle?.cargosSubdivididos || []);
 
   const handleBack = () => {
-    if (onNavigate) {
+    if (onBack) {
+      onBack();
+    } else if (onNavigate) {
       onNavigate('listado', { tab: 'cargos' });
     } else {
       window.history.back();
@@ -170,7 +221,7 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
 
             <div className="detalle-top-nav">
               <button className="back-button" onClick={handleBack}>
-                <FiChevronLeft /> Volver a Listado
+                <FiChevronLeft /> {previousCargo ? `Volver a Cargo N°${previousCargo.numero}` : 'Volver a Listado'}
               </button>
             </div>
 
@@ -306,13 +357,20 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
 
                     <div className="cargo-tree-section">
                       <div className="tree-title">Cargo Predecesor / Origen</div>
-                      {detalle?.cargoPredecesor ? (
-                        <div className="tree-card">
-                          <BsArrowUp className="tree-card-icon" />
-                          <div className="tree-card-content">
-                            <h5>Cargo N°{detalle.cargoPredecesor.numero} {detalle.cargoPredecesor.categoria ? `(${detalle.cargoPredecesor.categoria})` : ''}</h5>
-                            <p>Estado: {detalle.cargoPredecesor.estado}</p>
+                      {parentCargo ? (
+                        <div
+                          className={`tree-card ${navigatingNumero === parentCargo.numero ? 'loading' : ''}`}
+                          onClick={() => handleCargoClick(parentCargo.numero, parentCargo.id, { estado: parentCargo.estado, categoria: parentCargo.categoria })}
+                          title={`Ver detalle del Cargo N°${parentCargo.numero}`}
+                        >
+                          <div className="tree-card-left">
+                            <BsArrowUp className="tree-card-icon" />
+                            <div className="tree-card-content">
+                              <h5>Cargo N°{parentCargo.numero} {parentCargo.categoria ? `(${parentCargo.categoria})` : ''}</h5>
+                              <p>Estado: {parentCargo.estado}</p>
+                            </div>
                           </div>
+                          <MdKeyboardArrowRight className="subcargo-arrow" />
                         </div>
                       ) : (
                         <div style={{ padding: '12px 16px', background: '#f5f3ee', borderRadius: '8px', border: '1px dashed #ccc', color: '#777', fontSize: '13px' }}>
@@ -328,9 +386,14 @@ export default function CargoDetalle({ cargo, onLogout, onNavigate }: CargoDetal
 
                       <div className="tree-title">Subcargos Activos</div>
                       <div className="subcargos-list">
-                        {detalle?.subcargosActivos && detalle.subcargosActivos.length > 0 ? (
-                          detalle.subcargosActivos.map((sub, idx) => (
-                            <div className="subcargo-card" key={idx}>
+                        {subcargosList && subcargosList.length > 0 ? (
+                          subcargosList.map((sub, idx) => (
+                            <div
+                              className={`subcargo-card ${navigatingNumero === sub.numero ? 'loading' : ''}`}
+                              key={idx}
+                              onClick={() => handleCargoClick(sub.numero, sub.id, { estado: sub.estado, categoria: sub.categoria })}
+                              title={`Ver detalle del Cargo N°${sub.numero}`}
+                            >
                               <div className="subcargo-card-left">
                                 <BsArrowReturnRight className="subcargo-icon" />
                                 <span>Cargo N°{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} • {sub.estado}</span>
