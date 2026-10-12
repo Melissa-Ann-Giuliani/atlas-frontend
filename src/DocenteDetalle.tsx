@@ -3,9 +3,8 @@ import './DocenteDetalle.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import { FiChevronLeft } from 'react-icons/fi';
-import { FiCheckCircle } from 'react-icons/fi';
-import { FiEdit3 } from 'react-icons/fi';
-import { FaFilePdf, FaImage, FaHistory, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
+import { FiCheckCircle, FiEdit3 } from 'react-icons/fi';
+import { FaFilePdf, FaImage, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
 import { BiArchiveIn } from 'react-icons/bi';
 
@@ -92,7 +91,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
       }
       try {
         const token = localStorage.getItem('token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/docentes/${docente.usuarioId}`, { headers });
         if (response.ok) {
           const data = await response.json();

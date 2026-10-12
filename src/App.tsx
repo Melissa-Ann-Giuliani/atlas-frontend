@@ -53,6 +53,14 @@ function App() {
       return null;
     }
   });
+  const [selectedLicencia, setSelectedLicencia] = useState<any>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_selected_licencia');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
     try {
@@ -83,7 +91,7 @@ function App() {
     const currentPath = window.location.pathname.substring(1);
     const targetPath = getPathFromPage(activePage);
     if (currentPath !== targetPath) {
-      window.history.pushState({ page: activePage, tab: listadoTab, cargo: selectedCargo, docente: selectedDocente, cargoHistory }, '', `/${targetPath}`);
+      window.history.pushState({ page: activePage, tab: listadoTab, cargo: selectedCargo, docente: selectedDocente, licencia: selectedLicencia, cargoHistory }, '', `/${targetPath}`);
     }
   }, [activePage, listadoTab]);
 
@@ -98,6 +106,10 @@ function App() {
       if (event.state?.docente) {
         setSelectedDocente(event.state.docente);
         sessionStorage.setItem('atlas_selected_docente', JSON.stringify(event.state.docente));
+      }
+      if (event.state?.licencia) {
+        setSelectedLicencia(event.state.licencia);
+        sessionStorage.setItem('atlas_selected_licencia', JSON.stringify(event.state.licencia));
       }
       if (event.state?.tab) {
         setListadoTab(event.state.tab);
@@ -123,6 +135,7 @@ function App() {
     localStorage.removeItem('token');
     sessionStorage.removeItem('atlas_selected_docente');
     sessionStorage.removeItem('atlas_selected_cargo');
+    sessionStorage.removeItem('atlas_selected_licencia');
     sessionStorage.removeItem('atlas_cargo_history');
     sessionStorage.removeItem('atlas_listado_tab');
     setIsAuthenticated(false);
@@ -239,6 +252,12 @@ function App() {
       }
     }
 
+    if (page === 'licencia_detalle' && data) {
+      setSelectedLicencia(data);
+      sessionStorage.setItem('atlas_selected_licencia', JSON.stringify(data));
+      updateListadoTab('licencias');
+    }
+
     if (page === 'listado') {
       if (data?.tab) {
         updateListadoTab(data.tab);
@@ -267,6 +286,15 @@ function App() {
           onBack={handleBackCargo}
           onLogout={handleLogout}
           onNavigate={handleNavigate}
+        />
+      );
+    } else if (activePage === 'licencia_detalle') {
+      content = (
+        <Listado
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          initialTab="licencias"
+          onTabChange={updateListadoTab}
         />
       );
     } else {

@@ -97,7 +97,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
       }
 
       const token = localStorage.getItem('token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos?search=${numero}`,
         { headers }
@@ -131,7 +131,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
       setError(null);
       try {
         const token = localStorage.getItem('token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos/${cargo.id}`, { headers });
         if (response.ok) {
           const data = await response.json();
