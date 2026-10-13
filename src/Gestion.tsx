@@ -60,7 +60,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       title: 'Usuarios',
       headerClass: 'header-usuarios',
       options: [
-        { id: 'nuevo_usuario', label: 'Nuevo Usuario', type: 'green' },
+        { id: 'alta_usuario', label: 'Alta de Usuario', type: 'green', targetPage: 'nuevo_usuario' },
         { id: 'modificacion_usuario', label: 'Modificación de Usuario', type: 'blue' },
         { id: 'baja_usuario', label: 'Baja de Usuario', type: 'red' },
       ],
@@ -70,6 +70,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
   const handleOptionClick = (option: OptionItem, cardTitle: string) => {
     if (option.targetPage && onNavigate) {
       onNavigate(option.targetPage);
+    } else if ((option.id === 'alta_usuario' || option.id === 'nuevo_usuario') && onNavigate) {
+      onNavigate('nuevo_usuario');
     } else {
       // Future navigation handlers can be added here
       console.log(`Seleccionado: ${option.label} (${cardTitle})`);

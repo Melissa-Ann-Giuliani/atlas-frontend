@@ -6,16 +6,18 @@ import DocenteDetalle from './DocenteDetalle'
 import CargoDetalle from './CargoDetalle'
 import LicenciaDetalle from './LicenciaDetalle'
 import Gestion from './Gestion'
+import NuevoUsuario from './NuevoUsuario'
 
 
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
   if (page === 'cargo_detalle') return 'listado/cargo_detalle';
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
   if (page === 'modificar_docente') return 'gestion/modificar_docente';
+  if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
   return page;
 };
 
@@ -24,8 +26,9 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'listado/cargo_detalle') return 'cargo_detalle';
   if (path === 'listado/licencia_detalle') return 'licencia_detalle';
   if (path === 'gestion/modificar_docente') return 'modificar_docente';
+  if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario'];
   return validPages.includes(path as Page) ? (path as Page) : 'inicio';
 };
 
@@ -308,6 +311,14 @@ function App() {
           onNavigate={handleNavigate}
           initialTab="licencias"
           onTabChange={updateListadoTab}
+        />
+      );
+    } else if (activePage === 'nuevo_usuario') {
+      content = (
+        <NuevoUsuario
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          onBack={() => handleNavigate('gestion')}
         />
       );
     } else if (activePage === 'gestion') {
