@@ -36,9 +36,7 @@
   margin: 0 auto;
 }
 
-/* ============================================================
-   TOP NAVIGATION / RETROCEDER
-   ============================================================ */
+
 .nuevo-usuario-top-nav {
   display: flex;
   align-items: center;
@@ -69,9 +67,7 @@
   stroke-width: 2.5;
 }
 
-/* ============================================================
-   OUTER CONTAINER CARD
-   ============================================================ */
+
 .nuevo-usuario-container-card {
   background-color: var(--users-secondary-50, #F6F3EE);
   border: 1px solid var(--users-secondary-200, #D7CAB2);
@@ -98,7 +94,7 @@
 }
 
 .nuevo-usuario-header {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .nuevo-usuario-title {
@@ -114,9 +110,7 @@
   text-underline-offset: 6px;
 }
 
-/* ============================================================
-   INNER CARD (NUEVO USUARIO)
-   ============================================================ */
+
 .nuevo-usuario-form-card {
   border: 1.5px solid var(--admin-primary-800, #2A4B2F);
   border-radius: 8px;
@@ -162,9 +156,7 @@
   display: inline-block;
 }
 
-/* ============================================================
-   FEEDBACK MESSAGE
-   ============================================================ */
+
 .nuevo-usuario-feedback {
   padding: 10px 16px;
   border-radius: 6px;
@@ -198,9 +190,7 @@
   border: 1px solid #F5C2C7;
 }
 
-/* ============================================================
-   FORM & INPUTS
-   ============================================================ */
+
 .nuevo-usuario-form {
   display: flex;
   flex-direction: column;
@@ -249,6 +239,58 @@
 .nuevo-usuario-input::placeholder {
   color: #9CA3AF;
   font-weight: 400;
+}
+
+/* Password input & wrapper */
+.nuevo-usuario-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.nuevo-usuario-password-input {
+  padding-right: 68px;
+}
+
+.nuevo-usuario-password-actions {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.password-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.password-action-btn:hover {
+  color: var(--admin-primary-800, #2A4B2F);
+  background-color: rgba(42, 75, 47, 0.08);
+}
+
+.password-action-btn.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Rol Select */
@@ -300,9 +342,7 @@
   width: 100%;
 }
 
-/* ============================================================
-   BOTTOM ACTIONS (BORRAR & CONFIRMAR)
-   ============================================================ */
+
 .nuevo-usuario-actions {
   display: flex;
   justify-content: space-between;
@@ -360,9 +400,7 @@
   transform: translateY(0);
 }
 
-/* ============================================================
-   RESPONSIVE DESIGN (Smaller screens and laptops)
-   ============================================================ */
+
 @media (max-width: 1024px) {
   .nuevo-usuario-content-area {
     padding: 16px;
@@ -401,7 +439,6 @@
 
   .nuevo-usuario-title {
     font-size: 34px;
-    margin-bottom: 12px;
   }
 
   .nuevo-usuario-header {

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './NuevoUsuario.css';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff } from 'react-icons/fi';
 
 interface NuevoUsuarioProps {
   onLogout?: () => void;
@@ -18,6 +18,18 @@ interface FormState {
   rol: string;
 }
 
+interface RoleOption {
+  id: string | number;
+  label: string;
+}
+
+const defaultRoles: RoleOption[] = [
+  { id: 'ADMIN_GLOBAL', label: 'Admin Global' },
+  { id: 'ADMIN_UNIDAD', label: 'Admin de Unidad' },
+  { id: 'AUDITOR', label: 'Auditor' },
+  { id: 'DOCENTE', label: 'Docente' },
+];
+
 const initialFormState: FormState = {
   apellido: '',
   nombre: '',
@@ -26,9 +38,103 @@ const initialFormState: FormState = {
   rol: '',
 };
 
+const generateSecureRandomPassword = (): string => {
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
+  let result = '';
+  const cryptoObj = window.crypto || (window as any).msCrypto;
+  if (cryptoObj && cryptoObj.getRandomValues) {
+    const values = new Uint32Array(10);
+    cryptoObj.getRandomValues(values);
+    for (let i = 0; i < 10; i++) {
+      result += chars[values[i] % chars.length];
+    }
+  } else {
+    for (let i = 0; i < 10; i++) {
+      result += chars[Math.floor(Math.random() * chars.length)];
+    }
+  }
+  return result;
+};
+
 export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsuarioProps) {
   const [formData, setFormData] = useState<FormState>(initialFormState);
+  const [roles, setRoles] = useState<RoleOption[]>(defaultRoles);
+  const [isLoadingRoles, setIsLoadingRoles] = useState<boolean>(true);
+  const [isLoadingPassword, setIsLoadingPassword] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const fetchRandomPassword = async () => {
+    setIsLoadingPassword(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      let res = await fetch(`${apiUrl}/api/usuarios/generar-password`, { headers });
+
+      if (res.ok) {
+        const data = await res.json().catch(async () => {
+          return await res.text();
+        });
+        const passwordValue = typeof data === 'string' ? data : (data.password || data.contrasena || data.generatedPassword || '');
+        if (passwordValue) {
+          setFormData((prev) => ({ ...prev, password: passwordValue }));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('No se pudo obtener la contraseña del backend, generando temporalmente en cliente.', err);
+    } finally {
+      setIsLoadingPassword(false);
+    }
+
+    setFormData((prev) => ({ ...prev, password: generateSecureRandomPassword() }));
+    setIsLoadingPassword(false);
+  };
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      fetchRandomPassword();
+
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+        let response = await fetch(`${apiUrl}/api/roles`, { headers });
+        if (!response.ok && response.status === 404) {
+          response = await fetch(`${apiUrl}/api/usuarios/roles`, { headers });
+        }
+
+        if (response.status === 401 && onLogout) {
+          onLogout();
+          return;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const mappedRoles: RoleOption[] = data.map((item: any) => {
+              if (typeof item === 'string') {
+                return { id: item, label: item };
+              }
+              return {
+                id: item.rolId ?? item.id ?? item.codigo ?? item.nombre,
+                label: item.rolNombre ?? item.nombre ?? item.descripcion ?? item.name ?? String(item.id || item),
+              };
+            });
+            setRoles(mappedRoles);
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudieron obtener los roles del backend, usando roles predeterminados.', err);
+      } finally {
+        setIsLoadingRoles(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [onLogout]);
 
   const handleBack = () => {
     if (onBack) {
@@ -45,11 +151,14 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     if (feedback) setFeedback(null);
   };
 
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
   const handleClear = () => {
     setFormData(initialFormState);
+    fetchRandomPassword();
     setFeedback({
       type: 'success',
-      message: 'Los campos del formulario han sido limpiados.',
+      message: 'Los campos del formulario han sido limpiados y se generó una nueva contraseña.',
     });
     setTimeout(() => {
       setFeedback(null);
@@ -59,7 +168,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    // Validation
     if (!formData.apellido.trim() || !formData.nombre.trim() || !formData.username.trim() || !formData.password.trim() || !formData.rol) {
       setFeedback({
         type: 'error',
@@ -83,7 +191,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
         <main className="nuevo-usuario-main">
           <div className="nuevo-usuario-content-area">
-            {/* Retroceder navigation button */}
             <div className="nuevo-usuario-top-nav">
               <button
                 type="button"
@@ -95,13 +202,11 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
               </button>
             </div>
 
-            {/* Outer cream container card */}
             <div className="nuevo-usuario-container-card">
               <div className="nuevo-usuario-header">
                 <h1 className="nuevo-usuario-title">Gestión</h1>
               </div>
 
-              {/* Inner card with green header bar and border */}
               <div className="nuevo-usuario-form-card">
                 <div className="nuevo-usuario-card-header">
                   <h2>Nuevo Usuario</h2>
@@ -118,7 +223,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
                   <form className="nuevo-usuario-form" onSubmit={handleSubmit}>
                     <div className="nuevo-usuario-form-grid">
-                      {/* Column 1, Row 1: Apellido/s */}
                       <div className="nuevo-usuario-field">
                         <label htmlFor="apellido" className="nuevo-usuario-label">
                           Apellido/s
@@ -133,7 +237,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                         />
                       </div>
 
-                      {/* Column 2, Row 1: Nombre/s */}
                       <div className="nuevo-usuario-field">
                         <label htmlFor="nombre" className="nuevo-usuario-label">
                           Nombre/s
@@ -148,7 +251,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                         />
                       </div>
 
-                      {/* Column 1, Row 2: Nombre de Usuario */}
                       <div className="nuevo-usuario-field">
                         <label htmlFor="username" className="nuevo-usuario-label">
                           Nombre de Usuario
@@ -163,22 +265,43 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                         />
                       </div>
 
-                      {/* Column 2, Row 2: Contraseña */}
                       <div className="nuevo-usuario-field">
                         <label htmlFor="password" className="nuevo-usuario-label">
                           Contraseña
                         </label>
-                        <input
-                          id="password"
-                          type="password"
-                          className="nuevo-usuario-input"
-                          placeholder="••••••••"
-                          value={formData.password}
-                          onChange={(e) => handleChange('password', e.target.value)}
-                        />
+                        <div className="nuevo-usuario-password-wrapper">
+                          <input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            className="nuevo-usuario-input nuevo-usuario-password-input"
+                            placeholder={isLoadingPassword ? 'Generando contraseña...' : '••••••••'}
+                            value={formData.password}
+                            onChange={(e) => handleChange('password', e.target.value)}
+                          />
+                          <div className="nuevo-usuario-password-actions">
+                            <button
+                              type="button"
+                              className="password-action-btn"
+                              title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                              onClick={() => setShowPassword(!showPassword)}
+                              tabIndex={-1}
+                            >
+                              {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                            </button>
+                            <button
+                              type="button"
+                              className={`password-action-btn ${isLoadingPassword ? 'spinning' : ''}`}
+                              title="Regenerar contraseña"
+                              onClick={() => fetchRandomPassword()}
+                              disabled={isLoadingPassword}
+                              tabIndex={-1}
+                            >
+                              <FiRefreshCw size={15} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Column 1, Row 3: Rol */}
                       <div className="nuevo-usuario-field">
                         <label htmlFor="rol" className="nuevo-usuario-label">
                           Rol
@@ -189,26 +312,28 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             className="nuevo-usuario-select"
                             value={formData.rol}
                             onChange={(e) => handleChange('rol', e.target.value)}
+                            disabled={isLoadingRoles && roles.length === 0}
                           >
-                            <option value="">Seleccione</option>
-                            <option value="Admin Global">Admin Global</option>
-                            <option value="Admin de Unidad">Admin de Unidad</option>
-                            <option value="Auditor">Auditor</option>
-                            <option value="Docente">Docente</option>
+                            <option value="">
+                              {isLoadingRoles && roles.length === 0 ? 'Cargando roles...' : 'Seleccione'}
+                            </option>
+                            {roles.map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.label}
+                              </option>
+                            ))}
                           </select>
                           <FiChevronDown className="nuevo-usuario-select-caret" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Horizontal divider below Rol */}
                     <hr className="nuevo-usuario-divider" />
                   </form>
                 </div>
               </div>
             </div>
 
-            {/* Bottom Actions Row */}
             <div className="nuevo-usuario-actions">
               <button
                 type="button"
