@@ -1,7 +1,7 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './CargoDetalle.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
 import { FiChevronLeft, FiCheckCircle, FiEdit3, FiLink } from 'react-icons/fi';
 import { FaPaperclip, FaFilePdf, FaImage, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
@@ -110,7 +110,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
           return;
         }
       }
-      // Fallback si no viene con búsqueda exacta
+      // Fallback si no viene con b�squeda exacta
       onNavigate('cargo_detalle', { id: numero, numero, ...extra });
     } catch (err) {
       console.error('Error al navegar al cargo:', err);
@@ -150,7 +150,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
       }
 
       if (!resolvedId) {
-        setError('No se proporcionó un ID válido para el cargo.');
+        setError('No se proporcion� un ID v�lido para el cargo.');
         setIsLoading(false);
         return;
       }
@@ -169,7 +169,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
         }
       } catch (err) {
         console.error(err);
-        setError('Ocurrió un error al cargar los detalles.');
+        setError('Ocurri� un error al cargar los detalles.');
       } finally {
         setIsLoading(false);
       }
@@ -251,7 +251,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
 
             <div className="detalle-top-nav">
               <button className="back-button" onClick={handleBack}>
-                <FiChevronLeft /> {previousCargo ? `Volver a Cargo N°${previousCargo.numero}` : 'Volver a Listado'}
+                <FiChevronLeft /> {previousCargo ? `Volver a Cargo N�${previousCargo.numero}` : 'Volver a Listado'}
               </button>
             </div>
 
@@ -260,9 +260,9 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
               {/* Header */}
               <div className="cargo-detalle-header">
                 <div className="cargo-header-info">
-                  <h1 className="cargo-title">Cargo N°{detalle?.numero ?? cargo.numero ?? '----'}</h1>
+                  <h1 className="cargo-title">Cargo N�{detalle?.numero ?? cargo.numero ?? '----'}</h1>
                   <h2 className="cargo-subtitle">
-                    {detalle?.categoria || cargo.categoria || 'Sin Categoría'}
+                    {detalle?.categoria || cargo.categoria || 'Sin Categor�a'}
                   </h2>
                 </div>
                 <div className="cargo-header-actions">
@@ -302,22 +302,22 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                         </div>
 
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">N° RESOLUCIÓN</span>
+                          <span className="cargo-info-label">N� RESOLUCI�N</span>
                           <span className="cargo-info-value">
                             {detalle?.nroResolucionDesignacion || detalle?.designacionNroResolucion ? `RES-${detalle.nroResolucionDesignacion || detalle.designacionNroResolucion}` : 'No especificado'}
                           </span>
                         </div>
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">FECHA DE CREACIÓN</span>
+                          <span className="cargo-info-label">FECHA DE CREACI�N</span>
                           <span className="cargo-info-value">{formatDate(detalle?.fechaCreacion || cargo.fechaCreacion)}</span>
                         </div>
 
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">DEDICACIÓN</span>
+                          <span className="cargo-info-label">DEDICACI�N</span>
                           <span className="cargo-info-value">{detalle?.dedicacion || cargo.dedicacion || 'No especificado'}</span>
                         </div>
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">CARÁCTER</span>
+                          <span className="cargo-info-label">CAR�CTER</span>
                           <span className="cargo-info-value">{detalle?.caracter || cargo.caracter || 'No especificado'}</span>
                         </div>
                       </div>
@@ -364,22 +364,22 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
 
                     <div className="designacion-card">
                       <div className="designacion-card-title">
-                        <FiLink /> Designación Vinculada
+                        <FiLink /> Designaci�n Vinculada
                       </div>
 
                       <div className="designacion-info-box">
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">N° RESOLUCIÓN</span>
+                          <span className="cargo-info-label">N� RESOLUCI�N</span>
                           <span className="cargo-info-value">
-                            {detalle?.designacionNroResolucion || detalle?.nroResolucionDesignacion ? `RES-${detalle.designacionNroResolucion || detalle.nroResolucionDesignacion}` : 'Sin designación'}
+                            {detalle?.designacionNroResolucion || detalle?.nroResolucionDesignacion ? `RES-${detalle.designacionNroResolucion || detalle.nroResolucionDesignacion}` : 'Sin designaci�n'}
                           </span>
                         </div>
                         <div className="cargo-info-group">
-                          <span className="cargo-info-label">PERÍODO</span>
+                          <span className="cargo-info-label">PER�ODO</span>
                           <span className="cargo-info-value">
                             {detalle?.designacionFechaInicio
                               ? `${formatDate(detalle.designacionFechaInicio)} - ${detalle.designacionFechaFin ? formatDate(detalle.designacionFechaFin) : 'Actualidad'}`
-                              : 'Sin designación activa'}
+                              : 'Sin designaci�n activa'}
                           </span>
                         </div>
                       </div>
@@ -393,12 +393,12 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                             <div
                               className={`tree-card ${navigatingNumero === parentCargo.numero ? 'loading' : ''}`}
                               onClick={() => handleCargoClick(parentCargo.numero, parentCargo.id, { estado: parentCargo.estado, categoria: parentCargo.categoria })}
-                              title={`Ver detalle del Cargo N°${parentCargo.numero}`}
+                              title={`Ver detalle del Cargo N�${parentCargo.numero}`}
                             >
                               <div className="tree-card-left">
                                 <BsArrowUp className="tree-card-icon" />
                                 <div className="tree-card-content">
-                                  <h5>Cargo N°{parentCargo.numero} {parentCargo.categoria ? `(${parentCargo.categoria})` : ''}</h5>
+                                  <h5>Cargo N�{parentCargo.numero} {parentCargo.categoria ? `(${parentCargo.categoria})` : ''}</h5>
                                   <p>Estado: {parentCargo.estado}</p>
                                 </div>
                               </div>
@@ -422,11 +422,11 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                                   className={`subcargo-card ${navigatingNumero === sub.numero ? 'loading' : ''}`}
                                   key={idx}
                                   onClick={() => handleCargoClick(sub.numero, sub.id, { estado: sub.estado, categoria: sub.categoria })}
-                                  title={`Ver detalle del Cargo N°${sub.numero}`}
+                                  title={`Ver detalle del Cargo N�${sub.numero}`}
                                 >
                                   <div className="subcargo-card-left">
                                     <BsArrowReturnRight className="subcargo-icon" />
-                                    <span>Cargo N°{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} • {sub.estado}</span>
+                                    <span>Cargo N�{sub.numero} {sub.categoria ? `(${sub.categoria})` : ''} � {sub.estado}</span>
                                   </div>
                                   <MdKeyboardArrowRight className="subcargo-arrow" />
                                 </div>
@@ -441,10 +441,10 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
 
                 </div>
 
-                {/* Documentación Adjunta */}
+                {/* Documentaci�n Adjunta */}
                 <div className="doc-section-container">
                   <div className="doc-section-header">
-                    <h3 className="doc-section-title">Documentación Adjunta</h3>
+                    <h3 className="doc-section-title">Documentaci�n Adjunta</h3>
                     <input type="file" style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
                     <button className="doc-add-btn" onClick={() => fileInputRef.current?.click()}>
                       <FaPaperclip /> Agregar Documento
@@ -465,7 +465,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                             </div>
                             <div className="doc-card-bottom">
                               <h5>{doc.name}</h5>
-                              <p>{doc.size} • {doc.date}</p>
+                              <p>{doc.size} � {doc.date}</p>
                             </div>
                           </div>
                         );
@@ -473,7 +473,7 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                     ) : (
                       <div style={{ padding: '24px', width: '100%', textAlign: 'center', color: '#666', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <BiArchiveIn style={{ fontSize: '32px', color: '#aaa' }} />
-                        <p style={{ margin: 0, fontSize: '14px' }}>No hay documentación adjunta de momento.</p>
+                        <p style={{ margin: 0, fontSize: '14px' }}>No hay documentaci�n adjunta de momento.</p>
                       </div>
                     )}
                   </div>

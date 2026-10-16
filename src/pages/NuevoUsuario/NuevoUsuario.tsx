@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './NuevoUsuario.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff } from 'react-icons/fi';
 
 interface NuevoUsuarioProps {

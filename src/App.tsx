@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import Login from './Login'
-import Inicio from './Inicio'
-import Listado from './Listado'
-import DocenteDetalle from './DocenteDetalle'
-import CargoDetalle from './CargoDetalle'
-import LicenciaDetalle from './LicenciaDetalle'
-import Gestion from './Gestion'
-import NuevoUsuario from './NuevoUsuario'
+import Login from './pages/Login/Login'
+import Inicio from './pages/Inicio/Inicio'
+import Listado from './pages/Listado/Listado'
+import DocenteDetalle from './pages/DocenteDetalle/DocenteDetalle'
+import CargoDetalle from './pages/CargoDetalle/CargoDetalle.tsx'
+import LicenciaDetalle from './pages/LicenciaDetalle/LicenciaDetalle'
+import Gestion from './pages/Gestion/Gestion'
+import NuevoUsuario from './pages/NuevoUsuario/NuevoUsuario'
 
 
 

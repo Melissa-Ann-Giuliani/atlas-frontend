@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Inicio.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
 
 
-import FilterBar, { type FilterCategory } from './components/FilterBar';
+import FilterBar, { type FilterCategory } from '../../components/FilterBar';
 
 
 
