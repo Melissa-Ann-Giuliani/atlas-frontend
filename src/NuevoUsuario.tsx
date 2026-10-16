@@ -13,6 +13,7 @@ interface NuevoUsuarioProps {
 interface FormState {
   apellido: string;
   nombre: string;
+  correo: string;
   username: string;
   password: string;
   rol: string;
@@ -40,6 +41,7 @@ const defaultRoles: RoleOption[] = [
 const initialFormState: FormState = {
   apellido: '',
   nombre: '',
+  correo: '',
   username: '',
   password: '',
   rol: '',
@@ -69,6 +71,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   const [roles, setRoles] = useState<RoleOption[]>(defaultRoles);
   const [isLoadingRoles, setIsLoadingRoles] = useState<boolean>(true);
   const [isLoadingPassword, setIsLoadingPassword] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const fetchRandomPassword = async () => {
@@ -186,9 +189,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
   const isAdminGlobal = Boolean(
     selectedRole && (
-      selectedRole.nombre === 'ADMIN_GLOBAL' ||
-      selectedRole.nombre?.includes('ADMIN_GLOBAL') ||
-      String(selectedRole.id).toUpperCase().includes('ADMIN_GLOBAL') ||
+      selectedRole.nombre === 'Administrador Global' ||
       (selectedRole.label.toLowerCase().includes('admin') && selectedRole.label.toLowerCase().includes('global'))
     )
   );
@@ -230,13 +231,29 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     }, 3000);
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!formData.apellido.trim() || !formData.nombre.trim() || !formData.username.trim() || !formData.password.trim() || !formData.rol) {
+    if (
+      !formData.apellido.trim() ||
+      !formData.nombre.trim() ||
+      !formData.correo.trim() ||
+      !formData.username.trim() ||
+      !formData.password.trim() ||
+      !formData.rol
+    ) {
       setFeedback({
         type: 'error',
         message: 'Por favor, complete todos los campos requeridos antes de confirmar.',
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.correo.trim())) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, ingrese un formato de correo electrónico válido.',
       });
       return;
     }
@@ -249,10 +266,75 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       return;
     }
 
-    setFeedback({
-      type: 'success',
-      message: `Usuario "${formData.username}" registrado exitosamente con rol ${selectedRole?.label || formData.rol}.`,
-    });
+    setIsSubmitting(true);
+    setFeedback(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      };
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const endpoint = isAdminGlobal
+        ? `${apiUrl}/api/usuarios/admin-global`
+        : `${apiUrl}/api/usuarios`;
+
+      const payload = {
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        correo: formData.correo.trim(),
+        username: formData.username.trim(),
+        password: formData.password,
+        rol: formData.rol,
+        ...(isAdminGlobal
+          ? {
+            cargo: formData.cargo,
+            cargoNombre: formData.cargo, // matches backend CargoAdminGlobal enum
+          }
+          : {}),
+      };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (response.status === 201 || response.ok) {
+        setFeedback({
+          type: 'success',
+          message: data?.message || `Usuario "${formData.username}" registrado exitosamente.`,
+        });
+        setFormData(initialFormState);
+        fetchRandomPassword();
+      } else if (response.status === 409) {
+        setFeedback({
+          type: 'error',
+          message: data?.message || 'El nombre de usuario o usuario ya existe.',
+        });
+      } else if (response.status === 403) {
+        setFeedback({
+          type: 'error',
+          message: 'No tiene permisos para registrar este tipo de usuario.',
+        });
+      } else {
+        setFeedback({
+          type: 'error',
+          message: data?.message || 'Error al registrar el usuario en el servidor.',
+        });
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        message: err.message || 'Error de conexión con el servidor al registrar el usuario.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -321,6 +403,20 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                           placeholder="Ingrese valor"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="nuevo-usuario-field">
+                        <label htmlFor="correo" className="nuevo-usuario-label">
+                          Correo Electrónico
+                        </label>
+                        <input
+                          id="correo"
+                          type="email"
+                          className="nuevo-usuario-input"
+                          placeholder="ejemplo@correo.com"
+                          value={formData.correo}
+                          onChange={(e) => handleChange('correo', e.target.value)}
                         />
                       </div>
 
@@ -452,9 +548,10 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                 type="button"
                 className="btn-nuevo-usuario btn-confirmar"
                 onClick={() => handleSubmit()}
+                disabled={isSubmitting}
               >
                 <FiCheckSquare className="btn-icon" />
-                <span>Confirmar</span>
+                <span>{isSubmitting ? 'Guardando...' : 'Confirmar'}</span>
               </button>
             </div>
           </div>
