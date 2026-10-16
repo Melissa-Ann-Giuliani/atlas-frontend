@@ -19,6 +19,7 @@ interface FormState {
   rol: string;
   cargo: string;
   dependencia: string;
+  unidad: string;
 }
 
 interface RoleOption {
@@ -37,6 +38,13 @@ interface DependenciaOption {
   label: string;
 }
 
+interface UnidadOption {
+  id: string | number;
+  label: string;
+  tipoUnidadId?: number;
+  tipoUnidadNombre?: string;
+}
+
 const defaultRoles: RoleOption[] = [
   { id: 'ADMIN_GLOBAL', nombre: 'ADMIN_GLOBAL', label: 'Admin Global' },
   { id: 'ADMIN_UNIDAD', nombre: 'ADMIN_UNIDAD', label: 'Admin de Unidad' },
@@ -53,6 +61,7 @@ const initialFormState: FormState = {
   rol: '',
   cargo: '',
   dependencia: '',
+  unidad: '',
 };
 
 const generateSecureRandomPassword = (): string => {
@@ -165,6 +174,9 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   const [dependencias, setDependencias] = useState<DependenciaOption[]>([]);
   const [isLoadingDependencias, setIsLoadingDependencias] = useState<boolean>(false);
 
+  const [unidades, setUnidades] = useState<UnidadOption[]>([]);
+  const [isLoadingUnidades, setIsLoadingUnidades] = useState<boolean>(false);
+
   const fetchCargosAdminGlobal = async () => {
     setIsLoadingCargos(true);
     try {
@@ -255,6 +267,37 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     }
   };
 
+  const fetchUnidadesPorTipo = async (tipoId: string | number) => {
+    if (!tipoId) {
+      setUnidades([]);
+      return;
+    }
+    setIsLoadingUnidades(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const response = await fetch(`${apiUrl}/api/unidades?tipoUnidadId=${encodeURIComponent(tipoId)}`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const mapped: UnidadOption[] = data.map((item: any) => ({
+            id: item.unidadId ?? item.id,
+            label: item.unidadNombre ?? item.nombre ?? String(item.unidadId || item.id),
+            tipoUnidadId: item.tipoUnidadId,
+            tipoUnidadNombre: item.tipoUnidadNombre,
+          }));
+          setUnidades(mapped);
+        }
+      }
+    } catch (err) {
+      console.warn('No se pudieron obtener las unidades del backend.', err);
+    } finally {
+      setIsLoadingUnidades(false);
+    }
+  };
+
   const selectedRole = roles.find(
     (r) => String(r.id) === String(formData.rol) || r.nombre === formData.rol
   );
@@ -275,17 +318,33 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     )
   );
 
+  const selectedDependencia = dependencias.find(
+    (d) => String(d.id) === String(formData.dependencia) || d.label === formData.dependencia
+  );
+
+  const dynamicUnidadLabel = selectedDependencia?.label || 'Unidad';
+
   useEffect(() => {
     if (isAdminGlobal) {
       fetchCargosAdminGlobal();
-      setFormData((prev) => (prev.dependencia ? { ...prev, dependencia: '' } : prev));
+      setFormData((prev) => (prev.dependencia || prev.unidad ? { ...prev, dependencia: '', unidad: '' } : prev));
+      setUnidades([]);
     } else if (isAdminUnidad) {
       fetchCargosAdminUnidad();
       fetchDependencias();
     } else {
-      setFormData((prev) => (prev.cargo || prev.dependencia ? { ...prev, cargo: '', dependencia: '' } : prev));
+      setFormData((prev) => (prev.cargo || prev.dependencia || prev.unidad ? { ...prev, cargo: '', dependencia: '', unidad: '' } : prev));
+      setUnidades([]);
     }
   }, [isAdminGlobal, isAdminUnidad]);
+
+  useEffect(() => {
+    if (isAdminUnidad && formData.dependencia) {
+      fetchUnidadesPorTipo(formData.dependencia);
+    } else {
+      setUnidades([]);
+    }
+  }, [isAdminUnidad, formData.dependencia]);
 
   const handleBack = () => {
     if (onBack) {
@@ -298,7 +357,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   };
 
   const handleChange = (field: keyof FormState, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      if (field === 'dependencia') {
+        // Al cambiar de dependencia, reseteamos la unidad elegida
+        return { ...prev, dependencia: value, unidad: '' };
+      }
+      return { ...prev, [field]: value };
+    });
     if (feedback) setFeedback(null);
   };
 
@@ -366,6 +431,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
         });
         return;
       }
+      if (!formData.unidad) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor, seleccione un ${dynamicUnidadLabel.toLowerCase()} para el Administrador de Unidad.`,
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -404,8 +476,9 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
             cargo: formData.cargo,
             cargoNombre: formData.cargo,
             cargoAdNombre: formData.cargo,
-            unidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
+            unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
             dependencia: formData.dependencia,
+            tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
           }
           : {}),
       };
@@ -646,7 +719,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
                     {isAdminUnidad && (
                       <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid">
+                        <div className="nuevo-usuario-extra-grid nuevo-usuario-admin-unidad-grid">
                           <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
                             <label htmlFor="cargo" className="nuevo-usuario-label">
                               Cargo
@@ -700,6 +773,33 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                               <FiChevronDown className="nuevo-usuario-select-caret" />
                             </div>
                           </div>
+
+                          {formData.dependencia && (
+                            <div className="nuevo-usuario-field nuevo-usuario-field-unidad">
+                              <label htmlFor="unidad" className="nuevo-usuario-label">
+                                {dynamicUnidadLabel}
+                              </label>
+                              <div className="nuevo-usuario-select-wrapper">
+                                <select
+                                  id="unidad"
+                                  className="nuevo-usuario-select"
+                                  value={formData.unidad}
+                                  onChange={(e) => handleChange('unidad', e.target.value)}
+                                  disabled={isLoadingUnidades}
+                                >
+                                  <option value="">
+                                    {isLoadingUnidades ? `Cargando ${dynamicUnidadLabel.toLowerCase()}s...` : 'Seleccione'}
+                                  </option>
+                                  {unidades.map((uniOpt) => (
+                                    <option key={uniOpt.id} value={uniOpt.id}>
+                                      {uniOpt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <FiChevronDown className="nuevo-usuario-select-caret" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

@@ -355,8 +355,13 @@
   gap: 16px 24px;
 }
 
+.nuevo-usuario-admin-unidad-grid {
+  grid-template-columns: minmax(180px, 200px) minmax(180px, 200px) minmax(180px, 220px);
+}
+
 .nuevo-usuario-field-cargo,
-.nuevo-usuario-field-dependencia {
+.nuevo-usuario-field-dependencia,
+.nuevo-usuario-field-unidad {
   width: 100%;
 }
 
