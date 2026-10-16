@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './LicenciaDetalle.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
 import { FiChevronLeft, FiCheckCircle, FiEdit3, FiExternalLink } from 'react-icons/fi';
 import { FaPaperclip, FaFilePdf, FaImage, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';

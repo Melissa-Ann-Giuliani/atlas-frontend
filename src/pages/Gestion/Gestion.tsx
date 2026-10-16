@@ -1,7 +1,7 @@
 import React from 'react';
 import './Gestion.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
 import { FiChevronRight } from 'react-icons/fi';
 
 interface GestionProps {

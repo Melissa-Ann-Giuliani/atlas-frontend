@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import './Listado.css';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
-import FilterBar, { type FilterCategory, type FilterOption } from './components/FilterBar';
+import Sidebar from '../../components/Sidebar';
+import Topbar from '../../components/Topbar';
+import FilterBar, { type FilterCategory, type FilterOption } from '../../components/FilterBar';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 
 interface Licencia {
