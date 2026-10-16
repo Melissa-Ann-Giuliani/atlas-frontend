@@ -342,6 +342,29 @@
   width: 100%;
 }
 
+.nuevo-usuario-extra-section {
+  display: flex;
+  flex-direction: column;
+  padding-top: 18px;
+  animation: fadeInField 0.25s ease-out;
+}
+
+.nuevo-usuario-field-cargo {
+  max-width: 200px;
+  width: 100%;
+}
+
+@keyframes fadeInField {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 .nuevo-usuario-actions {
   display: flex;

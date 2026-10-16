@@ -16,18 +16,25 @@ interface FormState {
   username: string;
   password: string;
   rol: string;
+  cargo: string;
 }
 
 interface RoleOption {
   id: string | number;
+  nombre?: string;
+  label: string;
+}
+
+interface CargoOption {
+  id: string;
   label: string;
 }
 
 const defaultRoles: RoleOption[] = [
-  { id: 'ADMIN_GLOBAL', label: 'Admin Global' },
-  { id: 'ADMIN_UNIDAD', label: 'Admin de Unidad' },
-  { id: 'AUDITOR', label: 'Auditor' },
-  { id: 'DOCENTE', label: 'Docente' },
+  { id: 'ADMIN_GLOBAL', nombre: 'ADMIN_GLOBAL', label: 'Admin Global' },
+  { id: 'ADMIN_UNIDAD', nombre: 'ADMIN_UNIDAD', label: 'Admin de Unidad' },
+  { id: 'AUDITOR', nombre: 'AUDITOR', label: 'Auditor' },
+  { id: 'DOCENTE', nombre: 'DOCENTE', label: 'Docente' },
 ];
 
 const initialFormState: FormState = {
@@ -36,6 +43,7 @@ const initialFormState: FormState = {
   username: '',
   password: '',
   rol: '',
+  cargo: '',
 };
 
 const generateSecureRandomPassword = (): string => {
@@ -116,11 +124,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
           if (Array.isArray(data) && data.length > 0) {
             const mappedRoles: RoleOption[] = data.map((item: any) => {
               if (typeof item === 'string') {
-                return { id: item, label: item };
+                return { id: item, nombre: item, label: item };
               }
+              const roleName = item.nombre ?? item.rolNombre ?? item.name ?? '';
               return {
-                id: item.rolId ?? item.id ?? item.codigo ?? item.nombre,
-                label: item.rolNombre ?? item.nombre ?? item.descripcion ?? item.name ?? String(item.id || item),
+                id: item.id ?? item.rolId ?? item.codigo ?? roleName,
+                nombre: roleName,
+                label: item.descripcion ?? item.rolNombre ?? roleName ?? String(item.id || item),
               };
             });
             setRoles(mappedRoles);
@@ -135,6 +145,61 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
     fetchInitialData();
   }, [onLogout]);
+
+  const [cargosAdminGlobal, setCargosAdminGlobal] = useState<CargoOption[]>([]);
+  const [isLoadingCargos, setIsLoadingCargos] = useState<boolean>(false);
+
+  const fetchCargosAdminGlobal = async () => {
+    setIsLoadingCargos(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const response = await fetch(`${apiUrl}/api/usuarios/admin-global/cargos`, { headers });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const mapped: CargoOption[] = data.map((item: any) => {
+            const idVal = typeof item === 'string' ? item : (item.id ?? item.nombre ?? String(item));
+            const rawLabel = typeof item === 'string' ? item : (item.nombre ?? item.descripcion ?? idVal);
+            const formattedLabel = rawLabel
+              .split('_')
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            return { id: idVal, label: formattedLabel };
+          });
+          setCargosAdminGlobal(mapped);
+        }
+      }
+    } catch (err) {
+      console.warn('No se pudieron obtener los cargos de Admin Global del backend.', err);
+    } finally {
+      setIsLoadingCargos(false);
+    }
+  };
+
+  const selectedRole = roles.find(
+    (r) => String(r.id) === String(formData.rol) || r.nombre === formData.rol
+  );
+
+  const isAdminGlobal = Boolean(
+    selectedRole && (
+      selectedRole.nombre === 'ADMIN_GLOBAL' ||
+      selectedRole.nombre?.includes('ADMIN_GLOBAL') ||
+      String(selectedRole.id).toUpperCase().includes('ADMIN_GLOBAL') ||
+      (selectedRole.label.toLowerCase().includes('admin') && selectedRole.label.toLowerCase().includes('global'))
+    )
+  );
+
+  useEffect(() => {
+    if (isAdminGlobal) {
+      fetchCargosAdminGlobal();
+    } else {
+      setFormData((prev) => (prev.cargo ? { ...prev, cargo: '' } : prev));
+    }
+  }, [isAdminGlobal]);
 
   const handleBack = () => {
     if (onBack) {
@@ -176,9 +241,17 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       return;
     }
 
+    if (isAdminGlobal && !formData.cargo) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione un cargo para el Administrador Global.',
+      });
+      return;
+    }
+
     setFeedback({
       type: 'success',
-      message: `Usuario "${formData.username}" registrado exitosamente con rol ${formData.rol}.`,
+      message: `Usuario "${formData.username}" registrado exitosamente con rol ${selectedRole?.label || formData.rol}.`,
     });
   };
 
@@ -329,6 +402,37 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                     </div>
 
                     <hr className="nuevo-usuario-divider" />
+
+                    {isAdminGlobal && (
+                      <div className="nuevo-usuario-extra-section">
+                        <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
+                          <label htmlFor="cargo" className="nuevo-usuario-label">
+                            Cargo
+                          </label>
+                          <div className="nuevo-usuario-select-wrapper">
+                            <select
+                              id="cargo"
+                              className="nuevo-usuario-select"
+                              value={formData.cargo}
+                              onChange={(e) => handleChange('cargo', e.target.value)}
+                              disabled={isLoadingCargos && cargosAdminGlobal.length === 0}
+                            >
+                              <option value="">
+                                {isLoadingCargos && cargosAdminGlobal.length === 0
+                                  ? 'Cargando cargos...'
+                                  : 'Seleccione'}
+                              </option>
+                              {cargosAdminGlobal.map((cargoOpt) => (
+                                <option key={cargoOpt.id} value={cargoOpt.id}>
+                                  {cargoOpt.label}
+                                </option>
+                              ))}
+                            </select>
+                            <FiChevronDown className="nuevo-usuario-select-caret" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </div>
               </div>
