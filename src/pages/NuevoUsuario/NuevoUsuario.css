@@ -349,8 +349,14 @@
   animation: fadeInField 0.25s ease-out;
 }
 
-.nuevo-usuario-field-cargo {
-  max-width: 200px;
+.nuevo-usuario-extra-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 200px) minmax(180px, 200px);
+  gap: 16px 24px;
+}
+
+.nuevo-usuario-field-cargo,
+.nuevo-usuario-field-dependencia {
   width: 100%;
 }
 
