@@ -355,6 +355,10 @@
   gap: 16px 24px;
 }
 
+.nuevo-usuario-single-grid {
+  grid-template-columns: minmax(260px, 360px);
+}
+
 .nuevo-usuario-admin-unidad-grid {
   grid-template-columns: minmax(180px, 200px) minmax(180px, 200px) minmax(180px, 220px);
 }
@@ -456,7 +460,10 @@
     font-size: 22px;
   }
 
-  .nuevo-usuario-form-grid {
+  .nuevo-usuario-form-grid,
+  .nuevo-usuario-extra-grid,
+  .nuevo-usuario-single-grid,
+  .nuevo-usuario-admin-unidad-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
