@@ -52,12 +52,6 @@ const defaultRoles: RoleOption[] = [
   { id: 'DOCENTE', nombre: 'DOCENTE', label: 'Docente' },
 ];
 
-const defaultCargosAuditor: CargoOption[] = [
-  { id: 'DECANO', label: 'Decano' },
-  { id: 'VICEDECANO', label: 'Vicedecano' },
-  { id: 'SECRETARIA_ADMINISTRATIVA', label: 'Secretaría Administrativa' },
-];
-
 const initialFormState: FormState = {
   apellido: '',
   nombre: '',
@@ -151,13 +145,11 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
               if (typeof item === 'string') {
                 return { id: item, nombre: item, label: item };
               }
-              const roleName = item.nombre ?? item.rolNombre ?? item.rol_nombre ?? item.name ?? '';
-              const idVal = item.id ?? item.rolId ?? item.rol_id ?? item.codigo ?? roleName;
-              const labelVal = item.descripcion ?? item.rolDescripcion ?? item.rol_descripcion ?? item.rolNombre ?? item.rol_nombre ?? roleName ?? String(idVal);
+              const roleName = item.nombre ?? item.rolNombre ?? item.name ?? '';
               return {
-                id: idVal,
-                nombre: roleName || labelVal,
-                label: labelVal,
+                id: item.id ?? item.rolId ?? item.codigo ?? roleName,
+                nombre: roleName,
+                label: item.descripcion ?? item.rolNombre ?? roleName ?? String(item.id || item),
               };
             });
             setRoles(mappedRoles);
@@ -178,9 +170,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
   const [cargosAdminUnidad, setCargosAdminUnidad] = useState<CargoOption[]>([]);
   const [isLoadingCargosUnidad, setIsLoadingCargosUnidad] = useState<boolean>(false);
-
-  const [cargosAuditor, setCargosAuditor] = useState<CargoOption[]>([]);
-  const [isLoadingCargosAuditor, setIsLoadingCargosAuditor] = useState<boolean>(false);
 
   const [dependencias, setDependencias] = useState<DependenciaOption[]>([]);
   const [isLoadingDependencias, setIsLoadingDependencias] = useState<boolean>(false);
@@ -216,45 +205,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       console.warn('No se pudieron obtener los cargos de Admin Global del backend.', err);
     } finally {
       setIsLoadingCargos(false);
-    }
-  };
-
-  const fetchCargosAuditor = async () => {
-    setIsLoadingCargosAuditor(true);
-    try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-      let response = await fetch(`${apiUrl}/api/usuarios/auditor/cargos`, { headers });
-      if (!response.ok && response.status === 404) {
-        response = await fetch(`${apiUrl}/api/usuarios/auditores/cargos`, { headers });
-      }
-
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: CargoOption[] = data.map((item: any) => {
-            const idVal = typeof item === 'string' ? item : (item.value ?? item.id ?? item.nombre ?? String(item));
-            const rawLabel = typeof item === 'string' ? item : (item.label ?? item.nombre ?? item.descripcion ?? idVal);
-            const formattedLabel = rawLabel.includes('_')
-              ? rawLabel
-                .split('_')
-                .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ')
-              : rawLabel;
-            return { id: idVal, label: formattedLabel };
-          });
-          setCargosAuditor(mapped);
-          return;
-        }
-      }
-      setCargosAuditor(defaultCargosAuditor);
-    } catch (err) {
-      console.warn('No se pudieron obtener los cargos de Auditor del backend, usando predeterminados.', err);
-      setCargosAuditor(defaultCargosAuditor);
-    } finally {
-      setIsLoadingCargosAuditor(false);
     }
   };
 
@@ -349,43 +299,23 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   };
 
   const selectedRole = roles.find(
-    (r) =>
-      String(r.id) === String(formData.rol) ||
-      String(r.nombre || '').toLowerCase() === String(formData.rol || '').toLowerCase() ||
-      String(r.label || '').toLowerCase() === String(formData.rol || '').toLowerCase()
+    (r) => String(r.id) === String(formData.rol) || r.nombre === formData.rol
   );
 
   const isAdminGlobal = Boolean(
-    (selectedRole && (
+    selectedRole && (
       selectedRole.nombre === 'Administrador Global' ||
       selectedRole.nombre === 'ADMIN_GLOBAL' ||
-      String(selectedRole.id || '').toUpperCase() === 'ADMIN_GLOBAL' ||
       (selectedRole.label.toLowerCase().includes('admin') && selectedRole.label.toLowerCase().includes('global'))
-    )) ||
-    String(formData.rol).toUpperCase() === 'ADMIN_GLOBAL' ||
-    (String(formData.rol).toLowerCase().includes('admin') && String(formData.rol).toLowerCase().includes('global'))
+    )
   );
 
   const isAdminUnidad = Boolean(
-    (selectedRole && (
+    selectedRole && (
       selectedRole.nombre === 'Administrador de Unidad' ||
       selectedRole.nombre === 'ADMIN_UNIDAD' ||
-      String(selectedRole.id || '').toUpperCase() === 'ADMIN_UNIDAD' ||
       (selectedRole.label.toLowerCase().includes('admin') && selectedRole.label.toLowerCase().includes('unidad'))
-    )) ||
-    String(formData.rol).toUpperCase() === 'ADMIN_UNIDAD' ||
-    (String(formData.rol).toLowerCase().includes('admin') && String(formData.rol).toLowerCase().includes('unidad'))
-  );
-
-  const isAuditor = Boolean(
-    (selectedRole && (
-      selectedRole.nombre === 'Auditor' ||
-      selectedRole.nombre === 'AUDITOR' ||
-      String(selectedRole.nombre || '').toLowerCase().includes('auditor') ||
-      String(selectedRole.label || '').toLowerCase().includes('auditor') ||
-      String(selectedRole.id || '').toLowerCase().includes('auditor')
-    )) ||
-    String(formData.rol).toLowerCase().includes('auditor')
+    )
   );
 
   const selectedDependencia = dependencias.find(
@@ -402,15 +332,11 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     } else if (isAdminUnidad) {
       fetchCargosAdminUnidad();
       fetchDependencias();
-    } else if (isAuditor) {
-      fetchCargosAuditor();
-      setFormData((prev) => (prev.dependencia || prev.unidad ? { ...prev, dependencia: '', unidad: '' } : prev));
-      setUnidades([]);
     } else {
       setFormData((prev) => (prev.cargo || prev.dependencia || prev.unidad ? { ...prev, cargo: '', dependencia: '', unidad: '' } : prev));
       setUnidades([]);
     }
-  }, [isAdminGlobal, isAdminUnidad, isAuditor]);
+  }, [isAdminGlobal, isAdminUnidad]);
 
   useEffect(() => {
     if (isAdminUnidad && formData.dependencia) {
@@ -432,10 +358,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
   const handleChange = (field: keyof FormState, value: string) => {
     setFormData((prev) => {
-      if (field === 'rol') {
-        // Al cambiar de rol, reseteamos cargo, dependencia y unidad para evitar estados inconsistentes
-        return { ...prev, rol: value, cargo: '', dependencia: '', unidad: '' };
-      }
       if (field === 'dependencia') {
         // Al cambiar de dependencia, reseteamos la unidad elegida
         return { ...prev, dependencia: value, unidad: '' };
@@ -494,14 +416,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       return;
     }
 
-    if (isAuditor && !formData.cargo) {
-      setFeedback({
-        type: 'error',
-        message: 'Por favor, seleccione un cargo para el Auditor.',
-      });
-      return;
-    }
-
     if (isAdminUnidad) {
       if (!formData.cargo) {
         setFeedback({
@@ -542,8 +456,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
         endpoint = `${apiUrl}/api/usuarios/admin-global`;
       } else if (isAdminUnidad) {
         endpoint = `${apiUrl}/api/usuarios/admin-unidad`;
-      } else if (isAuditor) {
-        endpoint = `${apiUrl}/api/usuarios/auditor`;
       }
 
       const payload = {
@@ -557,13 +469,6 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
           ? {
             cargo: formData.cargo,
             cargoNombre: formData.cargo, // matches backend CargoAdminGlobal enum
-          }
-          : {}),
-        ...(isAuditor
-          ? {
-            cargo: formData.cargo,
-            cargoNombre: formData.cargo,
-            cargoAudNombre: formData.cargo,
           }
           : {}),
         ...(isAdminUnidad
@@ -783,65 +688,30 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
                     {isAdminGlobal && (
                       <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid nuevo-usuario-single-grid">
-                          <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
-                            <label htmlFor="cargo" className="nuevo-usuario-label">
-                              Cargo
-                            </label>
-                            <div className="nuevo-usuario-select-wrapper">
-                              <select
-                                id="cargo"
-                                className="nuevo-usuario-select"
-                                value={formData.cargo}
-                                onChange={(e) => handleChange('cargo', e.target.value)}
-                                disabled={isLoadingCargos && cargosAdminGlobal.length === 0}
-                              >
-                                <option value="">
-                                  {isLoadingCargos && cargosAdminGlobal.length === 0
-                                    ? 'Cargando cargos...'
-                                    : 'Seleccione'}
+                        <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
+                          <label htmlFor="cargo" className="nuevo-usuario-label">
+                            Cargo
+                          </label>
+                          <div className="nuevo-usuario-select-wrapper">
+                            <select
+                              id="cargo"
+                              className="nuevo-usuario-select"
+                              value={formData.cargo}
+                              onChange={(e) => handleChange('cargo', e.target.value)}
+                              disabled={isLoadingCargos && cargosAdminGlobal.length === 0}
+                            >
+                              <option value="">
+                                {isLoadingCargos && cargosAdminGlobal.length === 0
+                                  ? 'Cargando cargos...'
+                                  : 'Seleccione'}
+                              </option>
+                              {cargosAdminGlobal.map((cargoOpt) => (
+                                <option key={cargoOpt.id} value={cargoOpt.id}>
+                                  {cargoOpt.label}
                                 </option>
-                                {cargosAdminGlobal.map((cargoOpt) => (
-                                  <option key={cargoOpt.id} value={cargoOpt.id}>
-                                    {cargoOpt.label}
-                                  </option>
-                                ))}
-                              </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {isAuditor && (
-                      <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid nuevo-usuario-single-grid">
-                          <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
-                            <label htmlFor="cargo" className="nuevo-usuario-label">
-                              Cargo
-                            </label>
-                            <div className="nuevo-usuario-select-wrapper">
-                              <select
-                                id="cargo"
-                                className="nuevo-usuario-select"
-                                value={formData.cargo}
-                                onChange={(e) => handleChange('cargo', e.target.value)}
-                                disabled={isLoadingCargosAuditor && cargosAuditor.length === 0}
-                              >
-                                <option value="">
-                                  {isLoadingCargosAuditor && cargosAuditor.length === 0
-                                    ? 'Cargando cargos...'
-                                    : 'Seleccione'}
-                                </option>
-                                {cargosAuditor.map((cargoOpt) => (
-                                  <option key={cargoOpt.id} value={cargoOpt.id}>
-                                    {cargoOpt.label}
-                                  </option>
-                                ))}
-                              </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
-                            </div>
+                              ))}
+                            </select>
+                            <FiChevronDown className="nuevo-usuario-select-caret" />
                           </div>
                         </div>
                       </div>
