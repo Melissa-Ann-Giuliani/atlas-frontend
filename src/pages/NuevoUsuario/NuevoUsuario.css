@@ -199,8 +199,9 @@
 
 .nuevo-usuario-form-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(260px, 360px);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px 28px;
+  max-width: 1100px;
   margin-bottom: 22px;
 }
 
@@ -351,8 +352,9 @@
 
 .nuevo-usuario-extra-grid {
   display: grid;
-  grid-template-columns: minmax(180px, 200px) minmax(180px, 200px);
-  gap: 16px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 28px;
+  max-width: 1100px;
 }
 
 .nuevo-usuario-single-grid {
@@ -360,7 +362,10 @@
 }
 
 .nuevo-usuario-admin-unidad-grid {
-  grid-template-columns: minmax(180px, 200px) minmax(180px, 200px) minmax(180px, 220px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px 28px;
+  max-width: 1100px;
 }
 
 .nuevo-usuario-field-cargo,
@@ -439,7 +444,7 @@
 }
 
 
-@media (max-width: 1024px) {
+@media (max-width: 640px) {
   .nuevo-usuario-content-area {
     padding: 16px;
   }
