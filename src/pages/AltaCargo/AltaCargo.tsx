@@ -382,25 +382,31 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                     </div>
                   )}
 
-                  <form className="alta-cargo-form" onSubmit={handleSubmit} autoComplete="off">
+                  <div className="alta-cargo-form">
                     {/* SECTION 1: DATOS DE CARGOS */}
                     <h3 className="alta-cargo-section-title">Datos de Cargos</h3>
 
                     {/* Row 1: N° de Cargo, Fecha de Creación, Estado */}
                     <div className="alta-cargo-grid-3">
                       <div className="alta-cargo-field">
-                        <label htmlFor="numeroCargo" className="alta-cargo-label">
+                        <label htmlFor="codigo_cargo_pos" className="alta-cargo-label">
                           N° de Cargo
                         </label>
                         <input
-                          id="numeroCargo"
-                          name="numeroCargo"
+                          id="codigo_cargo_pos"
+                          name="codigo_cargo_pos"
                           type="text"
                           className="alta-cargo-input"
                           placeholder="Ingrese valor"
                           value={formData.numeroCargo}
                           onChange={(e) => handleChange('numeroCargo', e.target.value)}
                           autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck={false}
+                          data-lpignore="true"
+                          data-form-type="other"
+                          data-1p-ignore="true"
                         />
                       </div>
 
@@ -411,7 +417,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                         <div className="alta-cargo-datepicker-container">
                           <DatePicker
                             id="fechaCreacion"
-                            name="fechaCreacion"
+                            name="fecha_alta_cargo"
                             selected={parseIsoToDate(formData.fechaCreacion)}
                             onChange={(date: Date | null) => handleChange('fechaCreacion', formatDateToIso(date))}
                             dateFormat="dd/MM/yyyy"
@@ -643,6 +649,10 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                           value={formData.nroDesignacionAsociado}
                           onChange={(e) => handleChange('nroDesignacionAsociado', e.target.value)}
                           autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-lpignore="true"
+                          data-form-type="other"
                         />
                       </div>
 
@@ -659,10 +669,14 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                           value={formData.nroCargoPredecesor}
                           onChange={(e) => handleChange('nroCargoPredecesor', e.target.value)}
                           autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-lpignore="true"
+                          data-form-type="other"
                         />
                       </div>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
             </div>

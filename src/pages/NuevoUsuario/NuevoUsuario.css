@@ -410,6 +410,12 @@
   font-size: 17px;
   pointer-events: none;
   z-index: 2;
+  transition: color 0.2s ease;
+}
+
+.nuevo-usuario-datepicker-container:hover .nuevo-usuario-datepicker-icon,
+.nuevo-usuario-datepicker-container:focus-within .nuevo-usuario-datepicker-icon {
+  color: #1A2E1C;
 }
 
 /* Custom theme for react-datepicker popup matching the design system */
