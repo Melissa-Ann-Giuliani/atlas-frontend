@@ -55,6 +55,11 @@ interface CargoDetailDTO {
   designacionFechaInicio: string;
   designacionFechaFin: string;
   actividadesVinculadas: ActividadData[];
+  origenId?: number | null;
+  origen?: string | null;
+  unidadId?: number | null;
+  unidadNombre?: string | null;
+  tipoUnidadNombre?: string | null;
   cargoPredecesor?: CargoPredecesorData;
   cargoOrigenDivision?: CargoPredecesorData;
   cargosSubdivididos?: SubcargoData[];

@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './ModificarCargo.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiCheckSquare, FiCalendar, FiSearch, FiRefreshCw, FiTrash2 } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiCheckSquare, FiCalendar, FiSearch, FiTrash2 } from 'react-icons/fi';
 
 registerLocale('es', es);
 
@@ -73,6 +73,8 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
   const [isLoadingCatalogs, setIsLoadingCatalogs] = useState<boolean>(true);
 
+  const [loadedCargoData, setLoadedCargoData] = useState<{ id: number; data: any } | null>(null);
+
   // Parse YYYY-MM-DD from formData into Date object for DatePicker
   const parseIsoToDate = (isoStr: string): Date | null => {
     if (!isoStr) return null;
@@ -89,6 +91,13 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  // Re-run matching whenever catalogs or loaded cargo change
+  useEffect(() => {
+    if (loadedCargoData) {
+      populateForm(loadedCargoData.id, loadedCargoData.data);
+    }
+  }, [dependencias, origenes, caracteres, categorias, dedicaciones]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load catalogs on mount
   useEffect(() => {
@@ -218,6 +227,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
       const response = await fetch(`${apiUrl}/api/cargos/${cargoId}`, { headers });
       if (response.ok) {
         const data = await response.json();
+        setLoadedCargoData({ id: cargoId, data });
         populateForm(cargoId, data);
       } else {
         setFeedback({
@@ -238,34 +248,45 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   const populateForm = (cargoId: number, data: any) => {
     // Match catalog IDs if data has names
     let matchedOrigenId = '';
-    if (data.origenId) matchedOrigenId = String(data.origenId);
-    else if (data.origen) {
-      const found = origenes.find((o) => o.label.toLowerCase() === data.origen.toLowerCase());
-      matchedOrigenId = found ? String(found.id) : data.origen;
+    const rawOrigenVal = data.origenId ?? data.origen?.origenId ?? data.origenNombre ?? data.origen?.origenNombre ?? data.origen;
+    if (rawOrigenVal !== undefined && rawOrigenVal !== null && rawOrigenVal !== '') {
+      const found = origenes.find(
+        (o) => String(o.id) === String(rawOrigenVal) || o.label.toLowerCase() === String(rawOrigenVal).toLowerCase()
+      );
+      matchedOrigenId = found ? String(found.id) : String(rawOrigenVal);
+    } else if (data.actividadesVinculadas && data.actividadesVinculadas.length > 0 && data.actividadesVinculadas[0].origen) {
+      const actOrigen = data.actividadesVinculadas[0].origen;
+      const found = origenes.find((o) => o.label.toLowerCase() === actOrigen.toLowerCase());
+      matchedOrigenId = found ? String(found.id) : '';
     }
 
     let matchedCaracterId = '';
-    if (data.caracterId) matchedCaracterId = String(data.caracterId);
-    else if (data.caracter) {
-      const found = caracteres.find((c) => c.label.toLowerCase() === data.caracter.toLowerCase());
-      matchedCaracterId = found ? String(found.id) : data.caracter;
+    const rawCaracterVal = data.caracterId ?? data.caracter?.caracterId ?? data.caracterNombre ?? data.caracter;
+    if (rawCaracterVal !== undefined && rawCaracterVal !== null && rawCaracterVal !== '') {
+      const found = caracteres.find(
+        (c) => String(c.id) === String(rawCaracterVal) || c.label.toLowerCase() === String(rawCaracterVal).toLowerCase()
+      );
+      matchedCaracterId = found ? String(found.id) : String(rawCaracterVal);
     }
 
     let matchedCategoriaId = '';
-    if (data.categoriaId) matchedCategoriaId = String(data.categoriaId);
-    else if (data.categoria) {
-      const found = categorias.find((cat) => cat.label.toLowerCase() === data.categoria.toLowerCase());
-      matchedCategoriaId = found ? String(found.id) : data.categoria;
+    const rawCategoriaVal = data.categoriaId ?? data.categoria?.categoriaId ?? data.categoriaNombre ?? data.categoria;
+    if (rawCategoriaVal !== undefined && rawCategoriaVal !== null && rawCategoriaVal !== '') {
+      const found = categorias.find(
+        (cat) => String(cat.id) === String(rawCategoriaVal) || cat.label.toLowerCase() === String(rawCategoriaVal).toLowerCase()
+      );
+      matchedCategoriaId = found ? String(found.id) : String(rawCategoriaVal);
     }
 
     let matchedDedicacionId = '';
     let cantHorasVal = '';
-    if (data.dedicacionId) {
-      matchedDedicacionId = String(data.dedicacionId);
-    } else if (data.dedicacion) {
-      const found = dedicaciones.find((d) => d.label.toLowerCase() === data.dedicacion.toLowerCase());
-      matchedDedicacionId = found ? String(found.id) : data.dedicacion;
-      if (found && found.horas !== undefined) {
+    const rawDedicacionVal = data.dedicacionId ?? data.dedicacion?.dedicacionId ?? data.dedicacionNombre ?? data.dedicacion;
+    if (rawDedicacionVal !== undefined && rawDedicacionVal !== null && rawDedicacionVal !== '') {
+      const found = dedicaciones.find(
+        (d) => String(d.id) === String(rawDedicacionVal) || d.label.toLowerCase() === String(rawDedicacionVal).toLowerCase()
+      );
+      matchedDedicacionId = found ? String(found.id) : String(rawDedicacionVal);
+      if (found && found.horas !== undefined && found.horas !== null) {
         cantHorasVal = String(found.horas);
       }
     }
@@ -286,13 +307,28 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
       designacionCode = String(data.designacionNroResolucion);
     }
 
+    // Dependencia & Departamento fallbacks
+    const resolvedDependencia =
+      data.tipoUnidadNombre ||
+      data.unidad?.tipoUnidad?.tipoUnidadNombre ||
+      data.unidad?.tipoUnidadNombre ||
+      data.dependencia ||
+      '';
+
+    const resolvedDepartamento =
+      data.unidadNombre ||
+      data.unidad?.unidadNombre ||
+      data.unidad?.nombre ||
+      data.departamento ||
+      '';
+
     setFormData({
       cargoId,
       numeroCargo: String(data.numero || data.codigo || ''),
       fechaCreacion: data.fechaCreacion ? data.fechaCreacion.split('T')[0] : '',
       estado: data.estado || 'Libre',
-      dependencia: data.tipoUnidadNombre || data.dependencia || '',
-      departamento: data.unidadNombre || data.departamento || '',
+      dependencia: resolvedDependencia,
+      departamento: resolvedDepartamento,
       origen: matchedOrigenId,
       caracter: matchedCaracterId,
       categoria: matchedCategoriaId,
