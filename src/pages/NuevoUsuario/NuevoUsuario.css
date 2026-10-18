@@ -368,10 +368,38 @@
   max-width: 1100px;
 }
 
+.nuevo-usuario-docente-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px;
+  width: 100%;
+}
+
 .nuevo-usuario-field-cargo,
 .nuevo-usuario-field-dependencia,
 .nuevo-usuario-field-unidad {
   width: 100%;
+}
+
+/* Date input wrapper with calendar icon */
+.nuevo-usuario-date-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.nuevo-usuario-date-input {
+  width: 100%;
+  padding-right: 36px;
+}
+
+.nuevo-usuario-date-icon {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: #757873;
+  font-size: 16px;
 }
 
 @keyframes fadeInField {
@@ -444,6 +472,12 @@
 }
 
 
+@media (max-width: 900px) {
+  .nuevo-usuario-docente-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
   .nuevo-usuario-content-area {
     padding: 16px;
@@ -468,7 +502,8 @@
   .nuevo-usuario-form-grid,
   .nuevo-usuario-extra-grid,
   .nuevo-usuario-single-grid,
-  .nuevo-usuario-admin-unidad-grid {
+  .nuevo-usuario-admin-unidad-grid,
+  .nuevo-usuario-docente-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
