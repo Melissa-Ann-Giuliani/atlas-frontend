@@ -586,38 +586,41 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
             {/* Container Card */}
             <div className="modificar-cargo-container-card">
-              <div className="modificar-cargo-header">
-                <h1 className="modificar-cargo-title">Gestión</h1>
-              </div>
+              {/* Header & Search Bar Row */}
+              <div className="modificar-cargo-header-row">
+                <div className="modificar-cargo-header-left">
+                  <h1 className="modificar-cargo-title">Gestión</h1>
+                </div>
 
-              {/* Search Card */}
-              <div className="modificar-cargo-search-card">
-                <label htmlFor="searchCargoInput" className="modificar-cargo-search-label">
-                  Buscar Cargo a Modificar por Número
-                </label>
-                <div className="modificar-cargo-search-row">
-                  <div className="modificar-cargo-search-input-wrap">
-                    <FiSearch className="modificar-cargo-search-icon" />
-                    <input
-                      id="searchCargoInput"
-                      type="text"
-                      className="modificar-cargo-search-input"
-                      placeholder="Ingrese N° de Cargo (ej: 1001)..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      autoComplete="off"
-                    />
+                {/* Search Bar matching FilterBar style */}
+                <div className="modificar-cargo-search-card">
+                  <label htmlFor="searchCargoInput" className="modificar-cargo-search-label">
+                    Buscar Cargo a Modificar por Número
+                  </label>
+                  <div className="modificar-cargo-search-row">
+                    <div className="modificar-cargo-search-input-wrap">
+                      <input
+                        id="searchCargoInput"
+                        type="text"
+                        className="modificar-cargo-search-input"
+                        placeholder="Ingrese valor"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        autoComplete="off"
+                      />
+                      <FiSearch className="modificar-cargo-search-icon" />
+                    </div>
+                    <button
+                      type="button"
+                      className="modificar-cargo-search-btn"
+                      onClick={() => handleSearch()}
+                      disabled={isSearching}
+                    >
+                      <FiSearch />
+                      <span>{isSearching ? 'Buscando...' : 'Buscar Cargo'}</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="modificar-cargo-search-btn"
-                    onClick={() => handleSearch()}
-                    disabled={isSearching}
-                  >
-                    <FiSearch />
-                    <span>{isSearching ? 'Buscando...' : 'Buscar Cargo'}</span>
-                  </button>
                 </div>
               </div>
 
