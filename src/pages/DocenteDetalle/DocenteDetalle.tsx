@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+Ôªøimport { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
@@ -134,7 +134,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
       }
 
       if (!resolvedId) {
-        setError('No se proporcionÛ un ID v·lido para el docente (usuarioId).');
+        setError('No se proporcion√≥ un ID v√°lido para el docente (usuarioId).');
         setIsLoading(false);
         return;
       }
@@ -154,7 +154,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
         }
       } catch (err) {
         console.error(err);
-        setError('OcurriÛ un error al cargar los detalles.');
+        setError('Ocurri√≥ un error al cargar los detalles.');
       } finally {
         setIsLoading(false);
       }
@@ -277,7 +277,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                       </div>
 
                       <div className="info-group">
-                        <span className="info-label">TEL…FONO</span>
+                        <span className="info-label">TEL√âFONO</span>
                         <span className="info-value">
                           {datosPersonales?.telefonos && datosPersonales.telefonos.length > 0
                             ? datosPersonales.telefonos.join(', ')
@@ -289,16 +289,16 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                   </div>
 
                   <div className="section-block-left">
-                    <h2 className="section-title">DesignaciÛn y Cargo</h2>
+                    <h2 className="section-title">Designaci√≥n y Cargo</h2>
                     <hr className="section-divider" />
 
                     <div className="info-grid-2">
                       <div className="info-group">
-                        <span className="info-label">N∞ LEGAJO</span>
+                        <span className="info-label">N¬∞ LEGAJO</span>
                         <span className="info-value">{designacion?.legajo || 'No especificado'}</span>
                       </div>
                       <div className="info-group">
-                        <span className="info-label">N∞ RESOLUCI”N</span>
+                        <span className="info-label">N¬∞ RESOLUCI√ìN</span>
                         <span className="info-value">{designacion?.nroResolucion || 'No especificado'}</span>
                       </div>
 
@@ -307,26 +307,26 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                         <span className="info-value">{formatDate(designacion?.fechaInicio)}</span>
                       </div>
                       <div className="info-group">
-                        <span className="info-label">FECHA DE FINALIZACI”N</span>
+                        <span className="info-label">FECHA DE FINALIZACI√ìN</span>
                         <span className="info-value">{formatDate(designacion?.fechaFin)}</span>
                       </div>
 
                       <div className="info-group">
-                        <span className="info-label">N∞ CARGO</span>
+                        <span className="info-label">N¬∞ CARGO</span>
                         <span className="info-value">{designacion?.nroCargo || 'No especificado'}</span>
                       </div>
                       <div className="info-group">
-                        <span className="info-label">CATEGORÕA</span>
+                        <span className="info-label">CATEGOR√çA</span>
                         <span className="info-value">{designacion?.categoria || docente.categoria || 'No especificado'}</span>
                       </div>
 
                       <div className="info-group">
-                        <span className="info-label">DEDICACI”N</span>
+                        <span className="info-label">DEDICACI√ìN</span>
                         <span className="info-value">{designacion?.dedicacion || docente.dedicacion || 'No especificado'}</span>
                       </div>
 
                       <div className="info-group">
-                        <span className="info-label">CAR¡CTER</span>
+                        <span className="info-label">CAR√ÅCTER</span>
                         <span className="info-value">{designacion?.caracter || docente.caracter || 'No especificado'}</span>
                       </div>
                       <div className="info-group">
@@ -351,7 +351,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                         <thead>
                           <tr>
                             <th>Materia / Proyecto</th>
-                            <th>FunciÛn</th>
+                            <th>Funci√≥n</th>
                             <th>Origen</th>
                             <th>Horas</th>
                           </tr>
@@ -420,9 +420,9 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                     )}
                   </div>
 
-                  {/* DocumentaciÛn Adjunta */}
+                  {/* Documentaci√≥n Adjunta */}
                   <div className="section-block-right">
-                    <h2 className="section-title">DocumentaciÛn Adjunta</h2>
+                    <h2 className="section-title">Documentaci√≥n Adjunta</h2>
                     <hr className="section-divider" />
 
                     <div className="documentos-container">
@@ -449,7 +449,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                                   </div>
                                   <div className="doc-card-bottom">
                                     <h5 className="doc-name">{doc.name}</h5>
-                                    <p className="doc-meta">{doc.size} ï {doc.date}</p>
+                                    <p className="doc-meta">{doc.size} ‚Ä¢ {doc.date}</p>
                                   </div>
                                 </div>
                               );
@@ -459,7 +459,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                               <div className="empty-slot-icon">
                                 <BiArchiveIn />
                               </div>
-                              <p>No hay documentaciÛn adjunta de momento.</p>
+                              <p>No hay documentaci√≥n adjunta de momento.</p>
                             </div>
                           )}
 

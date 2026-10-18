@@ -7,10 +7,9 @@ import CargoDetalle from './pages/CargoDetalle/CargoDetalle.tsx'
 import LicenciaDetalle from './pages/LicenciaDetalle/LicenciaDetalle'
 import Gestion from './pages/Gestion/Gestion'
 import NuevoUsuario from './pages/NuevoUsuario/NuevoUsuario'
+import AltaCargo from './pages/AltaCargo/AltaCargo'
 
-
-
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -18,6 +17,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
   if (page === 'modificar_docente') return 'gestion/modificar_docente';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
+  if (page === 'alta_cargo') return 'gestion/alta_cargo';
   return page;
 };
 
@@ -27,8 +27,9 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'listado/licencia_detalle') return 'licencia_detalle';
   if (path === 'gestion/modificar_docente') return 'modificar_docente';
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
+  if (path === 'gestion/alta_cargo') return 'alta_cargo';
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo'];
   return validPages.includes(path as Page) ? (path as Page) : 'inicio';
 };
 
@@ -316,6 +317,14 @@ function App() {
     } else if (activePage === 'nuevo_usuario') {
       content = (
         <NuevoUsuario
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          onBack={() => handleNavigate('gestion')}
+        />
+      );
+    } else if (activePage === 'alta_cargo') {
+      content = (
+        <AltaCargo
           onLogout={handleLogout}
           onNavigate={handleNavigate}
           onBack={() => handleNavigate('gestion')}
