@@ -284,10 +284,59 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!formData.numeroCargo.trim()) {
+    // Validaciones de campos obligatorios requeridos por el backend (CargoCreateRequest)
+    if (!formData.numeroCargo.trim() || isNaN(Number(formData.numeroCargo.trim()))) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, ingrese el N° de Cargo.',
+        message: 'Por favor, ingrese un N° de Cargo válido.',
+      });
+      return;
+    }
+
+    if (!formData.fechaCreacion) {
+      setFeedback({
+        type: 'error',
+        message: 'La fecha de creación es obligatoria.',
+      });
+      return;
+    }
+
+    if (!formData.departamento) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione una Dependencia y Departamento.',
+      });
+      return;
+    }
+
+    if (!formData.origen) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione el Origen.',
+      });
+      return;
+    }
+
+    if (!formData.caracter) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione el Carácter.',
+      });
+      return;
+    }
+
+    if (!formData.categoria) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione la Categoría.',
+      });
+      return;
+    }
+
+    if (!formData.dedicacion) {
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, seleccione la Dedicación.',
       });
       return;
     }
@@ -304,21 +353,16 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
       const payload = {
-        numero: Number(formData.numeroCargo.trim()) || formData.numeroCargo.trim(),
-        fechaCreacion: formData.fechaCreacion || undefined,
-        estado: formData.estado || 'Libre',
-        dependenciaId: formData.dependencia ? Number(formData.dependencia) || formData.dependencia : undefined,
-        departamentoId: formData.departamento ? Number(formData.departamento) || formData.departamento : undefined,
-        origen: formData.origen || undefined,
-        caracter: formData.caracter || undefined,
-        caracterId: formData.caracter ? Number(formData.caracter) || undefined : undefined,
-        categoria: formData.categoria || undefined,
-        categoriaId: formData.categoria ? Number(formData.categoria) || undefined : undefined,
-        dedicacion: formData.dedicacion || undefined,
-        dedicacionId: formData.dedicacion ? Number(formData.dedicacion) || undefined : undefined,
-        cantHoras: formData.cantHoras ? Number(formData.cantHoras) : undefined,
-        nroDesignacionAsociado: formData.nroDesignacionAsociado ? Number(formData.nroDesignacionAsociado) || formData.nroDesignacionAsociado : undefined,
-        cargoPredecesorNumero: formData.nroCargoPredecesor ? Number(formData.nroCargoPredecesor) || formData.nroCargoPredecesor : undefined,
+        codigo: Number(formData.numeroCargo.trim()),
+        fechaCreacion: formData.fechaCreacion,
+        unidadId: Number(formData.departamento),
+        origenId: Number(formData.origen),
+        caracterId: Number(formData.caracter),
+        categoriaId: Number(formData.categoria),
+        dedicacionId: Number(formData.dedicacion),
+        ...(formData.nroCargoPredecesor && !isNaN(Number(formData.nroCargoPredecesor))
+          ? { predecesorCodigo: Number(formData.nroCargoPredecesor) }
+          : {}),
       };
 
       const response = await fetch(`${apiUrl}/api/cargos`, {
@@ -343,7 +387,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
       } else if (response.status === 403) {
         setFeedback({
           type: 'error',
-          message: 'No tiene permisos para registrar un nuevo cargo.',
+          message: data?.message || 'No tiene permisos para registrar un nuevo cargo en esta unidad.',
         });
       } else {
         setFeedback({
