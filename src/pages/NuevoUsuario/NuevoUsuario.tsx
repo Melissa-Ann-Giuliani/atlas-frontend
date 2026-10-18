@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale/es';
+import 'react-datepicker/dist/react-datepicker.css';
 import './NuevoUsuario.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
+
+registerLocale('es', es);
 
 interface NuevoUsuarioProps {
   onLogout?: () => void;
@@ -20,6 +25,13 @@ interface FormState {
   cargo: string;
   dependencia: string;
   unidad: string;
+  tipoDni: string;
+  numeroDni: string;
+  cuil: string;
+  domicilio: string;
+  emailInstitucional: string;
+  fechaIngreso: string;
+  antigPrevia: string;
 }
 
 interface RoleOption {
@@ -30,6 +42,12 @@ interface RoleOption {
 
 interface CargoOption {
   id: string;
+  label: string;
+}
+
+interface TipoDniOption {
+  value: string;
+  nombre?: string;
   label: string;
 }
 
@@ -52,6 +70,11 @@ const defaultRoles: RoleOption[] = [
   { id: 'DOCENTE', nombre: 'DOCENTE', label: 'Docente' },
 ];
 
+const defaultTiposDni: TipoDniOption[] = [
+  { value: 'DNI', label: 'DNI' },
+  { value: 'PASAPORTE', label: 'Pasaporte' },
+];
+
 const defaultCargosAuditor: CargoOption[] = [
   { id: 'DECANO', label: 'Decano' },
   { id: 'VICEDECANO', label: 'Vicedecano' },
@@ -68,6 +91,13 @@ const initialFormState: FormState = {
   cargo: '',
   dependencia: '',
   unidad: '',
+  tipoDni: '',
+  numeroDni: '',
+  cuil: '',
+  domicilio: '',
+  emailInstitucional: '',
+  fechaIngreso: '',
+  antigPrevia: '',
 };
 
 const generateSecureRandomPassword = (): string => {
@@ -95,6 +125,23 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   const [isLoadingPassword, setIsLoadingPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Parse YYYY-MM-DD from formData into Date object for DatePicker
+  const parseIsoToDate = (isoStr: string): Date | null => {
+    if (!isoStr) return null;
+    const [year, month, day] = isoStr.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  // Format Date object to YYYY-MM-DD for formData & backend
+  const formatDateToIso = (date: Date | null): string => {
+    if (!date || isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const fetchRandomPassword = async () => {
     setIsLoadingPassword(true);
@@ -187,6 +234,37 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
 
   const [unidades, setUnidades] = useState<UnidadOption[]>([]);
   const [isLoadingUnidades, setIsLoadingUnidades] = useState<boolean>(false);
+
+  const [tiposDni, setTiposDni] = useState<TipoDniOption[]>(defaultTiposDni);
+  const [isLoadingTiposDni, setIsLoadingTiposDni] = useState<boolean>(false);
+
+  const fetchTiposDni = async () => {
+    setIsLoadingTiposDni(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const response = await fetch(`${apiUrl}/api/usuarios/docente/tipos-dni`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: TipoDniOption[] = data.map((item: any) => ({
+            value: item.value ?? item.id ?? item.nombre,
+            label: item.label ?? item.nombre ?? item.value ?? String(item),
+          }));
+          setTiposDni(mapped);
+          return;
+        }
+      }
+      setTiposDni(defaultTiposDni);
+    } catch (err) {
+      console.warn('No se pudieron obtener los tipos de DNI del backend, usando predeterminados.', err);
+      setTiposDni(defaultTiposDni);
+    } finally {
+      setIsLoadingTiposDni(false);
+    }
+  };
 
   const fetchCargosAdminGlobal = async () => {
     setIsLoadingCargos(true);
@@ -388,6 +466,17 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     String(formData.rol).toLowerCase().includes('auditor')
   );
 
+  const isDocente = Boolean(
+    (selectedRole && (
+      selectedRole.nombre === 'Docente' ||
+      selectedRole.nombre === 'DOCENTE' ||
+      String(selectedRole.nombre || '').toLowerCase().includes('docente') ||
+      String(selectedRole.label || '').toLowerCase().includes('docente') ||
+      String(selectedRole.id || '').toLowerCase().includes('docente')
+    )) ||
+    String(formData.rol).toLowerCase().includes('docente')
+  );
+
   const selectedDependencia = dependencias.find(
     (d) => String(d.id) === String(formData.dependencia) || d.label === formData.dependencia
   );
@@ -406,11 +495,15 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       fetchCargosAuditor();
       setFormData((prev) => (prev.dependencia || prev.unidad ? { ...prev, dependencia: '', unidad: '' } : prev));
       setUnidades([]);
+    } else if (isDocente) {
+      fetchTiposDni();
+      setFormData((prev) => (prev.cargo || prev.dependencia || prev.unidad ? { ...prev, cargo: '', dependencia: '', unidad: '' } : prev));
+      setUnidades([]);
     } else {
       setFormData((prev) => (prev.cargo || prev.dependencia || prev.unidad ? { ...prev, cargo: '', dependencia: '', unidad: '' } : prev));
       setUnidades([]);
     }
-  }, [isAdminGlobal, isAdminUnidad, isAuditor]);
+  }, [isAdminGlobal, isAdminUnidad, isAuditor, isDocente]);
 
   useEffect(() => {
     if (isAdminUnidad && formData.dependencia) {
@@ -526,6 +619,30 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
       }
     }
 
+    if (isDocente) {
+      if (!formData.tipoDni) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, seleccione un tipo de DNI para el Docente.',
+        });
+        return;
+      }
+      if (!formData.numeroDni.trim()) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese el número de documento.',
+        });
+        return;
+      }
+      if (!formData.cuil.trim()) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese el CUIL.',
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setFeedback(null);
 
@@ -544,6 +661,8 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
         endpoint = `${apiUrl}/api/usuarios/admin-unidad`;
       } else if (isAuditor) {
         endpoint = `${apiUrl}/api/usuarios/auditor`;
+      } else if (isDocente) {
+        endpoint = `${apiUrl}/api/usuarios/docente`;
       }
 
       const payload = {
@@ -574,6 +693,17 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
             unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
             dependencia: formData.dependencia,
             tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
+          }
+          : {}),
+        ...(isDocente
+          ? {
+            tipoDni: formData.tipoDni,
+            dni: formData.numeroDni.trim() ? Number(formData.numeroDni.trim().replace(/\D/g, '')) || formData.numeroDni.trim() : undefined,
+            cuil: formData.cuil.trim() ? Number(formData.cuil.trim().replace(/\D/g, '')) || formData.cuil.trim() : undefined,
+            domicilio: formData.domicilio.trim() || undefined,
+            emailInstitucional: formData.emailInstitucional.trim() || undefined,
+            fechaIngreso: formData.fechaIngreso || undefined,
+            antigPrevia: formData.antigPrevia.trim() ? Number(formData.antigPrevia.trim()) : 0,
           }
           : {}),
       };
@@ -658,7 +788,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                     </div>
                   )}
 
-                  <form className="nuevo-usuario-form" onSubmit={handleSubmit}>
+                  <form className="nuevo-usuario-form" onSubmit={handleSubmit} autoComplete="off">
                     <div className="nuevo-usuario-form-grid">
                       <div className="nuevo-usuario-field">
                         <label htmlFor="apellido" className="nuevo-usuario-label">
@@ -666,11 +796,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                         </label>
                         <input
                           id="apellido"
+                          name="atlas_user_apellido"
                           type="text"
                           className="nuevo-usuario-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
+                          autoComplete="off"
                         />
                       </div>
 
@@ -930,6 +1062,143 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                               </div>
                             </div>
                           )}
+                        </div>
+                      </div>
+                    )}
+
+                    {isDocente && (
+                      <div className="nuevo-usuario-extra-section">
+                        <div className="nuevo-usuario-docente-grid">
+                          {/* Fila 1 */}
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="tipoDni" className="nuevo-usuario-label">
+                              Tipo DNI
+                            </label>
+                            <div className="nuevo-usuario-select-wrapper">
+                              <select
+                                id="tipoDni"
+                                className="nuevo-usuario-select"
+                                value={formData.tipoDni}
+                                onChange={(e) => handleChange('tipoDni', e.target.value)}
+                                disabled={isLoadingTiposDni && tiposDni.length === 0}
+                              >
+                                <option value="">
+                                  {isLoadingTiposDni && tiposDni.length === 0 ? 'Cargando tipos...' : 'Seleccione'}
+                                </option>
+                                {tiposDni.map((tipo) => (
+                                  <option key={tipo.value} value={tipo.value}>
+                                    {tipo.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                            </div>
+                          </div>
+
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="numeroDni" className="nuevo-usuario-label">
+                              Número
+                            </label>
+                            <input
+                              id="numeroDni"
+                              name="docente_numero_documento"
+                              type="text"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.numeroDni}
+                              onChange={(e) => handleChange('numeroDni', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
+
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="cuil" className="nuevo-usuario-label">
+                              CUIL
+                            </label>
+                            <input
+                              id="cuil"
+                              name="docente_cuil"
+                              type="text"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.cuil}
+                              onChange={(e) => handleChange('cuil', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
+
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="domicilio" className="nuevo-usuario-label">
+                              Domicilio
+                            </label>
+                            <input
+                              id="domicilio"
+                              name="docente_domicilio"
+                              type="text"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.domicilio}
+                              onChange={(e) => handleChange('domicilio', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
+
+                          {/* Fila 2 */}
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="emailInstitucional" className="nuevo-usuario-label">
+                              Email Institucional
+                            </label>
+                            <input
+                              id="emailInstitucional"
+                              name="docente_email_institucional"
+                              type="email"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.emailInstitucional}
+                              onChange={(e) => handleChange('emailInstitucional', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
+
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="fechaIngreso" className="nuevo-usuario-label">
+                              Fecha de Ingreso a la Universidad
+                            </label>
+                            <div className="nuevo-usuario-datepicker-container">
+                              <DatePicker
+                                id="fechaIngreso"
+                                name="docente_fecha_ingreso"
+                                selected={parseIsoToDate(formData.fechaIngreso)}
+                                onChange={(date: Date | null) => handleChange('fechaIngreso', formatDateToIso(date))}
+                                dateFormat="dd/MM/yyyy"
+                                placeholderText="DD/MM/AAAA"
+                                locale="es"
+                                className="nuevo-usuario-input nuevo-usuario-datepicker-input"
+                                autoComplete="off"
+                                showYearDropdown
+                                showMonthDropdown
+                                dropdownMode="select"
+                              />
+                              <FiCalendar className="nuevo-usuario-datepicker-icon" />
+                            </div>
+                          </div>
+
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="antigPrevia" className="nuevo-usuario-label">
+                              Antigüedad Previa
+                            </label>
+                            <input
+                              id="antigPrevia"
+                              name="docente_antiguedad_previa"
+                              type="number"
+                              min="0"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.antigPrevia}
+                              onChange={(e) => handleChange('antigPrevia', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
