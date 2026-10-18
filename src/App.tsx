@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login/Login'
 import Inicio from './pages/Inicio/Inicio'
 import Listado from './pages/Listado/Listado'
-import DocenteDetalle from './pages/DocenteDetalle/DocenteDetalle'
-import CargoDetalle from './pages/CargoDetalle/CargoDetalle.tsx'
-import LicenciaDetalle from './pages/LicenciaDetalle/LicenciaDetalle'
+import DocenteDetalle from './pages/Listado/DocenteDetalle/DocenteDetalle'
+import CargoDetalle from './pages/Listado/CargoDetalle/CargoDetalle.tsx'
+import LicenciaDetalle from './pages/Listado/LicenciaDetalle/LicenciaDetalle'
 import Gestion from './pages/Gestion/Gestion'
-import NuevoUsuario from './pages/NuevoUsuario/NuevoUsuario'
-import AltaCargo from './pages/AltaCargo/AltaCargo'
+import NuevoUsuario from './pages/Gestion/NuevoUsuario/NuevoUsuario'
+import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
+import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -18,6 +19,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'modificar_docente') return 'gestion/modificar_docente';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
   if (page === 'alta_cargo') return 'gestion/alta_cargo';
+  if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
   return page;
 };
 
@@ -28,8 +30,9 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/modificar_docente') return 'modificar_docente';
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
+  if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo'];
   return validPages.includes(path as Page) ? (path as Page) : 'inicio';
 };
 
@@ -258,6 +261,11 @@ function App() {
       }
     }
 
+    if (page === 'modificar_cargo' && data) {
+      setSelectedCargo(data);
+      sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(data));
+    }
+
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
       sessionStorage.setItem('atlas_selected_licencia', JSON.stringify(data));
@@ -325,6 +333,15 @@ function App() {
     } else if (activePage === 'alta_cargo') {
       content = (
         <AltaCargo
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          onBack={() => handleNavigate('gestion')}
+        />
+      );
+    } else if (activePage === 'modificar_cargo') {
+      content = (
+        <ModificarCargo
+          initialCargo={selectedCargo}
           onLogout={handleLogout}
           onNavigate={handleNavigate}
           onBack={() => handleNavigate('gestion')}

@@ -1,7 +1,7 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './CargoDetalle.css';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
+import Sidebar from '../../../components/Sidebar';
+import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiCheckCircle, FiEdit3, FiLink } from 'react-icons/fi';
 import { FaPaperclip, FaFilePdf, FaImage, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
@@ -269,7 +269,10 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
                   <div className={`status-badge ${(detalle?.estado || cargo.estado)?.toLowerCase() === 'asignado' ? 'asignado-status' : 'active-status'}`}>
                     <FiCheckCircle /> {detalle?.estado || cargo.estado || 'Asignado'}
                   </div>
-                  <button className="edit-btn">
+                  <button
+                    className="edit-btn"
+                    onClick={() => onNavigate && onNavigate('modificar_cargo', { ...cargo, ...detalle })}
+                  >
                     <FiEdit3 /> Editar Cargo
                   </button>
                 </div>

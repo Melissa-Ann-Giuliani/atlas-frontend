@@ -1,7 +1,7 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
+import Sidebar from '../../../components/Sidebar';
+import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiCheckCircle, FiEdit3 } from 'react-icons/fi';
 import { FaFilePdf, FaImage, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';

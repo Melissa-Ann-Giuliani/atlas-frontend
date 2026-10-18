@@ -3,8 +3,8 @@ import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
 import './NuevoUsuario.css';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
+import Sidebar from '../../../components/Sidebar';
+import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
 
 registerLocale('es', es);
