@@ -788,7 +788,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                     </div>
                   )}
 
-                  <form className="nuevo-usuario-form" onSubmit={handleSubmit}>
+                  <form className="nuevo-usuario-form" onSubmit={handleSubmit} autoComplete="off">
                     <div className="nuevo-usuario-form-grid">
                       <div className="nuevo-usuario-field">
                         <label htmlFor="apellido" className="nuevo-usuario-label">
@@ -796,11 +796,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                         </label>
                         <input
                           id="apellido"
+                          name="atlas_user_apellido"
                           type="text"
                           className="nuevo-usuario-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
+                          autoComplete="off"
                         />
                       </div>
 
@@ -1099,11 +1101,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             </label>
                             <input
                               id="numeroDni"
+                              name="docente_numero_documento"
                               type="text"
                               className="nuevo-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.numeroDni}
                               onChange={(e) => handleChange('numeroDni', e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
 
@@ -1113,11 +1117,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             </label>
                             <input
                               id="cuil"
+                              name="docente_cuil"
                               type="text"
                               className="nuevo-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.cuil}
                               onChange={(e) => handleChange('cuil', e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
 
@@ -1127,11 +1133,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             </label>
                             <input
                               id="domicilio"
+                              name="docente_domicilio"
                               type="text"
                               className="nuevo-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.domicilio}
                               onChange={(e) => handleChange('domicilio', e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
 
@@ -1142,11 +1150,13 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             </label>
                             <input
                               id="emailInstitucional"
+                              name="docente_email_institucional"
                               type="email"
                               className="nuevo-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
 
@@ -1157,6 +1167,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             <div className="nuevo-usuario-datepicker-container">
                               <DatePicker
                                 id="fechaIngreso"
+                                name="docente_fecha_ingreso"
                                 selected={parseIsoToDate(formData.fechaIngreso)}
                                 onChange={(date: Date | null) => handleChange('fechaIngreso', formatDateToIso(date))}
                                 dateFormat="dd/MM/yyyy"
@@ -1178,12 +1189,14 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             </label>
                             <input
                               id="antigPrevia"
+                              name="docente_antiguedad_previa"
                               type="number"
                               min="0"
                               className="nuevo-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.antigPrevia}
                               onChange={(e) => handleChange('antigPrevia', e.target.value)}
+                              autoComplete="off"
                             />
                           </div>
                         </div>
