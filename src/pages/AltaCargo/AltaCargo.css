@@ -1,0 +1,444 @@
+.alta-cargo-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--users-secondary-100, #E7DFD0);
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  text-align: left;
+}
+
+.alta-cargo-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.alta-cargo-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.alta-cargo-content-area {
+  padding: 24px 28px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Top Navigation: Retroceder */
+.alta-cargo-top-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.alta-cargo-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.alta-cargo-back-btn:hover {
+  text-decoration: underline;
+  transform: translateX(-2px);
+}
+
+.alta-cargo-back-icon {
+  font-size: 14px;
+  stroke-width: 2.5;
+}
+
+/* Big beige container card */
+.alta-cargo-container-card {
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  box-sizing: border-box;
+  animation: containerFadeIn 0.35s ease-out backwards;
+}
+
+@keyframes containerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alta-cargo-header {
+  margin-bottom: 20px;
+}
+
+.alta-cargo-title {
+  margin: 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 42px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: -0.5px;
+  display: inline-block;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+/* Green framed inner form card */
+.alta-cargo-form-card {
+  border: 1.5px solid var(--admin-primary-800, #2A4B2F);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--users-secondary-50, #F6F3EE);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  margin-bottom: 12px;
+}
+
+.alta-cargo-card-header {
+  background-color: var(--admin-primary-800, #2A4B2F);
+  padding: 12px 24px;
+}
+
+.alta-cargo-card-header h2 {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+}
+
+/* Scrollable or expandable form card body */
+.alta-cargo-card-body {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.alta-cargo-section-title {
+  margin: 0 0 18px 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+  display: inline-block;
+}
+
+/* Feedback banner */
+.alta-cargo-feedback {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  animation: feedbackSlide 0.25s ease-out;
+}
+
+@keyframes feedbackSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedback-success {
+  background-color: #E6F4EA;
+  color: #137333;
+  border: 1px solid #A8DAB5;
+}
+
+.feedback-error {
+  background-color: #FCE8E6;
+  color: #C5221F;
+  border: 1px solid #F5C2C7;
+}
+
+/* Form container */
+.alta-cargo-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Section 1: Datos de Cargos Grids */
+.alta-cargo-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px 28px;
+  max-width: 1000px;
+  margin-bottom: 18px;
+}
+
+.alta-cargo-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px 28px;
+  max-width: 700px;
+  margin-bottom: 18px;
+}
+
+/* Section Dividers */
+.alta-cargo-divider {
+  border: none;
+  border-top: 1px solid #757873;
+  opacity: 0.55;
+  margin: 10px 0 24px 0;
+  width: 100%;
+}
+
+/* Form Fields */
+.alta-cargo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alta-cargo-label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+}
+
+.alta-cargo-input {
+  height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #757873;
+  background-color: #FFFFFF;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #2D3748;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.alta-cargo-input:focus {
+  border-color: var(--admin-primary-600, #4B8653);
+  box-shadow: 0 0 0 3px rgba(75, 134, 83, 0.2);
+}
+
+.alta-cargo-input:read-only,
+.alta-cargo-input:disabled {
+  background-color: #FFFFFF;
+  color: #1A2E1C;
+  cursor: default;
+}
+
+.alta-cargo-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+/* Select wrapper and styled selects */
+.alta-cargo-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.alta-cargo-select {
+  height: 40px;
+  width: 100%;
+  padding: 8px 36px 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #C4B59C;
+  background-color: var(--users-secondary-200, #D7CAB2);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A2E1C;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.alta-cargo-select:focus {
+  border-color: var(--admin-primary-700, #3F6F45);
+  box-shadow: 0 0 0 3px rgba(63, 111, 69, 0.25);
+}
+
+.alta-cargo-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.alta-cargo-select-caret {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: #1A2E1C;
+  font-size: 16px;
+}
+
+/* DatePicker Integration */
+.alta-cargo-datepicker-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.alta-cargo-datepicker-container .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.alta-cargo-datepicker-container .react-datepicker__input-container {
+  width: 100%;
+}
+
+.alta-cargo-datepicker-input {
+  width: 100%;
+  padding-right: 40px !important;
+  box-sizing: border-box;
+}
+
+.alta-cargo-datepicker-icon {
+  position: absolute;
+  right: 12px;
+  color: #757873;
+  font-size: 17px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Bottom Actions Toolbar */
+.alta-cargo-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-alta-cargo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-alta-cargo .btn-icon {
+  font-size: 18px;
+}
+
+.btn-alta-cargo-borrar {
+  background-color: var(--btn-delete, #890505);
+}
+
+.btn-alta-cargo-borrar:hover {
+  background-color: #6E0404;
+  transform: translateY(-2px);
+}
+
+.btn-alta-cargo-borrar:active {
+  transform: translateY(0);
+}
+
+.btn-alta-cargo-confirmar {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.btn-alta-cargo-confirmar:hover {
+  background-color: #1F3823;
+  transform: translateY(-2px);
+}
+
+.btn-alta-cargo-confirmar:active {
+  transform: translateY(0);
+}
+
+.btn-alta-cargo-confirmar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .alta-cargo-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .alta-cargo-content-area {
+    padding: 16px;
+  }
+
+  .alta-cargo-container-card {
+    padding: 18px;
+  }
+
+  .alta-cargo-title {
+    font-size: 32px;
+  }
+
+  .alta-cargo-card-header h2 {
+    font-size: 20px;
+  }
+
+  .alta-cargo-section-title {
+    font-size: 22px;
+  }
+
+  .alta-cargo-grid-3,
+  .alta-cargo-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

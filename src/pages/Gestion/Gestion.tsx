@@ -30,7 +30,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       title: 'Cargos',
       headerClass: 'header-cargos',
       options: [
-        { id: 'alta_cargo', label: 'Alta de Cargo', type: 'green' },
+        { id: 'alta_cargo', label: 'Alta de Cargo', type: 'green', targetPage: 'alta_cargo' },
         { id: 'modificacion_cargo', label: 'Modificación de Cargo', type: 'blue' },
         { id: 'baja_cargo', label: 'Baja de Cargo', type: 'red' },
       ],
@@ -72,6 +72,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate(option.targetPage);
     } else if ((option.id === 'alta_usuario' || option.id === 'nuevo_usuario') && onNavigate) {
       onNavigate('nuevo_usuario');
+    } else if (option.id === 'alta_cargo' && onNavigate) {
+      onNavigate('alta_cargo');
     } else {
       // Future navigation handlers can be added here
       console.log(`Seleccionado: ${option.label} (${cardTitle})`);
