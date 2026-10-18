@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale/es';
+import 'react-datepicker/dist/react-datepicker.css';
 import './NuevoUsuario.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
+
+registerLocale('es', es);
 
 interface NuevoUsuarioProps {
   onLogout?: () => void;
@@ -120,6 +125,23 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
   const [isLoadingPassword, setIsLoadingPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Parse YYYY-MM-DD from formData into Date object for DatePicker
+  const parseIsoToDate = (isoStr: string): Date | null => {
+    if (!isoStr) return null;
+    const [year, month, day] = isoStr.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+  };
+
+  // Format Date object to YYYY-MM-DD for formData & backend
+  const formatDateToIso = (date: Date | null): string => {
+    if (!date || isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const fetchRandomPassword = async () => {
     setIsLoadingPassword(true);
@@ -1132,16 +1154,21 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                             <label htmlFor="fechaIngreso" className="nuevo-usuario-label">
                               Fecha de Ingreso a la Universidad
                             </label>
-                            <div className="nuevo-usuario-date-wrapper">
-                              <input
+                            <div className="nuevo-usuario-datepicker-container">
+                              <DatePicker
                                 id="fechaIngreso"
-                                type="date"
-                                className="nuevo-usuario-input nuevo-usuario-date-input"
-                                placeholder="DD/MM/AAAA"
-                                value={formData.fechaIngreso}
-                                onChange={(e) => handleChange('fechaIngreso', e.target.value)}
+                                selected={parseIsoToDate(formData.fechaIngreso)}
+                                onChange={(date: Date | null) => handleChange('fechaIngreso', formatDateToIso(date))}
+                                dateFormat="dd/MM/yyyy"
+                                placeholderText="DD/MM/AAAA"
+                                locale="es"
+                                className="nuevo-usuario-input nuevo-usuario-datepicker-input"
+                                autoComplete="off"
+                                showYearDropdown
+                                showMonthDropdown
+                                dropdownMode="select"
                               />
-                              <FiCalendar className="nuevo-usuario-date-icon" />
+                              <FiCalendar className="nuevo-usuario-datepicker-icon" />
                             </div>
                           </div>
 
