@@ -33,6 +33,7 @@ interface FormState {
 interface OptionItem {
   id: string | number;
   label: string;
+  horas?: number;
 }
 
 const getTodayIso = (): string => {
@@ -160,6 +161,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
               data.map((item: any) => ({
                 id: item.dedicacionId ?? item.id ?? item.nombre,
                 label: item.dedicacionNombre ?? item.nombre ?? String(item.id || item),
+                horas: item.dedicacionHoras ?? item.horas,
               }))
             );
           }
@@ -168,21 +170,28 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
         // Origenes
         if (resOrigenes && resOrigenes.ok) {
           const data = await resOrigenes.json();
-          if (Array.isArray(data)) {
+          if (Array.isArray(data) && data.length > 0) {
             setOrigenes(
               data.map((item: any) => ({
-                id: item.origenId ?? item.id ?? item.nombre,
+                id: item.origenId ?? item.id ?? item.origenNombre ?? item.nombre,
                 label: item.origenNombre ?? item.nombre ?? String(item.id || item),
               }))
             );
+          } else {
+            setOrigenes([
+              { id: 'Planta', label: 'Planta' },
+              { id: 'Investigación', label: 'Investigación' },
+              { id: 'Extensión', label: 'Extensión' },
+              { id: 'Gestión', label: 'Gestión' },
+            ]);
           }
         } else {
-          // Default fallbacks for Origen
+          // Default fallbacks for Origen from database (origen_nombre)
           setOrigenes([
-            { id: 'CREACION', label: 'Creación' },
-            { id: 'DIVISION', label: 'División' },
-            { id: 'SUBDIVISION', label: 'Subdivisión' },
-            { id: 'TRANSFERENCIA', label: 'Transferencia' },
+            { id: 'Planta', label: 'Planta' },
+            { id: 'Investigación', label: 'Investigación' },
+            { id: 'Extensión', label: 'Extensión' },
+            { id: 'Gestión', label: 'Gestión' },
           ]);
         }
       } catch (err) {
@@ -245,6 +254,16 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
     setFormData((prev) => {
       if (field === 'dependencia') {
         return { ...prev, dependencia: value, departamento: '' };
+      }
+      if (field === 'dedicacion') {
+        const selectedDed = dedicaciones.find((d) => String(d.id) === String(value));
+        return {
+          ...prev,
+          dedicacion: value,
+          cantHoras: selectedDed && selectedDed.horas !== undefined && selectedDed.horas !== null
+            ? String(selectedDed.horas)
+            : (value === '' ? '' : prev.cantHoras),
+        };
       }
       return { ...prev, [field]: value };
     });
