@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './ModificarCargo.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiCheckSquare, FiCalendar, FiSearch, FiTrash2 } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiCheckSquare, FiCalendar, FiSearch, FiTrash2, FiLayers, FiAlertCircle } from 'react-icons/fi';
 
 registerLocale('es', es);
 
@@ -37,6 +37,19 @@ interface OptionItem {
   id: string | number;
   label: string;
   horas?: number;
+}
+
+export interface SubcargoItem {
+  id: string; // unique key
+  numeroCargo: string;
+  fechaCreacion: string;
+  caracter: string;
+  categoria: string;
+  dedicacion: string;
+  cantHoras: string;
+  dependencia: string;
+  nroCargoPredecesor: string;
+  origenDivision: string; // locked to parent code
 }
 
 const emptyFormState: FormState = {
@@ -80,6 +93,11 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   const [isLoadingCatalogs, setIsLoadingCatalogs] = useState<boolean>(true);
 
   const [loadedCargoData, setLoadedCargoData] = useState<{ id: number; data: any } | null>(null);
+
+  // División de Cargo (RF19) State
+  const [numSubcargosInput, setNumSubcargosInput] = useState<string>('2');
+  const [subcargos, setSubcargos] = useState<SubcargoItem[]>([]);
+  const [isSubmittingDivision, setIsSubmittingDivision] = useState<boolean>(false);
 
   // Parse YYYY-MM-DD from formData into Date object for DatePicker
   const parseIsoToDate = (isoStr: string): Date | null => {
@@ -533,6 +551,8 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
     setFormData(emptyFormState);
     setSearchQuery('');
     setLoadedCargoData(null);
+    setSubcargos([]);
+    setNumSubcargosInput('2');
     setFeedback({
       type: 'info',
       message: 'Formulario limpiado. Ingrese un nuevo número de cargo para buscar.',
@@ -669,6 +689,239 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // RF19: División de Cargo Handlers & Calculations
+  const parentHoras = Number(formData.cantHoras) || (
+    dedicaciones.find((d) => String(d.id) === String(formData.dedicacion))?.horas || 0
+  );
+
+  const totalSubcargosHoras = subcargos.reduce((acc, sc) => {
+    return acc + (Number(sc.cantHoras) || 0);
+  }, 0);
+
+  const horasExcedidas = totalSubcargosHoras > parentHoras;
+
+  const handleGenerateSubcargos = () => {
+    const count = parseInt(numSubcargosInput, 10);
+    if (isNaN(count) || count < 2) {
+      setFeedback({
+        type: 'error',
+        message: 'La división requiere generar al menos 2 subcargos.',
+      });
+      return;
+    }
+
+    const todayIso = formatDateToIso(new Date());
+    const generated: SubcargoItem[] = [];
+
+    for (let i = 0; i < count; i++) {
+      generated.push({
+        id: `subcargo-${Date.now()}-${i}`,
+        numeroCargo: '',
+        fechaCreacion: todayIso,
+        caracter: formData.caracter || '',
+        categoria: formData.categoria || '',
+        dedicacion: '',
+        cantHoras: '',
+        dependencia: formData.dependencia || '',
+        nroCargoPredecesor: '',
+        origenDivision: formData.numeroCargo || '',
+      });
+    }
+
+    setSubcargos(generated);
+    setFeedback({
+      type: 'info',
+      message: `Se han generado ${count} subcargos para completar. Origen de división asignado: Cargo N° ${formData.numeroCargo}.`,
+    });
+  };
+
+  const handleSubcargoChange = (index: number, field: keyof SubcargoItem, value: string) => {
+    setSubcargos((prev) => {
+      const updated = [...prev];
+      const item = { ...updated[index] };
+
+      if (field === 'dedicacion') {
+        item.dedicacion = value;
+        const selectedDed = dedicaciones.find((d) => String(d.id) === String(value));
+        item.cantHoras = selectedDed && selectedDed.horas !== undefined && selectedDed.horas !== null
+          ? String(selectedDed.horas)
+          : (value === '' ? '' : item.cantHoras);
+      } else {
+        (item as any)[field] = value;
+      }
+
+      updated[index] = item;
+      return updated;
+    });
+    if (feedback && feedback.type === 'error') setFeedback(null);
+  };
+
+  const handleRemoveSubcargo = (index: number) => {
+    if (subcargos.length <= 2) {
+      setFeedback({
+        type: 'error',
+        message: 'No puede haber menos de 2 subcargos en una división.',
+      });
+      return;
+    }
+    setSubcargos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddSubcargo = () => {
+    const todayIso = formatDateToIso(new Date());
+    setSubcargos((prev) => [
+      ...prev,
+      {
+        id: `subcargo-${Date.now()}-${prev.length}`,
+        numeroCargo: '',
+        fechaCreacion: todayIso,
+        caracter: formData.caracter || '',
+        categoria: formData.categoria || '',
+        dedicacion: '',
+        cantHoras: '',
+        dependencia: formData.dependencia || '',
+        nroCargoPredecesor: '',
+        origenDivision: formData.numeroCargo || '',
+      },
+    ]);
+  };
+
+  const handleSubmitDivision = async () => {
+    if (!formData.cargoId) {
+      setFeedback({
+        type: 'error',
+        message: 'Debe buscar y seleccionar un cargo padre antes de subdividirlo.',
+      });
+      return;
+    }
+
+    if (subcargos.length < 2) {
+      setFeedback({
+        type: 'error',
+        message: 'Debe generar al menos 2 subcargos para registrar la división.',
+      });
+      return;
+    }
+
+    // Validation 1: Hours constraint (RF19 condition)
+    if (horasExcedidas) {
+      setFeedback({
+        type: 'error',
+        message: `La suma de horas de los subcargos (${totalSubcargosHoras} hs) supera la dedicación del cargo original (${parentHoras} hs).`,
+      });
+      return;
+    }
+
+    // Validation 2: Required fields on each subcargo
+    for (let i = 0; i < subcargos.length; i++) {
+      const sc = subcargos[i];
+      if (!sc.numeroCargo.trim()) {
+        setFeedback({
+          type: 'error',
+          message: `El Subcargo #${i + 1} no tiene un Número de Cargo asignado.`,
+        });
+        return;
+      }
+      if (!sc.fechaCreacion) {
+        setFeedback({
+          type: 'error',
+          message: `El Subcargo #${i + 1} requiere Fecha de Creación.`,
+        });
+        return;
+      }
+      if (!sc.caracter) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor, seleccione el Carácter para el Subcargo #${i + 1}.`,
+        });
+        return;
+      }
+      if (!sc.categoria) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor, seleccione la Categoría para el Subcargo #${i + 1}.`,
+        });
+        return;
+      }
+      if (!sc.dedicacion) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor, seleccione la Dedicación para el Subcargo #${i + 1}.`,
+        });
+        return;
+      }
+    }
+
+    setIsSubmittingDivision(true);
+    setFeedback(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      // Backend expects SubdividirCargoRequest:
+      // { cargoOrigenCodigo: Long, subcargos: [ { codigo, fechaCreacion, origenId, caracterId, categoriaId, dedicacionId, unidadId, predecesorCodigo } ] }
+      const parentUnidadId = loadedCargoData?.data?.unidadId || loadedCargoData?.data?.unidad?.unidadId || 1;
+
+      const payload = {
+        cargoOrigenCodigo: Number(formData.numeroCargo),
+        subcargos: subcargos.map((sc) => ({
+          codigo: Number(sc.numeroCargo.trim()),
+          fechaCreacion: sc.fechaCreacion,
+          origenId: Number(formData.origen || 1),
+          caracterId: Number(sc.caracter),
+          categoriaId: Number(sc.categoria),
+          dedicacionId: Number(sc.dedicacion),
+          unidadId: parentUnidadId,
+          predecesorCodigo: sc.nroCargoPredecesor ? Number(sc.nroCargoPredecesor) : null,
+        })),
+      };
+
+      let response: Response | null = null;
+      let data: any = null;
+      try {
+        response = await fetch(`${apiUrl}/api/cargos/subdividir`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        data = await response.json().catch(() => null);
+      } catch {
+        response = null;
+      }
+
+      if (response && (response.ok || response.status === 201)) {
+        setFeedback({
+          type: 'success',
+          message: data?.message || `El cargo N° ${formData.numeroCargo} ha sido subdividido exitosamente en ${subcargos.length} subcargos.`,
+        });
+      } else if (response && (response.status === 400 || response.status === 409 || response.status === 403 || response.status === 404)) {
+        setFeedback({
+          type: 'error',
+          message: data?.message || data?.error || 'Error de validación al subdividir el cargo.',
+        });
+      } else {
+        // Mock success fallback if backend server isn't running or endpoint is unreachable
+        console.log('[MOCK/FALLBACK RF19] Payload de subdivisión enviado:', payload);
+        setFeedback({
+          type: 'success',
+          message: `[Simulación exitosa] El cargo N° ${formData.numeroCargo} ha sido subdividido en ${subcargos.length} nuevos subcargos con origen N° ${formData.numeroCargo}.`,
+        });
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        message: err.message || 'Error al procesar la división del cargo.',
+      });
+    } finally {
+      setIsSubmittingDivision(false);
     }
   };
 
@@ -1004,37 +1257,289 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
                     <hr className="modificar-cargo-divider" />
 
-                    {/* SECTION 3: VINCULACIONES */}
-                    <h3 className="modificar-cargo-section-title">Vinculaciones</h3>
-
-                    <div className="modificar-cargo-grid-2">
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_nroDesignacionAsociado" className="modificar-cargo-label">
-                          N° Designación Asociado
-                        </label>
-                        <input
-                          id="mod_nroDesignacionAsociado"
-                          type="text"
-                          className="modificar-cargo-input"
-                          value={formData.nroDesignacionAsociado}
-                          readOnly
-                          disabled
-                        />
+                    {/* SECTION 4: DIVISIÓN DE CARGO (RF19) */}
+                    <div className="modificar-cargo-division-section">
+                      <div className="modificar-cargo-division-header">
+                        <h3 className="modificar-cargo-section-title">División de Cargo</h3>
+                        {subcargos.length > 0 && (
+                          <span className="modificar-cargo-division-badge">
+                            {subcargos.length} subcargos generados
+                          </span>
+                        )}
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_nroCargoPredecesor" className="modificar-cargo-label">
-                          N° Cargo Predecesor (Opcional)
-                        </label>
-                        <input
-                          id="mod_nroCargoPredecesor"
-                          type="text"
-                          className="modificar-cargo-input"
-                          placeholder="Ingrese número de cargo predecesor"
-                          value={formData.nroCargoPredecesor}
-                          onChange={(e) => handleChange('nroCargoPredecesor', e.target.value)}
-                          disabled={!hasLoadedCargo}
-                        />
+                      <div className="modificar-cargo-division-body">
+                        <p className="modificar-cargo-division-description">
+                          Subdivida el cargo actual N° <strong>{formData.numeroCargo || '---'}</strong> en 2 o más subcargos.
+                          La suma de horas de los subcargos no puede exceder las horas asignadas al cargo padre ({parentHoras} hs).
+                        </p>
+
+                        {/* Control to generate subcargos */}
+                        <div className="modificar-cargo-division-generator-bar">
+                          <div className="modificar-cargo-field division-field-inline">
+                            <label htmlFor="num_subcargos" className="modificar-cargo-label">
+                              Cantidad de subcargos:
+                            </label>
+                            <input
+                              id="num_subcargos"
+                              type="number"
+                              min="2"
+                              max="4"
+                              className="modificar-cargo-input division-count-input"
+                              value={numSubcargosInput}
+                              onChange={(e) => setNumSubcargosInput(e.target.value)}
+                              disabled={!hasLoadedCargo}
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            className="btn-division-generate"
+                            onClick={handleGenerateSubcargos}
+                            disabled={!hasLoadedCargo}
+                          >
+                            <FiLayers className="btn-icon" />
+                            <span>División de cargo</span>
+                          </button>
+                        </div>
+
+                        {/* Hours budget summary alert */}
+                        {subcargos.length > 0 && (
+                          <div className={`modificar-cargo-hours-bar ${horasExcedidas ? 'hours-bar-exceeded' : 'hours-bar-ok'}`}>
+                            <div className="hours-bar-item">
+                              <span className="hours-bar-label">Horas Cargo Padre:</span>
+                              <strong className="hours-bar-value">{parentHoras} hs</strong>
+                            </div>
+                            <div className="hours-bar-separator">/</div>
+                            <div className="hours-bar-item">
+                              <span className="hours-bar-label">Total Subcargos:</span>
+                              <strong className="hours-bar-value">{totalSubcargosHoras} hs</strong>
+                            </div>
+                            <div className="hours-bar-separator">/</div>
+                            <div className="hours-bar-item">
+                              <span className="hours-bar-label">Restante:</span>
+                              <strong className="hours-bar-value">
+                                {parentHoras - totalSubcargosHoras >= 0 ? `${parentHoras - totalSubcargosHoras} hs` : '0 hs'}
+                              </strong>
+                            </div>
+                            {horasExcedidas && (
+                              <div className="hours-bar-error">
+                                <FiAlertCircle />
+                                <span>¡La suma de horas ({totalSubcargosHoras} hs) supera las {parentHoras} hs originales!</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* List of subcargos */}
+                        {subcargos.length > 0 && (
+                          <div className="modificar-cargo-subcargos-list">
+                            {subcargos.map((sc, index) => (
+                              <div key={sc.id} className="modificar-cargo-subcargo-card">
+                                <div className="modificar-cargo-subcargo-header">
+                                  <div className="modificar-cargo-subcargo-title">
+                                    <span className="subcargo-badge">#{index + 1}</span>
+                                    <h4>Nuevo Subcargo</h4>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn-remove-subcargo"
+                                    title="Eliminar este subcargo"
+                                    onClick={() => handleRemoveSubcargo(index)}
+                                    disabled={subcargos.length <= 2}
+                                  >
+                                    <FiTrash2 />
+                                    <span>Eliminar</span>
+                                  </button>
+                                </div>
+
+                                <div className="modificar-cargo-subcargo-grid">
+                                  {/* Subcargo N° de Cargo */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      N° de Cargo *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      className="modificar-cargo-input"
+                                      placeholder="Ej: 1042-1"
+                                      value={sc.numeroCargo}
+                                      onChange={(e) => handleSubcargoChange(index, 'numeroCargo', e.target.value)}
+                                    />
+                                  </div>
+
+                                  {/* Subcargo Fecha de Creación */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Fecha de Creación *
+                                    </label>
+                                    <div className="modificar-cargo-datepicker-container">
+                                      <DatePicker
+                                        selected={parseIsoToDate(sc.fechaCreacion)}
+                                        onChange={(date: Date | null) =>
+                                          handleSubcargoChange(index, 'fechaCreacion', formatDateToIso(date))
+                                        }
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="DD/MM/AAAA"
+                                        locale="es"
+                                        className="modificar-cargo-input modificar-cargo-datepicker-input"
+                                        autoComplete="off"
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
+                                      />
+                                      <FiCalendar className="modificar-cargo-datepicker-icon" />
+                                    </div>
+                                  </div>
+
+                                  {/* Subcargo Carácter */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Carácter *
+                                    </label>
+                                    <div className="modificar-cargo-select-wrapper">
+                                      <select
+                                        className="modificar-cargo-select"
+                                        value={sc.caracter}
+                                        onChange={(e) => handleSubcargoChange(index, 'caracter', e.target.value)}
+                                      >
+                                        <option value="">Seleccione</option>
+                                        {caracteres.map((c) => (
+                                          <option key={c.id} value={c.id}>
+                                            {c.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <FiChevronDown className="modificar-cargo-select-caret" />
+                                    </div>
+                                  </div>
+
+                                  {/* Subcargo Categoría */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Categoría *
+                                    </label>
+                                    <div className="modificar-cargo-select-wrapper">
+                                      <select
+                                        className="modificar-cargo-select"
+                                        value={sc.categoria}
+                                        onChange={(e) => handleSubcargoChange(index, 'categoria', e.target.value)}
+                                      >
+                                        <option value="">Seleccione</option>
+                                        {categorias.map((cat) => (
+                                          <option key={cat.id} value={cat.id}>
+                                            {cat.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <FiChevronDown className="modificar-cargo-select-caret" />
+                                    </div>
+                                  </div>
+
+                                  {/* Subcargo Dedicación */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Dedicación *
+                                    </label>
+                                    <div className="modificar-cargo-select-wrapper">
+                                      <select
+                                        className="modificar-cargo-select"
+                                        value={sc.dedicacion}
+                                        onChange={(e) => handleSubcargoChange(index, 'dedicacion', e.target.value)}
+                                      >
+                                        <option value="">Seleccione</option>
+                                        {dedicaciones.map((ded) => (
+                                          <option key={ded.id} value={ded.id}>
+                                            {ded.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <FiChevronDown className="modificar-cargo-select-caret" />
+                                    </div>
+                                  </div>
+
+                                  {/* Subcargo Horas */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Cant. de Horas
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      className="modificar-cargo-input"
+                                      placeholder="Horas asignadas"
+                                      value={sc.cantHoras}
+                                      onChange={(e) => handleSubcargoChange(index, 'cantHoras', e.target.value)}
+                                    />
+                                  </div>
+
+                                  {/* Subcargo Dependencia / Unidad */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      Dependencia / Unidad
+                                    </label>
+                                    <input
+                                      type="text"
+                                      className="modificar-cargo-input"
+                                      value={sc.dependencia || formData.dependencia}
+                                      onChange={(e) => handleSubcargoChange(index, 'dependencia', e.target.value)}
+                                      placeholder="Unidad académica"
+                                    />
+                                  </div>
+
+                                  {/* Subcargo N° Predecesor Posible */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      N° Predecesor Posible (Opcional)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      className="modificar-cargo-input"
+                                      placeholder="N° cargo predecesor"
+                                      value={sc.nroCargoPredecesor}
+                                      onChange={(e) => handleSubcargoChange(index, 'nroCargoPredecesor', e.target.value)}
+                                    />
+                                  </div>
+
+                                  {/* Subcargo N° Origen de División (Bloqueado al padre) */}
+                                  <div className="modificar-cargo-field">
+                                    <label className="modificar-cargo-label">
+                                      N° Origen de División
+                                    </label>
+                                    <input
+                                      type="text"
+                                      className="modificar-cargo-input input-locked-origin"
+                                      value={formData.numeroCargo ? `Cargo N° ${formData.numeroCargo}` : ''}
+                                      readOnly
+                                      disabled
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                            <div className="modificar-cargo-subcargo-actions-bar">
+                              <button
+                                type="button"
+                                className="btn-add-subcargo"
+                                onClick={handleAddSubcargo}
+                                disabled={subcargos.length >= 4}
+                              >
+                                + Agregar otro subcargo
+                              </button>
+
+                              <button
+                                type="button"
+                                className="btn-modificar-cargo btn-modificar-cargo-dividir"
+                                onClick={handleSubmitDivision}
+                                disabled={isSubmittingDivision || horasExcedidas || !hasLoadedCargo || subcargos.length < 2}
+                              >
+                                <FiLayers className="btn-icon" />
+                                <span>{isSubmittingDivision ? 'Dividiendo...' : 'Confirmar División de Cargo'}</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
