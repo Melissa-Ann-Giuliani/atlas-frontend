@@ -211,7 +211,28 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   z-index: 1000;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
 }
+
+.modificar-cargo-suggestions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modificar-cargo-suggestions-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modificar-cargo-suggestions-list::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.modificar-cargo-suggestions-list::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
 
 .modificar-cargo-suggestion-item {
   padding: 8px 12px;
@@ -309,7 +330,28 @@
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
 }
+
+.modificar-cargo-card-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modificar-cargo-card-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modificar-cargo-card-body::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.modificar-cargo-card-body::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
 
 /* Feedback banners */
 .modificar-cargo-feedback {

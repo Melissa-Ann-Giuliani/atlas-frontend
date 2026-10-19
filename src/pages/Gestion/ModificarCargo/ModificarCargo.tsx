@@ -72,7 +72,6 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
   // Catalogs
   const [dependencias, setDependencias] = useState<OptionItem[]>([]);
-  const [departamentos, setDepartamentos] = useState<OptionItem[]>([]);
   const [origenes, setOrigenes] = useState<OptionItem[]>([]);
   const [caracteres, setCaracteres] = useState<OptionItem[]>([]);
   const [categorias, setCategorias] = useState<OptionItem[]>([]);

@@ -134,3 +134,28 @@ body {
   margin: 0 auto;
   text-align: center;
 }
+
+/* Global Custom Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}

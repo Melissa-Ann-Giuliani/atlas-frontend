@@ -23,7 +23,28 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
 }
+
+.gestion-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gestion-main::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.gestion-main::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.gestion-main::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
 
 .gestion-content-area {
   padding: 28px;

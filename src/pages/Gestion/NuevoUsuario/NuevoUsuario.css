@@ -23,7 +23,28 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
 }
+
+.nuevo-usuario-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nuevo-usuario-main::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.nuevo-usuario-main::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.nuevo-usuario-main::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
 
 .nuevo-usuario-content-area {
   padding: 24px 28px;
