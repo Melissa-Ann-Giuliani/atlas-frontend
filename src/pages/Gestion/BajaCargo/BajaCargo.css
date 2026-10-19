@@ -403,6 +403,44 @@
   color: var(--admin-primary-900, #1A2E1C);
 }
 
+/* Warning callout for already dado de baja cargo */
+.baja-cargo-warning-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeInFeedback 0.25s ease-out;
+}
+
+.baja-cargo-warning-icon {
+  font-size: 18px;
+  color: #D97706;
+  flex-shrink: 0;
+}
+
+/* Permission notice for non-ADMIN_GLOBAL */
+.baja-cargo-role-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: fadeInFeedback 0.25s ease-out;
+}
+
 /* Form Container */
 .baja-cargo-form {
   display: flex;

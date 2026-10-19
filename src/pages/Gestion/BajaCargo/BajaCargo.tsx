@@ -47,6 +47,40 @@ interface OptionItem {
   horas?: number;
 }
 
+export const isCargoDadoDeBaja = (estado?: string | null): boolean => {
+  if (!estado) return false;
+  const normalized = estado.trim().toLowerCase();
+  return normalized === 'dado de baja' || normalized === 'inactivo';
+};
+
+const getUserRole = (): string | null => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    if (parsed.rol) return String(parsed.rol);
+    if (parsed.role) return String(parsed.role);
+    if (Array.isArray(parsed.roles) && parsed.roles.length > 0) return String(parsed.roles[0]);
+    if (Array.isArray(parsed.authorities) && parsed.authorities.length > 0) {
+      const auth = parsed.authorities[0];
+      return typeof auth === 'string' ? auth : auth.authority;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const emptyFormState: FormState = {
   cargoId: null,
   numeroCargo: '',
@@ -69,6 +103,12 @@ export default function BajaCargo({
   onNavigate,
   onBack,
 }: BajaCargoProps) {
+  const userRole = getUserRole();
+  const isNonAdminGlobal =
+    userRole !== null &&
+    userRole !== 'ADMIN_GLOBAL' &&
+    userRole !== 'ROLE_ADMIN_GLOBAL';
+
   const [searchQuery, setSearchQuery] = useState<string>(
     initialCargo?.numero ? String(initialCargo.numero) : ''
   );
@@ -380,7 +420,7 @@ export default function BajaCargo({
       nroCargoPredecesor: predecesorCode,
     });
 
-    if (estadoVal === 'Dado de Baja' || estadoVal === 'Inactivo') {
+    if (isCargoDadoDeBaja(estadoVal)) {
       setFeedback({
         type: 'info',
         message: `El Cargo N° ${data.numero || data.codigo} ya se encuentra en estado "${estadoVal}".`,
@@ -487,6 +527,30 @@ export default function BajaCargo({
         if (found && (found.id || found.cargoId)) {
           const resolvedId = found.id || found.cargoId;
           await loadCargoDetails(resolvedId);
+        } else if (!isNaN(Number(term))) {
+          // If not in active cargos (e.g. already "Dado de baja"), try loading directly
+          try {
+            const directRes = await fetch(`${apiUrl}/api/cargos/${term}`, { headers });
+            if (directRes.ok) {
+              const directData = await directRes.json();
+              if (
+                directData &&
+                (String(directData.numero) === term || String(directData.id) === term)
+              ) {
+                const resolvedId = directData.id || Number(term);
+                setLoadedCargoData({ id: resolvedId, data: directData });
+                populateForm(resolvedId, directData);
+                return;
+              }
+            }
+          } catch {
+            // ignore fallback error
+          }
+          setFeedback({
+            type: 'error',
+            message: `No se encontró ningún cargo activo con el número ${term}.`,
+          });
+          setFormData(emptyFormState);
         } else {
           setFeedback({
             type: 'error',
@@ -568,7 +632,7 @@ export default function BajaCargo({
     }
   };
 
-  // Submit Baja de Cargo: changes estado to "Dado de Baja"
+  // Submit Baja de Cargo: executes PATCH /api/cargos/{id}/baja
   const handleSubmit = async () => {
     if (!formData.cargoId) {
       setFeedback({
@@ -578,7 +642,7 @@ export default function BajaCargo({
       return;
     }
 
-    if (formData.estado === 'Dado de Baja') {
+    if (isCargoDadoDeBaja(formData.estado)) {
       setFeedback({
         type: 'error',
         message: `El Cargo N° ${formData.numeroCargo} ya está en estado "Dado de Baja".`,
@@ -592,74 +656,77 @@ export default function BajaCargo({
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
-        'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      // 1. Try dedicated baja endpoint first (PATCH or POST /api/cargos/{id}/baja)
-      let response = await fetch(`${apiUrl}/api/cargos/${formData.cargoId}/baja`, {
-        method: 'POST',
+      const response = await fetch(`${apiUrl}/api/cargos/${formData.cargoId}/baja`, {
+        method: 'PATCH',
         headers,
-      }).catch(() => null);
+      });
 
-      if (!response || response.status === 404 || response.status === 405) {
-        response = await fetch(`${apiUrl}/api/cargos/${formData.cargoId}/baja`, {
-          method: 'PATCH',
-          headers,
-        }).catch(() => null);
-      }
-
-      // 2. If endpoint not found or not supported, fallback to PUT /api/cargos/{id} with estado = "Dado de Baja"
-      if (!response || response.status === 404 || response.status === 405) {
-        const payload: any = {
-          fechaCreacion: formData.fechaCreacion,
-          estado: 'Dado de Baja',
-          origenId: formData.origen ? Number(formData.origen) : undefined,
-          caracterId: formData.caracter ? Number(formData.caracter) : undefined,
-          categoriaId: formData.categoria ? Number(formData.categoria) : undefined,
-          dedicacionId: formData.dedicacion ? Number(formData.dedicacion) : undefined,
-        };
-        if (
-          formData.nroCargoPredecesor &&
-          !isNaN(Number(formData.nroCargoPredecesor))
-        ) {
-          payload.predecesorCodigo = Number(formData.nroCargoPredecesor);
-        }
-
-        response = await fetch(`${apiUrl}/api/cargos/${formData.cargoId}`, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(payload),
-        });
+      if (response.status === 401) {
+        if (onLogout) onLogout();
+        return;
       }
 
       const data = await response.json().catch(() => null);
 
       if (response.ok) {
-        setFormData((prev) => ({
-          ...prev,
-          estado: 'Dado de Baja',
-        }));
+        // Backend returns CargoDetailDTO with estado: "Dado de baja"
+        if (data) {
+          setLoadedCargoData({ id: formData.cargoId, data });
+          populateForm(formData.cargoId, data);
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            estado: 'Dado de baja',
+          }));
+        }
+
+        // Keep session storage in sync if selected_cargo matches
+        try {
+          const storedSelectedCargo = sessionStorage.getItem('atlas_selected_cargo');
+          if (storedSelectedCargo) {
+            const parsed = JSON.parse(storedSelectedCargo);
+            if (
+              parsed &&
+              (parsed.id === formData.cargoId || parsed.numero === Number(formData.numeroCargo))
+            ) {
+              sessionStorage.setItem(
+                'atlas_selected_cargo',
+                JSON.stringify(data || { ...parsed, estado: 'Dado de baja' })
+              );
+            }
+          }
+        } catch {
+          // ignore storage error
+        }
+
         setFeedback({
           type: 'success',
+          message: `El Cargo N° ${formData.numeroCargo} ha sido dado de baja exitosamente.`,
+        });
+      } else if (response.status === 400) {
+        // Validation errors: designación vigente, subcargos derivados activos, o ya dado de baja
+        setFeedback({
+          type: 'error',
           message:
             data?.message ||
-            `El Cargo N° ${formData.numeroCargo} ha sido dado de baja exitosamente.`,
+            'No se puede dar de baja el cargo. Verifique las condiciones requeridas.',
         });
       } else if (response.status === 403) {
+        // Exclusivo ADMIN_GLOBAL
         setFeedback({
           type: 'error',
           message:
             data?.message ||
-            'No tiene permisos para dar de baja cargos de esta unidad académica.',
+            'Solo el Administrador Global tiene permisos para dar de baja un cargo',
         });
-      } else if (response.status === 409) {
+      } else if (response.status === 404) {
         setFeedback({
           type: 'error',
-          message:
-            data?.message ||
-            'No se puede dar de baja el cargo porque posee docentes o designaciones activas vinculadas.',
+          message: data?.message || 'Cargo no encontrado',
         });
       } else {
         setFeedback({
@@ -750,9 +817,8 @@ export default function BajaCargo({
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-cargo-suggestion-item ${
-                                idx === activeSuggestionIndex ? 'active' : ''
-                              }`}
+                              className={`baja-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -796,18 +862,27 @@ export default function BajaCargo({
                 </div>
 
                 <div className="baja-cargo-card-body">
+                  {isNonAdminGlobal && (
+                    <div className="baja-cargo-role-notice">
+                      <FiAlertTriangle className="baja-cargo-warning-icon" />
+                      <span>
+                        Nota de permisos: Se requiere rol de <strong>Administrador Global</strong> para dar de baja un cargo.
+                      </span>
+                    </div>
+                  )}
+
                   {feedback && (
                     <div className={`baja-cargo-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  {hasLoadedCargo && formData.estado === 'Dado de Baja' && (
+                  {hasLoadedCargo && isCargoDadoDeBaja(formData.estado) && (
                     <div className="baja-cargo-warning-box">
                       <FiAlertTriangle className="baja-cargo-warning-icon" />
                       <span>
                         Este cargo ya ha sido dado de baja. Su estado actual es{' '}
-                        <strong>Dado de Baja</strong>.
+                        <strong>{formData.estado || 'Dado de baja'}</strong>.
                       </span>
                     </div>
                   )}
@@ -844,7 +919,7 @@ export default function BajaCargo({
                           <DatePicker
                             id="baja_fechaCreacion"
                             selected={parseIsoToDate(formData.fechaCreacion)}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             dateFormat="dd/MM/yyyy"
                             placeholderText="DD/MM/AAAA"
                             locale="es"
@@ -1049,16 +1124,16 @@ export default function BajaCargo({
                 disabled={
                   isSubmitting ||
                   !hasLoadedCargo ||
-                  formData.estado === 'Dado de Baja'
+                  isCargoDadoDeBaja(formData.estado)
                 }
               >
                 <FiCheckSquare className="btn-icon" />
                 <span>
                   {isSubmitting
                     ? 'Procesando...'
-                    : formData.estado === 'Dado de Baja'
-                    ? 'Dado de Baja'
-                    : 'Confirmar'}
+                    : isCargoDadoDeBaja(formData.estado)
+                      ? 'Dado de baja'
+                      : 'Confirmar'}
                 </span>
               </button>
             </div>
