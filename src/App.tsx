@@ -261,10 +261,10 @@ function App() {
       }
     }
 
-    if (page === 'modificar_cargo' && data) {
-      setSelectedCargo(data);
-      sessionStorage.setItem('atlas_selected_cargo', JSON.stringify(data));
+    if (page === 'modificar_cargo') {
+      setSelectedCargo(data || null);
     }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);

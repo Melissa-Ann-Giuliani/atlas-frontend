@@ -211,14 +211,22 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
     fetchCatalogs();
   }, [onLogout]);
 
-  // Load initialCargo if passed via props
+  // Load initialCargo if passed via props, or reset if none provided
   useEffect(() => {
     if (initialCargo) {
+      if (initialCargo.numero) {
+        setSearchQuery(String(initialCargo.numero));
+      }
       if (initialCargo.id) {
         loadCargoDetails(initialCargo.id);
       } else if (initialCargo.numero) {
         handleSearch(String(initialCargo.numero));
       }
+    } else {
+      setSearchQuery('');
+      setFormData(emptyFormState);
+      setLoadedCargoData(null);
+      setFeedback(null);
     }
   }, [initialCargo]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -524,6 +532,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   const handleClear = () => {
     setFormData(emptyFormState);
     setSearchQuery('');
+    setLoadedCargoData(null);
     setFeedback({
       type: 'info',
       message: 'Formulario limpiado. Ingrese un nuevo número de cargo para buscar.',
