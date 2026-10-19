@@ -117,7 +117,7 @@
 .modificar-cargo-title {
   margin: 0;
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 32px;
+  font-size: 44px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   text-decoration: underline;
@@ -138,7 +138,7 @@
 }
 
 .modificar-cargo-search-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: 0.01em;
@@ -176,6 +176,14 @@
   box-shadow: 0 0 0 2px var(--admin-tertiary-500, #7BC33C);
 }
 
+.modificar-cargo-search-input::-webkit-search-decoration,
+.modificar-cargo-search-input::-webkit-search-cancel-button,
+.modificar-cargo-search-input::-webkit-search-results-button,
+.modificar-cargo-search-input::-webkit-search-results-decoration {
+  display: none;
+  -webkit-appearance: none;
+}
+
 .modificar-cargo-search-icon {
   position: absolute;
   right: 12px;
@@ -184,6 +192,60 @@
   color: #666;
   font-size: 16px;
   pointer-events: none;
+}
+
+/* Suggestions Dropdown */
+.modificar-cargo-suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #FFFFFF;
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.modificar-cargo-suggestion-item {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #F0ECE4;
+}
+
+.modificar-cargo-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.modificar-cargo-suggestion-item:hover,
+.modificar-cargo-suggestion-item.active {
+  background-color: var(--users-secondary-50, #F6F3EE);
+}
+
+.modificar-cargo-suggestion-number {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.modificar-cargo-suggestion-sub {
+  font-size: 11px;
+  color: #666666;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modificar-cargo-search-btn {
@@ -196,7 +258,7 @@
   border-radius: 6px;
   padding: 8px 16px;
   font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
@@ -499,4 +561,175 @@
   opacity: 0.65;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Responsive adjustments (matching AltaCargo / NuevoUsuario) */
+@media (max-width: 900px) {
+  .modificar-cargo-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .modificar-cargo-title {
+    font-size: 42px;
+  }
+
+  .modificar-cargo-search-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .modificar-cargo-search-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .modificar-cargo-search-input-wrap {
+    flex: 1;
+    min-width: 200px;
+    width: auto;
+  }
+
+  .modificar-cargo-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .modificar-cargo-content-area {
+    padding: 16px;
+  }
+
+  .modificar-cargo-container-card {
+    padding: 18px;
+  }
+
+  .modificar-cargo-title {
+    font-size: 32px;
+  }
+
+  .modificar-cargo-card-header h2 {
+    font-size: 20px;
+  }
+
+  .modificar-cargo-section-title {
+    font-size: 15px;
+  }
+
+  .modificar-cargo-grid-3,
+  .modificar-cargo-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .modificar-cargo-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modificar-cargo-search-input-wrap {
+    width: 100%;
+  }
+
+  .modificar-cargo-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-height: 900px) {
+  .modificar-cargo-content-area {
+    padding: 16px 24px;
+  }
+
+  .modificar-cargo-container-card {
+    padding: 18px 24px;
+  }
+
+  .modificar-cargo-header-row {
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+
+  .modificar-cargo-title {
+    font-size: 28px;
+  }
+
+  .modificar-cargo-search-card {
+    padding: 6px 12px;
+    gap: 4px;
+  }
+
+  .modificar-cargo-search-label {
+    font-size: 11px;
+  }
+
+  .modificar-cargo-search-input {
+    padding: 6px 32px 6px 12px;
+    font-size: 13px;
+  }
+
+  .modificar-cargo-search-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .modificar-cargo-card-header {
+    padding: 10px 20px;
+  }
+
+  .modificar-cargo-card-header h2 {
+    font-size: 20px;
+  }
+
+  .modificar-cargo-card-body {
+    padding: 16px 20px 20px 20px;
+  }
+
+  .modificar-cargo-feedback {
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .modificar-cargo-section-title {
+    font-size: 15px;
+    margin: 0 0 12px 0;
+  }
+
+  .modificar-cargo-divider {
+    margin: 16px 0 14px 0;
+  }
+
+  .modificar-cargo-grid-3,
+  .modificar-cargo-grid-2 {
+    column-gap: 20px;
+    row-gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .modificar-cargo-label {
+    font-size: 12px;
+  }
+
+  .modificar-cargo-input,
+  .modificar-cargo-select {
+    height: 36px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .modificar-cargo-select {
+    padding-right: 32px;
+  }
+
+  .modificar-cargo-actions {
+    margin-top: 12px;
+  }
+
+  .btn-modificar-cargo {
+    padding: 8px 18px;
+    font-size: 14px;
+  }
 }

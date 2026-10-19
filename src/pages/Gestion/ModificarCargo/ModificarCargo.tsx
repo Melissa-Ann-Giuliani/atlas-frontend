@@ -63,6 +63,13 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<Array<{ id: number; numero: string | number; categoria?: string; unidad?: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState<boolean>(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
+
   // Catalogs
   const [dependencias, setDependencias] = useState<OptionItem[]>([]);
   const [departamentos, setDepartamentos] = useState<OptionItem[]>([]);
@@ -345,8 +352,77 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
     });
   };
 
+  // Debounced search for cargo suggestions
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+        const response = await fetch(`${apiUrl}/api/cargos?search=${encodeURIComponent(trimmed)}&size=8`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          const list = data.content || (Array.isArray(data) ? data : []);
+          const mapped = list
+            .filter((c: any) => c.numero !== undefined && c.numero !== null)
+            .map((c: any) => ({
+              id: c.id || c.cargoId,
+              numero: c.numero ?? c.codigo,
+              categoria: c.categoriaNombre || c.categoria?.categoriaNombre || '',
+              unidad: c.unidadNombre || c.unidad?.unidadNombre || '',
+            }));
+          setSuggestions(mapped);
+          setShowSuggestions(mapped.length > 0);
+          setActiveSuggestionIndex(-1);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.warn('Error fetching cargo suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close suggestions dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectSuggestion = (cargoItem: { id: number; numero: string | number }) => {
+    setSearchQuery(String(cargoItem.numero));
+    setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
+    if (cargoItem.id) {
+      loadCargoDetails(cargoItem.id);
+    } else {
+      handleSearch(String(cargoItem.numero));
+    }
+  };
+
   const handleSearch = async (queryToSearch?: string) => {
     const term = (queryToSearch !== undefined ? queryToSearch : searchQuery).trim();
+    setShowSuggestions(false);
     if (!term) {
       setFeedback({
         type: 'error',
@@ -367,7 +443,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
       if (response.ok) {
         const data = await response.json();
         const cargosList = data.content || (Array.isArray(data) ? data : []);
-        const found = cargosList.find((c: any) => String(c.numero) === term || String(c.codigo) === term) || cargosList[0];
+        const found = cargosList.find((c: any) => String(c.numero) === term || String(c.codigo) === term);
 
         if (found && (found.id || found.cargoId)) {
           const resolvedId = found.id || found.cargoId;
@@ -396,6 +472,33 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length) {
+          selectSuggestion(suggestions[activeSuggestionIndex]);
+          return;
+        }
+        setShowSuggestions(false);
+        handleSearch();
+        return;
+      }
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        return;
+      }
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSearch();
@@ -598,18 +701,57 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                     Buscar Cargo a Modificar por Número
                   </label>
                   <div className="modificar-cargo-search-row">
-                    <div className="modificar-cargo-search-input-wrap">
+                    <div className="modificar-cargo-search-input-wrap" ref={searchContainerRef}>
                       <input
                         id="searchCargoInput"
-                        type="text"
+                        name="busqueda_cargo_query"
+                        type="search"
                         className="modificar-cargo-search-input"
                         placeholder="Ingrese valor"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => {
+                          if (suggestions.length > 0) setShowSuggestions(true);
+                        }}
                         onKeyDown={handleKeyDown}
-                        autoComplete="off"
+                        autoComplete="one-time-code"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                        data-form-type="other"
+                        data-1p-ignore="true"
                       />
                       <FiSearch className="modificar-cargo-search-icon" />
+
+                      {/* Suggestions Dropdown */}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <ul className="modificar-cargo-suggestions-list" role="listbox">
+                          {suggestions.map((item, idx) => (
+                            <li
+                              key={item.id ?? idx}
+                              className={`modificar-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              onMouseDown={(e) => {
+                                // Prevent input blur before click registers
+                                e.preventDefault();
+                                selectSuggestion(item);
+                              }}
+                              onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                              role="option"
+                              aria-selected={idx === activeSuggestionIndex}
+                            >
+                              <span className="modificar-cargo-suggestion-number">
+                                Cargo N° {item.numero}
+                              </span>
+                              {(item.categoria || item.unidad) && (
+                                <span className="modificar-cargo-suggestion-sub">
+                                  {[item.categoria, item.unidad].filter(Boolean).join(' • ')}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                     <button
                       type="button"
