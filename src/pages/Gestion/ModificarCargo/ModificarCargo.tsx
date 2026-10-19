@@ -802,11 +802,12 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
       return;
     }
 
-    // Check parent cargo state: must be "Libre"
-    if (formData.estado && formData.estado.toLowerCase() !== 'libre') {
+    // Check parent cargo state: must be "Libre" or "Licencia"
+    const estadoNorm = (formData.estado || '').toLowerCase();
+    if (estadoNorm !== 'libre' && estadoNorm !== 'licencia') {
       setFeedback({
         type: 'error',
-        message: `Solo se pueden subdividir cargos en estado Libre. El cargo actual está en estado "${formData.estado}".`,
+        message: `Solo se pueden subdividir cargos en estado Libre o Licencia. El cargo actual está en estado "${formData.estado}".`,
       });
       return;
     }
@@ -926,7 +927,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
           categoriaId: Number(sc.categoria),
           dedicacionId: Number(sc.dedicacion),
           unidadId: Number(parentUnidadId),
-          predecesorCodigo: sc.nroCargoPredecesor ? Number(sc.nroCargoPredecesor) : Number(formData.numeroCargo),
+          predecesorCodigo: sc.nroCargoPredecesor && sc.nroCargoPredecesor.trim() ? Number(sc.nroCargoPredecesor.trim()) : null,
         })),
       };
 
@@ -943,16 +944,16 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
           type: 'success',
           message: data?.message || `El cargo N° ${formData.numeroCargo} ha sido subdividido exitosamente en ${subcargos.length} subcargos.`,
         });
-        // Update local state to reflect that parent is now Subdividido
+        // Update local state: keep original estado, update horasOcupadas to parent cargo dedication hours
         setFormData((prev) => ({
           ...prev,
-          estado: 'Subdividido',
+          horasOcupadas: parentHoras || Number(prev.cantHoras) || 0,
         }));
         setSubcargos([]);
       } else if (response.status === 400) {
         setFeedback({
           type: 'error',
-          message: data?.message || data?.error || 'Error de validación: Verifique que el cargo esté en estado Libre y que la suma de horas no supere la original.',
+          message: data?.message || data?.error || 'Error de validación: Verifique que el cargo esté en estado Libre o Licencia y que la suma de horas no supere la original.',
         });
       } else if (response.status === 403) {
         setFeedback({
@@ -963,6 +964,11 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
         setFeedback({
           type: 'error',
           message: data?.message || 'No se encontró el cargo de origen o alguno de los catálogos especificados.',
+        });
+      } else if (response.status === 409) {
+        setFeedback({
+          type: 'error',
+          message: data?.message || data?.error || 'Conflicto: Uno o más códigos de subcargo ya existen en el sistema.',
         });
       } else {
         setFeedback({
