@@ -32,6 +32,12 @@ export const getUserRole = (): string | null => {
 export const isGlobalAdmin = (): boolean => {
   const role = getUserRole();
   if (!role) return false;
-  const upper = role.toUpperCase();
-  return upper === 'ADMIN_GLOBAL' || upper === 'ROLE_ADMIN_GLOBAL';
+  const upper = role.toUpperCase().trim();
+  return (
+    upper === 'ADMIN_GLOBAL' ||
+    upper === 'ROLE_ADMIN_GLOBAL' ||
+    upper === 'ADMIN GLOBAL' ||
+    upper === 'ADMINISTRADOR GLOBAL' ||
+    upper === 'ROLE_ADMINISTRADOR_GLOBAL'
+  );
 };

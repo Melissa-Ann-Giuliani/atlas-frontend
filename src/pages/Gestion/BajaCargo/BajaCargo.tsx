@@ -52,7 +52,7 @@ export const isCargoDadoDeBaja = (estado?: string | null): boolean => {
   return normalized === 'dado de baja' || normalized === 'inactivo';
 };
 
-import { getUserRole, isGlobalAdmin } from '../../../utils/auth';
+import { getUserRole } from '../../../utils/auth';
 
 const emptyFormState: FormState = {
   cargoId: null,
@@ -202,7 +202,7 @@ export default function BajaCargo({
               data.map((item: any) => ({
                 id: item.dedicacionId ?? item.id ?? item.nombre,
                 label: item.dedicacionNombre ?? item.nombre ?? String(item.id || item),
-                horas: item.horas,
+                horas: item.dedicacionHoras ?? item.horas,
               }))
             );
           }

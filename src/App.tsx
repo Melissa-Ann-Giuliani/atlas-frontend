@@ -392,7 +392,6 @@ function App() {
           }
           return (
             <BajaCargo
-              initialCargo={selectedCargo}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate('gestion')}
