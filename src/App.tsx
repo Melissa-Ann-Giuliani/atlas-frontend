@@ -10,8 +10,9 @@ import NuevoUsuario from './pages/Gestion/NuevoUsuario/NuevoUsuario'
 import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
 import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
 import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
+import AltaCatedra from './pages/Gestion/AltaCatedra/AltaCatedra'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_catedra';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -22,6 +23,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'alta_cargo') return 'gestion/alta_cargo';
   if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
   if (page === 'baja_cargo') return 'gestion/baja_cargo';
+  if (page === 'alta_catedra') return 'gestion/alta_catedra';
   return page;
 };
 
@@ -33,11 +35,12 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
+  if (path === 'gestion/alta_catedra') return 'alta_catedra';
   if (path === 'gestion/baja_cargo') {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_catedra'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -392,6 +395,15 @@ function App() {
           }
           return (
             <BajaCargo
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'alta_catedra':
+          return (
+            <AltaCatedra
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate('gestion')}

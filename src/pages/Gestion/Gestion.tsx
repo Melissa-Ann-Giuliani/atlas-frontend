@@ -45,7 +45,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       title: 'Cátedras',
       headerClass: 'header-catedras',
       options: [
-        { id: 'alta_catedra', label: 'Alta de Cátedra', type: 'green' },
+        { id: 'alta_catedra', label: 'Alta de Cátedra', type: 'green', targetPage: 'alta_catedra' },
         { id: 'modificacion_catedra', label: 'Modificación de Cátedra', type: 'blue' },
         { id: 'baja_catedra', label: 'Baja de Cátedra', type: 'red' },
       ],
@@ -75,6 +75,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
   const handleOptionClick = (option: OptionItem, cardTitle: string) => {
     if (option.targetPage && onNavigate) {
       onNavigate(option.targetPage);
+    } else if (option.id === 'alta_catedra' && onNavigate) {
+      onNavigate('alta_catedra');
     } else if ((option.id === 'alta_usuario' || option.id === 'nuevo_usuario') && onNavigate) {
       onNavigate('nuevo_usuario');
     } else if (option.id === 'alta_cargo' && onNavigate) {

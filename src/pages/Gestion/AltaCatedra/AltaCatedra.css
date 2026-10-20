@@ -1,0 +1,424 @@
+.alta-catedra-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--users-secondary-100, #E7DFD0);
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  text-align: left;
+}
+
+.alta-catedra-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.alta-catedra-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.alta-catedra-content-area {
+  padding: 24px 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Top Navigation: Retroceder */
+.alta-catedra-top-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.alta-catedra-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.alta-catedra-back-btn:hover {
+  text-decoration: underline;
+  transform: translateX(-2px);
+}
+
+.alta-catedra-back-icon {
+  font-size: 14px;
+  stroke-width: 2.5;
+}
+
+/* Big beige container card */
+.alta-catedra-container-card {
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: containerFadeIn 0.35s ease-out backwards;
+}
+
+@keyframes containerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alta-catedra-header {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.alta-catedra-title {
+  margin: 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 44px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: -0.5px;
+  display: inline-block;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+/* Green framed inner form card */
+.alta-catedra-form-card {
+  border: 1.5px solid var(--admin-primary-800, #2A4B2F);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--users-secondary-50, #F6F3EE);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.alta-catedra-card-header {
+  background-color: var(--admin-primary-800, #2A4B2F);
+  padding: 12px 24px;
+  flex-shrink: 0;
+}
+
+.alta-catedra-card-header h2 {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+}
+
+/* Scrollable form card body */
+.alta-catedra-card-body {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
+}
+
+.alta-catedra-card-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.alta-catedra-card-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.alta-catedra-card-body::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.alta-catedra-card-body::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
+.alta-catedra-section-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  margin: 0 0 16px 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+/* Feedback banner */
+.alta-catedra-feedback {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 18px;
+  animation: feedbackSlide 0.25s ease-out;
+}
+
+@keyframes feedbackSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feedback-success {
+  background-color: #E6F4EA;
+  color: #137333;
+  border: 1px solid #A8DAB5;
+}
+
+.feedback-error {
+  background-color: #FCE8E6;
+  color: #C5221F;
+  border: 1px solid #F5C2C7;
+}
+
+/* Form container */
+.alta-catedra-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Grid layout matching design */
+.alta-catedra-grid-row-1 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 28px;
+  max-width: 1100px;
+  margin-bottom: 16px;
+}
+
+.alta-catedra-grid-row-2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 28px;
+  max-width: 1100px;
+  margin-bottom: 8px;
+}
+
+/* Section Dividers */
+.alta-catedra-divider {
+  border: none;
+  border-top: 1px solid #757873;
+  opacity: 0.55;
+  margin: 24px 0px 16px 0px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* Form Fields */
+.alta-catedra-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alta-catedra-label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+}
+
+.alta-catedra-input {
+  height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #757873;
+  background-color: #FFFFFF;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #2D3748;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.alta-catedra-input:focus {
+  border-color: var(--admin-primary-600, #4B8653);
+  box-shadow: 0 0 0 3px rgba(75, 134, 83, 0.2);
+}
+
+.alta-catedra-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+/* Select wrapper and styled selects */
+.alta-catedra-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.alta-catedra-select {
+  height: 40px;
+  width: 100%;
+  padding: 8px 36px 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #C4B59C;
+  background-color: var(--users-secondary-200, #D7CAB2);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A2E1C;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.alta-catedra-select:focus {
+  border-color: var(--admin-primary-700, #3F6F45);
+  box-shadow: 0 0 0 3px rgba(63, 111, 69, 0.25);
+}
+
+.alta-catedra-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.alta-catedra-select-caret {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: #1A2E1C;
+  font-size: 16px;
+}
+
+/* Bottom Actions Toolbar */
+.alta-catedra-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.btn-alta-catedra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-alta-catedra .btn-icon {
+  font-size: 18px;
+}
+
+.btn-alta-catedra-borrar {
+  background-color: var(--btn-delete, #890505);
+}
+
+.btn-alta-catedra-borrar:hover {
+  background-color: #6E0404;
+  transform: translateY(-2px);
+}
+
+.btn-alta-catedra-borrar:active {
+  transform: translateY(0);
+}
+
+.btn-alta-catedra-confirmar {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.btn-alta-catedra-confirmar:hover {
+  background-color: #1F3823;
+  transform: translateY(-2px);
+}
+
+.btn-alta-catedra-confirmar:active {
+  transform: translateY(0);
+}
+
+.btn-alta-catedra-confirmar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .alta-catedra-header {
+    margin-bottom: 16px;
+  }
+
+  .alta-catedra-title {
+    font-size: 34px;
+  }
+
+  .alta-catedra-grid-row-1,
+  .alta-catedra-grid-row-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .alta-catedra-content-area {
+    padding: 16px;
+  }
+
+  .alta-catedra-container-card {
+    padding: 16px;
+  }
+}
