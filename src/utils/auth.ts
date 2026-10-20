@@ -46,3 +46,28 @@ export const isGlobalAdmin = (): boolean => {
     upper === 'ROLE_ADMINISTRADOR_GLOBAL'
   );
 };
+
+export interface UserUnitInfo {
+  unidadId: number | null;
+  unidadNombre: string | null;
+  tipoUnidadId: number | null;
+  tipoUnidadNombre: string | null;
+}
+
+export const getUserUnitInfo = (): UserUnitInfo => {
+  const parsed = getParsedToken();
+  if (!parsed) {
+    return { unidadId: null, unidadNombre: null, tipoUnidadId: null, tipoUnidadNombre: null };
+  }
+  const unidadId = parsed.unidadId ?? parsed.unidad_id ?? parsed.unitId ?? null;
+  const unidadNombre = parsed.unidadNombre ?? parsed.unidad_nombre ?? null;
+  const tipoUnidadId = parsed.tipoUnidadId ?? parsed.tipo_unidad_id ?? null;
+  const tipoUnidadNombre = parsed.tipoUnidadNombre ?? parsed.tipo_unidad_nombre ?? null;
+
+  return {
+    unidadId: unidadId !== null ? Number(unidadId) : null,
+    unidadNombre: unidadNombre ? String(unidadNombre) : null,
+    tipoUnidadId: tipoUnidadId !== null ? Number(tipoUnidadId) : null,
+    tipoUnidadNombre: tipoUnidadNombre ? String(tipoUnidadNombre) : null,
+  };
+};

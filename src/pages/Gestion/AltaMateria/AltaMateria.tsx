@@ -3,7 +3,7 @@ import './AltaMateria.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare } from 'react-icons/fi';
-import { isGlobalAdmin, getParsedToken } from '../../../utils/auth';
+import { isGlobalAdmin, getUserUnitInfo } from '../../../utils/auth';
 
 interface AltaMateriaProps {
   onLogout?: () => void;
@@ -55,20 +55,20 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
   const [isLoadingCatalogs, setIsLoadingCatalogs] = useState<boolean>(true);
   const [isLoadingUnidades, setIsLoadingUnidades] = useState<boolean>(false);
 
-  // Detect user's assigned unit if not global admin
+  // Detect user's assigned unit & dependency if not global admin
   useEffect(() => {
-    const tokenData = getParsedToken();
-    if (tokenData) {
-      const assignedId =
-        tokenData.unidadId ||
-        tokenData.unidad_id ||
-        tokenData.unitId ||
-        (tokenData.unidad && typeof tokenData.unidad === 'object' ? tokenData.unidad.id || tokenData.unidad.unidadId : null);
-      if (assignedId) {
-        setUserUnitId(Number(assignedId));
+    if (!isGlobal) {
+      const unitInfo = getUserUnitInfo();
+      if (unitInfo.unidadId) {
+        setUserUnitId(unitInfo.unidadId);
+        setFormData((prev) => ({
+          ...prev,
+          unidad: String(unitInfo.unidadId),
+          dependencia: unitInfo.tipoUnidadId ? String(unitInfo.tipoUnidadId) : prev.dependencia,
+        }));
       }
     }
-  }, []);
+  }, [isGlobal]);
 
   // Load Tipos de Unidad (Dependencias) on mount
   useEffect(() => {
@@ -168,7 +168,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
       // Reset dependent unidad if dependencia changed
-      if (field === 'dependencia' && isGlobal) {
+      if (field === 'dependencia' && (!userUnitId || isGlobal)) {
         next.unidad = '';
       }
       return next;
@@ -179,11 +179,11 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
   const handleClear = () => {
     setFormData({
       ...initialFormState,
-      // If admin de unidad, preserve assigned unit/dependencia
-      dependencia: !isGlobal ? formData.dependencia : '',
-      unidad: !isGlobal ? formData.unidad : '',
+      // If user has an auto-scoped assigned unit, preserve it
+      dependencia: (!isGlobal && userUnitId) ? formData.dependencia : '',
+      unidad: (!isGlobal && userUnitId) ? formData.unidad : '',
     });
-    if (isGlobal) {
+    if (isGlobal || !userUnitId) {
       setUnidades([]);
     }
     setFeedback(null);
@@ -315,10 +315,10 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
       // Clear form
       setFormData({
         ...initialFormState,
-        dependencia: !isGlobal ? formData.dependencia : '',
-        unidad: !isGlobal ? formData.unidad : '',
+        dependencia: (!isGlobal && userUnitId) ? formData.dependencia : '',
+        unidad: (!isGlobal && userUnitId) ? formData.unidad : '',
       });
-      if (isGlobal) {
+      if (isGlobal || !userUnitId) {
         setUnidades([]);
       }
     } catch (error: any) {
@@ -429,7 +429,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                             className="alta-materia-select"
                             value={formData.dependencia}
                             onChange={(e) => handleChange('dependencia', e.target.value)}
-                            disabled={!isGlobal || (isLoadingCatalogs && dependencias.length === 0)}
+                            disabled={(!isGlobal && !!userUnitId) || (isLoadingCatalogs && dependencias.length === 0)}
                           >
                             <option value="" disabled hidden>
                               {isLoadingCatalogs && dependencias.length === 0 ? 'Cargando dependencias...' : 'Seleccione'}
@@ -454,14 +454,14 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                             className="alta-materia-select"
                             value={formData.unidad}
                             onChange={(e) => handleChange('unidad', e.target.value)}
-                            disabled={!isGlobal || isLoadingUnidades || (!formData.dependencia && unidades.length === 0)}
+                            disabled={(!isGlobal && !!userUnitId) || isLoadingUnidades || (!formData.dependencia && unidades.length === 0)}
                           >
                             <option value="" disabled hidden>
                               {isLoadingUnidades
                                 ? 'Cargando unidades...'
-                                : !formData.dependencia && isGlobal
-                                ? 'Primero seleccione una dependencia'
-                                : 'Seleccione'}
+                                : !formData.dependencia
+                                  ? 'Primero seleccione una dependencia'
+                                  : 'Seleccione'}
                             </option>
                             {unidades.map((u) => (
                               <option key={u.id} value={u.id}>
@@ -562,8 +562,6 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                         />
                       </div>
                     </div>
-
-                    <hr className="alta-materia-divider" />
                   </form>
                 </div>
               </div>
