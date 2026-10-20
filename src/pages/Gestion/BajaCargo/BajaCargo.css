@@ -31,7 +31,6 @@
   box-sizing: border-box;
   max-width: 1400px;
   width: 100%;
-  margin: 0 auto;
   min-height: 0;
   overflow: hidden;
 }
@@ -91,6 +90,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -366,6 +366,7 @@
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -660,18 +661,16 @@
   cursor: not-allowed;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments (matching ModificarCargo / AltaCargo / NuevoUsuario) */
 @media (max-width: 900px) {
-  .baja-cargo-grid-3,
-  .baja-cargo-grid-2 {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
   .baja-cargo-header-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .baja-cargo-title {
+    font-size: 40px;
   }
 
   .baja-cargo-search-card {
@@ -688,6 +687,101 @@
     flex: 1;
     min-width: 200px;
     width: auto;
+  }
+
+  .baja-cargo-search-label {
+    font-size: 12px;
+  }
+
+  .baja-cargo-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .baja-cargo-content-area {
+    padding: 16px;
+  }
+
+  .baja-cargo-container-card {
+    padding: 18px;
+  }
+
+  .baja-cargo-title {
+    font-size: 32px;
+  }
+
+  .baja-cargo-card-header h2 {
+    font-size: 20px;
+  }
+
+  .baja-cargo-section-title {
+    font-size: 15px;
+  }
+
+  .baja-cargo-grid-3,
+  .baja-cargo-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .baja-cargo-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .baja-cargo-search-input-wrap {
+    width: 100%;
+  }
+
+  .baja-cargo-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-height: 900px) {
+  .baja-cargo-content-area {
+    padding: 16px 24px;
+  }
+
+  .baja-cargo-container-card {
+    padding: 18px 24px;
+  }
+
+  .baja-cargo-header-row {
+    margin-bottom: 12px;
+  }
+
+  .baja-cargo-title {
+    font-size: 36px;
+  }
+
+  .baja-cargo-card-header {
+    padding: 10px 20px;
+  }
+
+  .baja-cargo-card-body {
+    padding: 16px 20px 20px 20px;
+  }
+
+  .baja-cargo-divider {
+    margin: 16px 0 14px 0;
+  }
+
+  .baja-cargo-grid-3,
+  .baja-cargo-grid-2 {
+    row-gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .baja-cargo-input,
+  .baja-cargo-select {
+    height: 36px;
+  }
+
+  .baja-cargo-actions {
+    margin-top: 12px;
   }
 }
 
@@ -834,6 +928,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -844,9 +939,9 @@
     transform: translateY(-24px) scale(0.96);
     opacity: 0;
   }
+
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
-

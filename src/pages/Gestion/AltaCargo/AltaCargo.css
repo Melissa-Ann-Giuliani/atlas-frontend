@@ -24,14 +24,13 @@
 }
 
 .alta-cargo-content-area {
-  padding: 24px 28px;
+  padding: 28px;
   flex: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   max-width: 1400px;
   width: 100%;
-  margin: 0 auto;
   min-height: 0;
   overflow: hidden;
 }
@@ -106,7 +105,7 @@
 .alta-cargo-title {
   margin: 0;
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
@@ -447,6 +446,20 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 900px) {
+  .alta-cargo-header {
+    margin-bottom: 16px;
+  }
+
+  .alta-cargo-title {
+    font-size: 32px;
+  }
+
+  .alta-cargo-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .alta-cargo-content-area {
     padding: 16px;
@@ -485,15 +498,11 @@
   }
 
   .alta-cargo-title {
-    font-size: 34px;
+    font-size: 36px;
   }
 
   .alta-cargo-header {
     margin-bottom: 12px;
-  }
-
-  .alta-cargo-form-card {
-    min-height: 320px;
   }
 
   .alta-cargo-card-header {
@@ -505,28 +514,21 @@
   }
 
   .alta-cargo-section-title {
-    font-size: 22px;
     margin-bottom: 14px;
   }
 
   .alta-cargo-grid-3,
   .alta-cargo-grid-2 {
-    gap: 12px 24px;
+    row-gap: 12px;
     margin-bottom: 14px;
   }
 
   .alta-cargo-input,
   .alta-cargo-select {
     height: 36px;
-    font-size: 13px;
   }
 
   .alta-cargo-actions {
     margin-top: 12px;
-  }
-
-  .btn-alta-cargo {
-    padding: 8px 18px;
-    font-size: 14px;
   }
 }

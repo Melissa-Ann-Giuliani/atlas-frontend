@@ -670,7 +670,7 @@
 .modificar-cargo-division-badge {
   background-color: var(--docente-primary-600, #1953B8);
   color: #FFFFFF;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   padding: 2px 9px;
   border-radius: 12px;
@@ -865,18 +865,6 @@
   gap: 16px 20px;
 }
 
-@media (max-width: 1000px) {
-  .modificar-cargo-subcargo-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 650px) {
-  .modificar-cargo-subcargo-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .input-locked-origin {
   background-color: #F3F1EC !important;
   color: #555555 !important;
@@ -924,7 +912,7 @@
   }
 
   .modificar-cargo-title {
-    font-size: 42px;
+    font-size: 36px;
   }
 
   .modificar-cargo-search-card {
@@ -937,6 +925,10 @@
     flex-wrap: wrap;
   }
 
+  .modificar-cargo-search-label {
+    font-size: 12px;
+  }
+
   .modificar-cargo-search-input-wrap {
     flex: 1;
     min-width: 200px;
@@ -945,6 +937,10 @@
 
   .modificar-cargo-grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modificar-cargo-subcargo-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -970,7 +966,8 @@
   }
 
   .modificar-cargo-grid-3,
-  .modificar-cargo-grid-2 {
+  .modificar-cargo-grid-2,
+  .modificar-cargo-subcargo-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
@@ -1001,53 +998,18 @@
 
   .modificar-cargo-header-row {
     margin-bottom: 12px;
-    gap: 12px;
   }
 
   .modificar-cargo-title {
-    font-size: 28px;
-  }
-
-  .modificar-cargo-search-card {
-    padding: 6px 12px;
-    gap: 4px;
-  }
-
-  .modificar-cargo-search-label {
-    font-size: 11px;
-  }
-
-  .modificar-cargo-search-input {
-    padding: 6px 32px 6px 12px;
-    font-size: 13px;
-  }
-
-  .modificar-cargo-search-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    font-size: 36px;
   }
 
   .modificar-cargo-card-header {
     padding: 10px 20px;
   }
 
-  .modificar-cargo-card-header h2 {
-    font-size: 20px;
-  }
-
   .modificar-cargo-card-body {
     padding: 16px 20px 20px 20px;
-  }
-
-  .modificar-cargo-feedback {
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    font-size: 13px;
-  }
-
-  .modificar-cargo-section-title {
-    font-size: 15px;
-    margin: 0 0 12px 0;
   }
 
   .modificar-cargo-divider {
@@ -1056,32 +1018,16 @@
 
   .modificar-cargo-grid-3,
   .modificar-cargo-grid-2 {
-    column-gap: 20px;
     row-gap: 12px;
     margin-bottom: 12px;
-  }
-
-  .modificar-cargo-label {
-    font-size: 12px;
   }
 
   .modificar-cargo-input,
   .modificar-cargo-select {
     height: 36px;
-    padding: 6px 10px;
-    font-size: 13px;
-  }
-
-  .modificar-cargo-select {
-    padding-right: 32px;
   }
 
   .modificar-cargo-actions {
     margin-top: 12px;
-  }
-
-  .btn-modificar-cargo {
-    padding: 8px 18px;
-    font-size: 14px;
   }
 }

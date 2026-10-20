@@ -602,15 +602,11 @@
   }
 
   .nuevo-usuario-title {
-    font-size: 34px;
+    font-size: 36px;
   }
 
   .nuevo-usuario-header {
     margin-bottom: 12px;
-  }
-
-  .nuevo-usuario-form-card {
-    min-height: 320px;
   }
 
   .nuevo-usuario-card-header {
@@ -622,27 +618,20 @@
   }
 
   .nuevo-usuario-section-title {
-    font-size: 22px;
     margin-bottom: 14px;
   }
 
   .nuevo-usuario-form-grid {
-    gap: 12px 24px;
+    row-gap: 12px;
     margin-bottom: 16px;
   }
 
   .nuevo-usuario-input,
   .nuevo-usuario-select {
     height: 36px;
-    font-size: 13px;
   }
 
   .nuevo-usuario-actions {
     margin-top: 12px;
-  }
-
-  .btn-nuevo-usuario {
-    padding: 8px 18px;
-    font-size: 14px;
   }
 }
