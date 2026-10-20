@@ -12,7 +12,6 @@ import {
   FiCalendar,
   FiSearch,
   FiTrash2,
-  FiFilter,
   FiAlertTriangle,
 } from 'react-icons/fi';
 
@@ -778,13 +777,11 @@ export default function BajaCargo({
                   <h1 className="baja-cargo-title">Gestión</h1>
                 </div>
 
-                {/* Search Bar matching Figma: [ Filtros ] [ Ingrese valor  (Q) ] */}
+                {/* Search Bar matching Modificar Cargo style */}
                 <div className="baja-cargo-search-card">
-                  <div className="baja-cargo-search-filter-badge">
-                    <FiFilter />
-                    <span>Filtros</span>
-                  </div>
-
+                  <label htmlFor="searchCargoInput" className="baja-cargo-search-label">
+                    Buscar Cargo a Dar de Baja por Número
+                  </label>
                   <div className="baja-cargo-search-row">
                     <div
                       className="baja-cargo-search-input-wrap"
@@ -808,6 +805,7 @@ export default function BajaCargo({
                         spellCheck={false}
                         data-lpignore="true"
                         data-form-type="other"
+                        data-1p-ignore="true"
                       />
                       <FiSearch className="baja-cargo-search-icon" />
 
@@ -817,8 +815,9 @@ export default function BajaCargo({
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
-                                }`}
+                              className={`baja-cargo-suggestion-item ${
+                                idx === activeSuggestionIndex ? 'active' : ''
+                              }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -849,7 +848,8 @@ export default function BajaCargo({
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
-                      <span>{isSearching ? 'Buscando...' : 'Buscar'}</span>
+                      <FiSearch />
+                      <span>{isSearching ? 'Buscando...' : 'Buscar Cargo'}</span>
                     </button>
                   </div>
                 </div>

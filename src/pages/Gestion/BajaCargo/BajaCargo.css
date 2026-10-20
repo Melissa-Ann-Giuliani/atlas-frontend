@@ -125,39 +125,27 @@
   display: inline-block;
 }
 
-/* Search bar card inside header row, matching Figma with Filtros pill / badge and rounded search input */
+/* Search bar card inside header row, styled like Modificar Cargo */
 .baja-cargo-search-card {
   background-color: var(--users-secondary-200, #D7CAB2);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-.baja-cargo-search-filter-badge {
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  background-color: var(--admin-primary-900, #1A2E1C);
-  color: #FFFFFF;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  user-select: none;
+  flex-shrink: 0;
 }
 
-.baja-cargo-search-filter-badge svg {
-  font-size: 13px;
+.baja-cargo-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: 0.01em;
 }
 
 .baja-cargo-search-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -173,19 +161,18 @@
   padding: 8px 36px 8px 14px;
   font-size: 14px;
   font-family: 'DM Sans', system-ui, sans-serif;
-  border: 1px solid transparent;
-  border-radius: 20px;
-  background-color: #FFFFFF;
+  border: none;
+  border-radius: 24px;
+  background-color: var(--users-secondary-50, #F6F3EE);
   color: var(--admin-primary-900, #1A2E1C);
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .baja-cargo-search-input:focus {
   outline: none;
-  border-color: #890505;
-  box-shadow: 0 0 0 2px rgba(137, 5, 5, 0.18);
+  box-shadow: 0 0 0 2px var(--admin-tertiary-500, #7BC33C);
 }
 
 .baja-cargo-search-input::-webkit-search-decoration,
@@ -201,8 +188,8 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #555555;
-  font-size: 15px;
+  color: #666;
+  font-size: 16px;
   pointer-events: none;
 }
 
@@ -288,9 +275,9 @@
   color: #FFFFFF;
   border: none;
   border-radius: 6px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
@@ -684,16 +671,22 @@
   .baja-cargo-header-row {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .baja-cargo-search-card {
     width: 100%;
     box-sizing: border-box;
-    justify-content: space-between;
+  }
+
+  .baja-cargo-search-row {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .baja-cargo-search-input-wrap {
-    width: 100%;
     flex: 1;
+    min-width: 200px;
+    width: auto;
   }
 }
