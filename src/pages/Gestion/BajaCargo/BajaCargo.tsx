@@ -52,33 +52,7 @@ export const isCargoDadoDeBaja = (estado?: string | null): boolean => {
   return normalized === 'dado de baja' || normalized === 'inactivo';
 };
 
-const getUserRole = (): string | null => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    const parts = token.split('.');
-    if (parts.length < 2) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    const parsed = JSON.parse(jsonPayload);
-    if (parsed.rol) return String(parsed.rol);
-    if (parsed.role) return String(parsed.role);
-    if (Array.isArray(parsed.roles) && parsed.roles.length > 0) return String(parsed.roles[0]);
-    if (Array.isArray(parsed.authorities) && parsed.authorities.length > 0) {
-      const auth = parsed.authorities[0];
-      return typeof auth === 'string' ? auth : auth.authority;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
+import { getUserRole, isGlobalAdmin } from '../../../utils/auth';
 
 const emptyFormState: FormState = {
   cargoId: null,
@@ -114,6 +88,7 @@ export default function BajaCargo({
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormState>(emptyFormState);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | 'info';
     message: string;
@@ -631,8 +606,29 @@ export default function BajaCargo({
     }
   };
 
+  const handleOpenConfirmModal = () => {
+    if (!formData.cargoId) {
+      setFeedback({
+        type: 'error',
+        message: 'Debe buscar y seleccionar un cargo antes de darlo de baja.',
+      });
+      return;
+    }
+
+    if (isCargoDadoDeBaja(formData.estado)) {
+      setFeedback({
+        type: 'error',
+        message: `El Cargo N° ${formData.numeroCargo} ya está en estado "Dado de Baja".`,
+      });
+      return;
+    }
+
+    setShowConfirmModal(true);
+  };
+
   // Submit Baja de Cargo: executes PATCH /api/cargos/{id}/baja
   const handleSubmit = async () => {
+    setShowConfirmModal(false);
     if (!formData.cargoId) {
       setFeedback({
         type: 'error',
@@ -815,9 +811,8 @@ export default function BajaCargo({
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-cargo-suggestion-item ${
-                                idx === activeSuggestionIndex ? 'active' : ''
-                              }`}
+                              className={`baja-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -877,15 +872,17 @@ export default function BajaCargo({
                     </div>
                   )}
 
-                  {hasLoadedCargo && isCargoDadoDeBaja(formData.estado) && (
-                    <div className="baja-cargo-warning-box">
-                      <FiAlertTriangle className="baja-cargo-warning-icon" />
-                      <span>
-                        Este cargo ya ha sido dado de baja. Su estado actual es{' '}
-                        <strong>{formData.estado || 'Dado de baja'}</strong>.
-                      </span>
-                    </div>
-                  )}
+                  {hasLoadedCargo &&
+                    isCargoDadoDeBaja(formData.estado) &&
+                    feedback?.type !== 'success' && (
+                      <div className="baja-cargo-warning-box">
+                        <FiAlertTriangle className="baja-cargo-warning-icon" />
+                        <span>
+                          Este cargo ya ha sido dado de baja. Su estado actual es{' '}
+                          <strong>{formData.estado || 'Dado de baja'}</strong>.
+                        </span>
+                      </div>
+                    )}
 
                   <div className="baja-cargo-form">
                     {/* SECTION 1: DATOS DE CARGOS */}
@@ -1120,7 +1117,7 @@ export default function BajaCargo({
               <button
                 type="button"
                 className="btn-baja-cargo btn-baja-cargo-confirmar"
-                onClick={() => handleSubmit()}
+                onClick={handleOpenConfirmModal}
                 disabled={
                   isSubmitting ||
                   !hasLoadedCargo ||
@@ -1140,6 +1137,46 @@ export default function BajaCargo({
           </div>
         </main>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="baja-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baja-modal-title">
+          <div className="baja-modal">
+            <div className="baja-modal-header">
+              <FiAlertTriangle className="baja-modal-warning-icon" />
+              <h2 id="baja-modal-title">Confirmar Baja de Cargo</h2>
+              <FiAlertTriangle className="baja-modal-warning-icon" />
+            </div>
+            <div className="baja-modal-content">
+              <p>
+                ¿Está seguro de que desea dar de baja el <strong>Cargo N° {formData.numeroCargo}</strong>?
+              </p>
+              <p className="baja-modal-subtext">
+                Esta acción dará de baja el cargo en el sistema y cambiará su estado a <strong>Dado de baja</strong>.
+              </p>
+              <div className="baja-modal-actions">
+                <button
+                  type="button"
+                  className="baja-modal-btn-cancel"
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="baja-modal-btn-confirm"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  <FiTrash2 className="btn-icon" />
+                  <span>{isSubmitting ? 'Procesando...' : 'Dar de baja'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -33,13 +33,20 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
-  if (path === 'gestion/baja_cargo') return 'baja_cargo';
+  if (path === 'gestion/baja_cargo') {
+    return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
+  }
 
   const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo'];
-  return validPages.includes(path as Page) ? (path as Page) : 'inicio';
+  const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
+  if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
+    return 'gestion';
+  }
+  return resolved;
 };
 
 import IdleTimeoutModal from './components/IdleTimeoutModal.tsx';
+import { isGlobalAdmin } from './utils/auth';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -219,6 +226,11 @@ function App() {
       sessionStorage.removeItem('atlas_cargo_history');
     }
 
+    if (page === 'baja_cargo' && !isGlobalAdmin()) {
+      setActivePage('gestion');
+      return;
+    }
+
     setActivePage(page);
 
     if (page === 'docente_detalle' && data) {
@@ -375,6 +387,9 @@ function App() {
           );
 
         case 'baja_cargo':
+          if (!isGlobalAdmin()) {
+            return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
+          }
           return (
             <BajaCargo
               initialCargo={selectedCargo}
