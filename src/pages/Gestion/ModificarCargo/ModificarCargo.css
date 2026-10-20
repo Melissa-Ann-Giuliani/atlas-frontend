@@ -24,12 +24,11 @@
 }
 
 .modificar-cargo-content-area {
-  padding: 24px 28px;
+  padding: 24px 32px;
   flex: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   min-height: 0;
@@ -325,7 +324,7 @@
 
 /* Scrollable Form Body */
 .modificar-cargo-card-body {
-  padding: 20px 24px 28px 24px;
+  padding: 20px 28px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -396,17 +395,20 @@
 /* Form Sections */
 .modificar-cargo-section-title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 24px;
+  font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0 0 16px 0;
   text-align: left;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
 }
 
 .modificar-cargo-divider {
   border: 0;
   border-top: 1px solid var(--users-secondary-100, #E7DFD0);
-  margin: 24px 0 20px 0;
+  margin: 20px 0px;
 }
 
 /* Form Grid */
@@ -415,7 +417,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .modificar-cargo-grid-2 {
@@ -423,7 +425,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 /* Fields */
@@ -988,12 +990,8 @@
 }
 
 @media (max-height: 900px) {
-  .modificar-cargo-content-area {
-    padding: 16px 24px;
-  }
-
   .modificar-cargo-container-card {
-    padding: 18px 24px;
+    padding: 20px 28px;
   }
 
   .modificar-cargo-header-row {
@@ -1009,17 +1007,29 @@
   }
 
   .modificar-cargo-card-body {
-    padding: 16px 20px 20px 20px;
+    padding: 16px 24px;
+  }
+
+  .modificar-cargo-section-title {
+    font-size: 20px;
+    margin: 0 0 12px 0;
   }
 
   .modificar-cargo-divider {
-    margin: 16px 0 14px 0;
+    margin: 16px 0px;
   }
 
   .modificar-cargo-grid-3,
   .modificar-cargo-grid-2 {
     row-gap: 12px;
-    margin-bottom: 12px;
+  }
+
+  .modificar-cargo-grid-3 {
+    margin-bottom: 16px;
+  }
+
+  .modificar-cargo-grid-2 {
+    margin-bottom: 4px;
   }
 
   .modificar-cargo-input,

@@ -24,12 +24,11 @@
 }
 
 .baja-cargo-content-area {
-  padding: 24px 28px;
+  padding: 24px 32px;
   flex: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  max-width: 1400px;
   width: 100%;
   min-height: 0;
   overflow: hidden;
@@ -324,7 +323,7 @@
 
 /* Scrollable Form Body */
 .baja-cargo-card-body {
-  padding: 20px 24px 28px 24px;
+  padding: 20px 28px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -439,7 +438,7 @@
 /* Form Sections */
 .baja-cargo-section-title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0 0 16px 0;
@@ -453,7 +452,7 @@
   border: 0;
   border-top: 1px solid #757873;
   opacity: 0.5;
-  margin: 20px 0 20px 0;
+  margin: 20px 0px;
 }
 
 /* Form Grid */
@@ -462,7 +461,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .baja-cargo-grid-2 {
@@ -470,7 +469,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 /* Fields */
@@ -742,7 +741,7 @@
 
 @media (max-height: 900px) {
   .baja-cargo-content-area {
-    padding: 16px 24px;
+    padding: 20px 28px;
   }
 
   .baja-cargo-container-card {
@@ -762,17 +761,29 @@
   }
 
   .baja-cargo-card-body {
-    padding: 16px 20px 20px 20px;
+    padding: 16px 24px;
+  }
+
+  .baja-cargo-section-title {
+    font-size: 20px;
+    margin: 0 0 12px 0;
   }
 
   .baja-cargo-divider {
-    margin: 16px 0 14px 0;
+    margin: 16px 0px;
   }
 
   .baja-cargo-grid-3,
   .baja-cargo-grid-2 {
     row-gap: 12px;
-    margin-bottom: 12px;
+  }
+
+  .baja-cargo-grid-3 {
+    margin-bottom: 16px;
+  }
+
+  .baja-cargo-grid-2 {
+    margin-bottom: 4px;
   }
 
   .baja-cargo-input,
