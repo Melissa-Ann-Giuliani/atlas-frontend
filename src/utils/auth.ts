@@ -1,7 +1,7 @@
 /**
  * Helper utilities for checking user roles from JWT token in localStorage.
  */
-export const getUserRole = (): string | null => {
+export const getParsedToken = (): any | null => {
   try {
     const token = localStorage.getItem('token');
     if (!token) return null;
@@ -15,18 +15,23 @@ export const getUserRole = (): string | null => {
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-    const parsed = JSON.parse(jsonPayload);
-    if (parsed.rol) return String(parsed.rol);
-    if (parsed.role) return String(parsed.role);
-    if (Array.isArray(parsed.roles) && parsed.roles.length > 0) return String(parsed.roles[0]);
-    if (Array.isArray(parsed.authorities) && parsed.authorities.length > 0) {
-      const auth = parsed.authorities[0];
-      return typeof auth === 'string' ? auth : auth.authority;
-    }
-    return null;
+    return JSON.parse(jsonPayload);
   } catch {
     return null;
   }
+};
+
+export const getUserRole = (): string | null => {
+  const parsed = getParsedToken();
+  if (!parsed) return null;
+  if (parsed.rol) return String(parsed.rol);
+  if (parsed.role) return String(parsed.role);
+  if (Array.isArray(parsed.roles) && parsed.roles.length > 0) return String(parsed.roles[0]);
+  if (Array.isArray(parsed.authorities) && parsed.authorities.length > 0) {
+    const auth = parsed.authorities[0];
+    return typeof auth === 'string' ? auth : auth.authority;
+  }
+  return null;
 };
 
 export const isGlobalAdmin = (): boolean => {
