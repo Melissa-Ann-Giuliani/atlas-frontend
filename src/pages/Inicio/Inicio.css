@@ -22,12 +22,6 @@
   font-family: inherit;
 }
 
-
-
-
-
-
-
 /* Main Content */
 .main-content {
   flex: 1;
@@ -36,11 +30,8 @@
   overflow: hidden;
 }
 
-
-
 .content-area {
-  padding-inline: 24px;
-  padding-block: 16px;
+  padding: 32px;
   overflow: hidden;
   flex: 1;
   display: flex;
@@ -294,6 +285,12 @@
   transform: translate(-50%, -100%);
   margin-top: -15px;
   white-space: nowrap;
+}
+
+@media (max-height: 900px) {
+  .content-area {
+    padding: 28px;
+  }
 }
 
 @media (min-width: 1024px) {

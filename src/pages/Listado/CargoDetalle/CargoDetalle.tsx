@@ -227,9 +227,20 @@ export default function CargoDetalle({ cargo, previousCargo, onBack, onLogout, o
 
   const documentosAdjuntos: any[] = detalle?.documentacionAdjunta || [];
   const parentCargo = detalle?.cargoPredecesor || detalle?.cargoOrigenDivision;
-  const subcargosList = (detalle?.subcargosActivos && detalle.subcargosActivos.length > 0)
-    ? detalle.subcargosActivos
-    : (detalle?.cargosSubdivididos || []);
+  const rawSubcargos = [
+    ...(detalle?.subcargosActivos || []),
+    ...(detalle?.cargosSubdivididos || []),
+  ];
+  const subcargosList = Array.from(
+    new Map(
+      rawSubcargos
+        .filter((item) => {
+          const st = item.estado?.toLowerCase()?.trim();
+          return st !== 'dado de baja' && st !== 'inactivo';
+        })
+        .map((item) => [item.numero, item])
+    ).values()
+  );
   const hasPredecessor = Boolean(parentCargo);
   const hasSubcargos = Boolean(subcargosList && subcargosList.length > 0);
   const showTreeSection = hasPredecessor || hasSubcargos;

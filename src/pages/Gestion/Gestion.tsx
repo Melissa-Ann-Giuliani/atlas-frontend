@@ -3,6 +3,7 @@ import './Gestion.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import { FiChevronRight } from 'react-icons/fi';
+import { isGlobalAdmin } from '../../utils/auth';
 
 interface GestionProps {
   onLogout?: () => void;
@@ -24,6 +25,8 @@ interface GestionCardData {
 }
 
 export default function Gestion({ onLogout, onNavigate }: GestionProps) {
+  const userIsAdminGlobal = isGlobalAdmin();
+
   const cards: GestionCardData[] = [
     {
       id: 'cargos',
@@ -32,7 +35,9 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       options: [
         { id: 'alta_cargo', label: 'Alta de Cargo', type: 'green', targetPage: 'alta_cargo' },
         { id: 'modificacion_cargo', label: 'Modificación de Cargo', type: 'blue', targetPage: 'modificar_cargo' },
-        { id: 'baja_cargo', label: 'Baja de Cargo', type: 'red' },
+        ...(userIsAdminGlobal
+          ? [{ id: 'baja_cargo', label: 'Baja de Cargo', type: 'red' as const, targetPage: 'baja_cargo' }]
+          : []),
       ],
     },
     {
@@ -76,6 +81,10 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate('alta_cargo');
     } else if (option.id === 'modificacion_cargo' && onNavigate) {
       onNavigate('modificar_cargo');
+    } else if (option.id === 'baja_cargo' && onNavigate) {
+      if (userIsAdminGlobal) {
+        onNavigate('baja_cargo');
+      }
     } else {
       // Future navigation handlers can be added here
       console.log(`Seleccionado: ${option.label} (${cardTitle})`);

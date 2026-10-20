@@ -9,8 +9,9 @@ import Gestion from './pages/Gestion/Gestion'
 import NuevoUsuario from './pages/Gestion/NuevoUsuario/NuevoUsuario'
 import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
 import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
+import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -20,6 +21,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
   if (page === 'alta_cargo') return 'gestion/alta_cargo';
   if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
+  if (page === 'baja_cargo') return 'gestion/baja_cargo';
   return page;
 };
 
@@ -31,12 +33,20 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
+  if (path === 'gestion/baja_cargo') {
+    return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
+  }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo'];
-  return validPages.includes(path as Page) ? (path as Page) : 'inicio';
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo'];
+  const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
+  if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
+    return 'gestion';
+  }
+  return resolved;
 };
 
 import IdleTimeoutModal from './components/IdleTimeoutModal.tsx';
+import { isGlobalAdmin } from './utils/auth';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -216,6 +226,11 @@ function App() {
       sessionStorage.removeItem('atlas_cargo_history');
     }
 
+    if (page === 'baja_cargo' && !isGlobalAdmin()) {
+      setActivePage('gestion');
+      return;
+    }
+
     setActivePage(page);
 
     if (page === 'docente_detalle' && data) {
@@ -280,82 +295,121 @@ function App() {
   };
 
   if (isAuthenticated) {
-    let content;
-    if (activePage === 'listado') {
-      content = (
-        <Listado
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-          initialTab={listadoTab}
-          onTabChange={updateListadoTab}
-        />
-      );
-    } else if (activePage === 'docente_detalle' && selectedDocente) {
-      content = <DocenteDetalle
-        docente={selectedDocente}
-        onLogout={handleLogout}
-        onNavigate={handleNavigate}
-      />;
-    } else if (activePage === 'cargo_detalle' && selectedCargo) {
-      content = (
-        <CargoDetalle
-          cargo={selectedCargo}
-          previousCargo={cargoHistory.length > 0 ? cargoHistory[cargoHistory.length - 1] : null}
-          onBack={handleBackCargo}
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-        />
-      );
-    } else if (activePage === 'licencia_detalle') {
-      content = selectedLicencia ? (
-        <LicenciaDetalle
-          licencia={selectedLicencia}
-          onBack={() => handleNavigate('listado', { tab: 'licencias' })}
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-        />
-      ) : (
-        <Listado
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-          initialTab="licencias"
-          onTabChange={updateListadoTab}
-        />
-      );
-    } else if (activePage === 'nuevo_usuario') {
-      content = (
-        <NuevoUsuario
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-          onBack={() => handleNavigate('gestion')}
-        />
-      );
-    } else if (activePage === 'alta_cargo') {
-      content = (
-        <AltaCargo
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-          onBack={() => handleNavigate('gestion')}
-        />
-      );
-    } else if (activePage === 'modificar_cargo') {
-      content = (
-        <ModificarCargo
-          initialCargo={selectedCargo}
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-          onBack={() => handleNavigate('gestion')}
-        />
-      );
-    } else if (activePage === 'gestion') {
-      content = <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
-    } else {
-      content = <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
-    }
+    const renderContent = () => {
+      switch (activePage) {
+        case 'listado':
+          return (
+            <Listado
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              initialTab={listadoTab}
+              onTabChange={updateListadoTab}
+            />
+          );
+
+        case 'docente_detalle':
+          return selectedDocente ? (
+            <DocenteDetalle
+              docente={selectedDocente}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+            />
+          ) : (
+            <Listado
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              initialTab="docentes"
+              onTabChange={updateListadoTab}
+            />
+          );
+
+        case 'cargo_detalle':
+          return selectedCargo ? (
+            <CargoDetalle
+              cargo={selectedCargo}
+              previousCargo={cargoHistory.length > 0 ? cargoHistory[cargoHistory.length - 1] : null}
+              onBack={handleBackCargo}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+            />
+          ) : (
+            <Listado
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              initialTab="cargos"
+              onTabChange={updateListadoTab}
+            />
+          );
+
+        case 'licencia_detalle':
+          return selectedLicencia ? (
+            <LicenciaDetalle
+              licencia={selectedLicencia}
+              onBack={() => handleNavigate('listado', { tab: 'licencias' })}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+            />
+          ) : (
+            <Listado
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              initialTab="licencias"
+              onTabChange={updateListadoTab}
+            />
+          );
+
+        case 'nuevo_usuario':
+          return (
+            <NuevoUsuario
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'alta_cargo':
+          return (
+            <AltaCargo
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'modificar_cargo':
+          return (
+            <ModificarCargo
+              initialCargo={selectedCargo}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'baja_cargo':
+          if (!isGlobalAdmin()) {
+            return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
+          }
+          return (
+            <BajaCargo
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'gestion':
+          return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
+
+        case 'inicio':
+        default:
+          return <Inicio onLogout={handleLogout} onNavigate={handleNavigate} />;
+      }
+    };
 
     return (
       <>
-        {content}
+        {renderContent()}
         <IdleTimeoutModal onLogout={handleLogout} timeoutSeconds={3600} warningSeconds={60} />
       </>
     );
