@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ModificarMateria.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiSearch } from 'react-icons/fi';
 import { isGlobalAdmin, getUserUnitInfo } from '../../../utils/auth';
 
 interface ModificarMateriaProps {
@@ -39,6 +39,134 @@ interface MateriaSuggestion {
   materia?: any;
 }
 
+/**
+ * Normalizes text: lowercase, removes accents/diacritics, and strips extra spaces.
+ */
+function normalizeSearchText(text: string): string {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Levenshtein distance between two strings for typo tolerance.
+ */
+function getLevenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const matrix: number[][] = [];
+  for (let i = 0; i <= a.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,       // deletion
+        matrix[i][j - 1] + 1,       // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  return matrix[a.length][b.length];
+}
+
+/**
+ * Calculates a closeness / relevance score between a materia and the search query.
+ * Higher score = closer match. Returns 0 if not a relevant match.
+ */
+function calculateMateriaCloseness(materia: any, rawQuery: string): number {
+  const q = normalizeSearchText(rawQuery);
+  if (!q) return 0;
+
+  const rawName = materia.nombre || materia.materiaNombre || '';
+  const name = normalizeSearchText(rawName);
+  if (!name) return 0;
+
+  const rawPlan = materia.planEstudio ?? materia.plan ?? materia.nroPlan ?? '';
+  const planStr = String(rawPlan).trim();
+
+  // 1. Exact match
+  if (name === q) {
+    return 10000;
+  }
+
+  // 1b. Exact match with plan (e.g. "algebra 2023" or "algebra plan 2023")
+  if (planStr && (name + ' ' + planStr === q || name + ' plan ' + planStr === q)) {
+    return 9500;
+  }
+
+  // 2. Starts with query (prefix match) - penalize slightly by extra length so concise titles rank closer
+  if (name.startsWith(q)) {
+    const lengthPenalty = Math.min(300, (name.length - q.length) * 2);
+    return 8000 - lengthPenalty;
+  }
+
+  // 3. Word starts with query (e.g. query "sistemas" -> "Análisis de Sistemas")
+  const words = name.split(' ');
+  const qWords = q.split(' ');
+  const wordIdx = words.findIndex((w) => w.startsWith(q));
+  if (wordIdx !== -1) {
+    return 6000 - wordIdx * 50 - Math.min(200, name.length - q.length);
+  }
+
+  // 4. Multi-word query where all query words are contained or start words in title
+  if (qWords.length > 1) {
+    const allWordsMatch = qWords.every((qw) =>
+      words.some((w) => w.startsWith(qw) || w.includes(qw))
+    );
+    if (allWordsMatch) {
+      return 5500 - Math.min(300, name.length - q.length);
+    }
+  }
+
+  // 5. Query is a substring of the title
+  const subIdx = name.indexOf(q);
+  if (subIdx !== -1) {
+    return 4000 - subIdx * 10 - Math.min(200, name.length - q.length);
+  }
+
+  // 6. Plan number search (e.g. "2023")
+  if (planStr && q === planStr) {
+    return 3500;
+  }
+
+  // 7. Fuzzy matching for typos (e.g. "algbra" -> "álgebra", "quimca" -> "química", "sitemas" -> "sistemas")
+  if (q.length >= 3) {
+    let bestWordSim = 0;
+    for (const w of words) {
+      if (Math.abs(w.length - q.length) <= 2) {
+        const dist = getLevenshteinDistance(w, q);
+        const maxLen = Math.max(w.length, q.length);
+        const sim = 1 - dist / maxLen;
+        if (sim > bestWordSim) {
+          bestWordSim = sim;
+        }
+      }
+    }
+    if (bestWordSim >= 0.65) {
+      return Math.round(3000 * bestWordSim);
+    }
+
+    if (name.length >= q.length) {
+      const prefix = name.slice(0, q.length + 1);
+      const dist = getLevenshteinDistance(prefix, q);
+      const sim = 1 - dist / Math.max(prefix.length, q.length);
+      if (sim >= 0.7) {
+        return Math.round(2500 * sim);
+      }
+    }
+  }
+
+  return 0;
+}
+
 const ANIO_EDUCATIVO_OPTIONS = ['1°', '2°', '3°', '4°', '5°'];
 
 const emptyFormState: FormState = {
@@ -69,9 +197,11 @@ export default function ModificarMateria({
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState<MateriaSuggestion[]>([]);
+  const [allMaterias, setAllMaterias] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const isSelectingRef = useRef<boolean>(false);
 
   // Role & Scoping
   const isGlobal = isGlobalAdmin();
@@ -133,6 +263,28 @@ export default function ModificarMateria({
 
     fetchCatalogs();
   }, [onLogout]);
+
+  // Pre-load materias catalog on mount to guarantee instant, typo-tolerant closeness matching
+  useEffect(() => {
+    const fetchAllMaterias = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+        const res = await fetch(`${apiUrl}/api/materias?size=500`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.content || (Array.isArray(data) ? data : []);
+          setAllMaterias(list);
+        }
+      } catch (err) {
+        console.warn('Error fetching all materias catalog:', err);
+      }
+    };
+
+    fetchAllMaterias();
+  }, []);
 
   // Load Unidades when Dependencia changes (or if userUnitId is present)
   useEffect(() => {
@@ -204,10 +356,15 @@ export default function ModificarMateria({
     }
   }, [initialMateria]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-search suggestions as user types
+  // Auto-search suggestions as user types - ranked by closeness to user input
   useEffect(() => {
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
+
     const term = searchQuery.trim();
-    if (!term || term.length < 2) {
+    if (!term) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -219,29 +376,70 @@ export default function ModificarMateria({
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-        const res = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(term)}`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          const list = data.content || (Array.isArray(data) ? data : []);
-          const mapped = list.slice(0, 8).map((m: any) => ({
-            id: m.id || m.materiaId,
-            nombre: m.nombre || m.materiaNombre,
-            unidad: m.unidad?.nombre || m.unidad?.unidadNombre || m.unidadNombre || m.unidadAcademica,
-            anio: m.anio || m.anoEducativo,
-            planEstudio: m.planEstudio || m.plan || m.nroPlan,
-            materia: m,
-          }));
-          setSuggestions(mapped);
-          setShowSuggestions(mapped.length > 0);
-          setActiveSuggestionIndex(-1);
+        // 1. Fetch matching candidates from backend search endpoint
+        let backendList: any[] = [];
+        try {
+          const res = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(term)}&size=50`, { headers });
+          if (res.ok) {
+            const data = await res.json();
+            backendList = data.content || (Array.isArray(data) ? data : []);
+          }
+        } catch {
+          backendList = [];
         }
+
+        // 2. Combine with preloaded allMaterias to catch unaccented, typos, and partial phrases
+        const combinedMap = new Map<number, any>();
+        for (const m of backendList) {
+          const id = m.id || m.materiaId;
+          if (id) combinedMap.set(id, m);
+        }
+        for (const m of allMaterias) {
+          const id = m.id || m.materiaId;
+          if (id && !combinedMap.has(id)) {
+            combinedMap.set(id, m);
+          }
+        }
+        const candidates = Array.from(combinedMap.values());
+
+        // 3. Score and sort candidates by closeness to whatever the user is typing
+        const scored = candidates
+          .map((m: any) => ({
+            m,
+            score: calculateMateriaCloseness(m, term),
+          }))
+          .filter((item) => item.score > 0)
+          .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            // Higher / more recent plan de estudio first
+            const planA = Number(a.m.planEstudio ?? a.m.plan ?? a.m.nroPlan ?? 0) || 0;
+            const planB = Number(b.m.planEstudio ?? b.m.plan ?? b.m.nroPlan ?? 0) || 0;
+            if (planB !== planA) return planB - planA;
+            return String(a.m.nombre || '').localeCompare(String(b.m.nombre || ''));
+          });
+
+        const mapped: MateriaSuggestion[] = scored.slice(0, 8).map(({ m }) => ({
+          id: m.id || m.materiaId,
+          nombre: m.nombre || m.materiaNombre,
+          unidad: m.unidad?.nombre || m.unidad?.unidadNombre || m.unidadNombre || m.unidadAcademica,
+          anio: m.anio || m.anoEducativo,
+          planEstudio: m.planEstudio !== undefined && m.planEstudio !== null
+            ? m.planEstudio
+            : (m.plan !== undefined && m.plan !== null ? m.plan : (m.nroPlan ?? '')),
+          materia: m,
+        }));
+
+        setSuggestions(mapped);
+        setShowSuggestions(mapped.length > 0);
+        setActiveSuggestionIndex(-1);
       } catch (err) {
-        console.warn('Error searching materias autocomplete:', err);
+        console.warn('Error calculating closest materias:', err);
+        setSuggestions([]);
       }
-    }, 250);
+    }, 180);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, allMaterias]);
 
   // Click outside listener for suggestions
   useEffect(() => {
@@ -343,12 +541,16 @@ export default function ModificarMateria({
   };
 
   const selectSuggestion = (sug: MateriaSuggestion) => {
+    isSelectingRef.current = true;
     setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
     setSearchQuery(sug.nombre);
-    if (sug.materia) {
+    if (sug.id) {
+      loadMateriaDetails(sug.id, sug.materia);
+    } else if (sug.materia) {
       populateFormWithMateria(sug.materia);
     } else {
-      loadMateriaDetails(sug.id);
+      handleSearch(sug.nombre);
     }
   };
 
@@ -358,7 +560,7 @@ export default function ModificarMateria({
     if (!term) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, ingrese el nombre o valor de la materia a buscar.',
+        message: 'Por favor, ingrese el nombre de la materia a buscar.',
       });
       return;
     }
@@ -371,30 +573,57 @@ export default function ModificarMateria({
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      const response = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(term)}`, { headers });
-      if (response.ok) {
-        const data = await response.json();
-        const list = data.content || (Array.isArray(data) ? data : []);
-        if (list.length > 0) {
-          const exact = list.find((m: any) => (m.nombre || '').toLowerCase() === term.toLowerCase());
-          const chosen = exact || list[0];
+      let list: any[] = [];
+      try {
+        const response = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(term)}&size=50`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          list = data.content || (Array.isArray(data) ? data : []);
+        }
+      } catch {
+        list = [];
+      }
+
+      // Combine backend search results with preloaded catalog for closest match resolution
+      const combinedMap = new Map<number, any>();
+      for (const m of list) {
+        const id = m.id || m.materiaId;
+        if (id) combinedMap.set(id, m);
+      }
+      for (const m of allMaterias) {
+        const id = m.id || m.materiaId;
+        if (id && !combinedMap.has(id)) {
+          combinedMap.set(id, m);
+        }
+      }
+      const candidates = Array.from(combinedMap.values());
+
+      // Score candidates to find the closest match
+      const scored = candidates
+        .map((m) => ({ m, score: calculateMateriaCloseness(m, term) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      if (scored.length > 0) {
+        const chosen = scored[0].m;
+        const chosenId = chosen.id || chosen.materiaId;
+        isSelectingRef.current = true;
+        setSearchQuery(chosen.nombre || chosen.materiaNombre || term);
+        if (chosenId) {
+          await loadMateriaDetails(chosenId, chosen);
+        } else {
           populateFormWithMateria(chosen);
           setFeedback({
             type: 'info',
-            message: `Materia "${chosen.nombre}" cargada.`,
+            message: `Materia "${chosen.nombre}" cargada para modificación.`,
           });
-        } else {
-          setFeedback({
-            type: 'error',
-            message: `No se encontró ninguna materia coincidente con "${term}".`,
-          });
-          setFormData(emptyFormState);
         }
       } else {
         setFeedback({
           type: 'error',
-          message: 'Error al buscar materias en el servidor.',
+          message: `No se encontró ninguna materia coincidente con "${term}".`,
         });
+        setFormData(emptyFormState);
       }
     } catch (err: any) {
       setFeedback({
@@ -654,71 +883,90 @@ export default function ModificarMateria({
                   <h1 className="modificar-materia-title">Gestión</h1>
                 </div>
 
-                {/* Filter and Search Bar Card */}
+                {/* Search Bar matching ModificarCargo style */}
                 <div className="modificar-materia-search-card">
-                  <button
-                    type="button"
-                    className="modificar-materia-filtros-btn"
-                    onClick={() => handleSearch()}
-                    title="Filtrar o buscar materia"
-                  >
-                    <FiFilter />
-                    <span>Filtros</span>
-                  </button>
+                  <label htmlFor="searchMateriaInput" className="modificar-materia-search-label">
+                    Buscar Materia a Modificar por Nombre
+                  </label>
+                  <div className="modificar-materia-search-row">
+                    <div className="modificar-materia-search-input-wrap" ref={searchContainerRef}>
+                      <input
+                        id="searchMateriaInput"
+                        name="busqueda_materia_query"
+                        type="search"
+                        className="modificar-materia-search-input"
+                        placeholder="Ingrese valor"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          isSelectingRef.current = false;
+                          setSearchQuery(e.target.value);
+                        }}
+                        onFocus={() => {
+                          if (suggestions.length > 0) setShowSuggestions(true);
+                        }}
+                        onClick={() => {
+                          if (suggestions.length > 0) setShowSuggestions(true);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        autoComplete="one-time-code"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                        data-form-type="other"
+                        data-1p-ignore="true"
+                      />
+                      <FiSearch className="modificar-materia-search-icon" />
 
-                  <div className="modificar-materia-search-input-wrap" ref={searchContainerRef}>
-                    <input
-                      id="searchMateriaInput"
-                      name="busqueda_materia_query"
-                      type="search"
-                      className="modificar-materia-search-input"
-                      placeholder="Ingrese valor"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={() => {
-                        if (suggestions.length > 0) setShowSuggestions(true);
-                      }}
-                      onKeyDown={handleKeyDown}
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck={false}
-                    />
-                    <FiSearch className="modificar-materia-search-icon" />
-
-                    {/* Suggestions Dropdown */}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <ul className="modificar-materia-suggestions-list" role="listbox">
-                        {suggestions.map((item, idx) => (
-                          <li
-                            key={item.id ?? idx}
-                            className={`modificar-materia-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              selectSuggestion(item);
-                            }}
-                            onMouseEnter={() => setActiveSuggestionIndex(idx)}
-                            role="option"
-                            aria-selected={idx === activeSuggestionIndex}
-                          >
-                            <span className="modificar-materia-suggestion-name">
-                              {item.nombre}
-                            </span>
-                            {(item.unidad || item.anio || item.planEstudio) && (
-                              <span className="modificar-materia-suggestion-sub">
-                                {[
-                                  item.unidad,
-                                  item.anio ? `Año: ${item.anio}` : null,
-                                  item.planEstudio ? `Plan: ${item.planEstudio}` : null,
-                                ]
-                                  .filter(Boolean)
-                                  .join(' • ')}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                      {/* Suggestions Dropdown */}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <ul className="modificar-materia-suggestions-list" role="listbox">
+                          {suggestions.map((item, idx) => (
+                            <li
+                              key={item.id ?? idx}
+                              className={`modificar-materia-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectSuggestion(item);
+                              }}
+                              onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                              role="option"
+                              aria-selected={idx === activeSuggestionIndex}
+                            >
+                              <div className="modificar-materia-suggestion-header">
+                                <span className="modificar-materia-suggestion-name">
+                                  {item.nombre}
+                                </span>
+                                {item.planEstudio ? (
+                                  <span className="modificar-materia-suggestion-plan-badge">
+                                    Plan {item.planEstudio}
+                                  </span>
+                                ) : null}
+                              </div>
+                              {(item.unidad || item.anio) && (
+                                <span className="modificar-materia-suggestion-sub">
+                                  {[
+                                    item.unidad,
+                                    item.anio ? `Año: ${item.anio}` : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' • ')}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="modificar-materia-search-btn"
+                      onClick={() => handleSearch()}
+                      disabled={isSearching}
+                    >
+                      <FiSearch />
+                      <span>{isSearching ? 'Buscando...' : 'Buscar Materia'}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -736,7 +984,13 @@ export default function ModificarMateria({
                     </div>
                   )}
 
-                  <form className="modificar-materia-form" onSubmit={handleSubmit}>
+                  <form
+                    className="modificar-materia-form"
+                    onSubmit={handleSubmit}
+                    onFocusCapture={() => {
+                      if (feedback && feedback.type !== 'info') setFeedback(null);
+                    }}
+                  >
                     {/* SECTION: DATOS DE MATERIA */}
                     <h3 className="modificar-materia-section-title">Datos de Materia</h3>
 

@@ -375,7 +375,13 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                     </div>
                   )}
 
-                  <form className="alta-materia-form" onSubmit={handleSubmit}>
+                  <form
+                    className="alta-materia-form"
+                    onSubmit={handleSubmit}
+                    onFocusCapture={() => {
+                      if (feedback) setFeedback(null);
+                    }}
+                  >
                     {/* SECTION: DATOS DE MATERIA */}
                     <h3 className="alta-materia-section-title">Datos de Materia</h3>
 

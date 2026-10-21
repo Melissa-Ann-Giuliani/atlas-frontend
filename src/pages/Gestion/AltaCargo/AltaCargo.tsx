@@ -445,7 +445,12 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                     </div>
                   )}
 
-                  <div className="alta-cargo-form">
+                  <div
+                    className="alta-cargo-form"
+                    onFocusCapture={() => {
+                      if (feedback) setFeedback(null);
+                    }}
+                  >
                     {/* SECTION 1: DATOS DE CARGOS */}
                     <h3 className="alta-cargo-section-title">Datos de Cargos</h3>
 

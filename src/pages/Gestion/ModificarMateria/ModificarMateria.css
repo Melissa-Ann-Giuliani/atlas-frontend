@@ -119,42 +119,35 @@
   font-size: 44px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
+  letter-spacing: -0.5px;
   display: inline-block;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 }
 
-/* Search bar card matching FilterBar / image */
+/* Search bar card inside header row, styled like Modificar Cargo */
 .modificar-materia-search-card {
   background-color: var(--users-secondary-200, #D7CAB2);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.modificar-materia-filtros-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #242B24;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-family: 'DM Sans', system-ui, sans-serif;
+.modificar-materia-search-label {
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: 0.01em;
 }
 
-.modificar-materia-filtros-btn:hover {
-  background-color: #161B16;
+.modificar-materia-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .modificar-materia-search-input-wrap {
@@ -170,7 +163,7 @@
   font-size: 14px;
   font-family: 'DM Sans', system-ui, sans-serif;
   border: none;
-  border-radius: 20px;
+  border-radius: 24px;
   background-color: var(--users-secondary-50, #F6F3EE);
   color: var(--admin-primary-900, #1A2E1C);
   box-sizing: border-box;
@@ -196,7 +189,7 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #555555;
+  color: #666;
   font-size: 16px;
   pointer-events: none;
 }
@@ -206,8 +199,8 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  width: 100%;
-  max-height: 240px;
+  width: max(100%, 340px);
+  max-height: 230px;
   overflow-y: auto;
   margin: 0;
   padding: 4px 0;
@@ -236,11 +229,15 @@
   border-radius: 4px;
 }
 
+.modificar-materia-suggestions-list::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
 .modificar-materia-suggestion-item {
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   cursor: pointer;
   transition: background-color 0.15s ease;
   border-bottom: 1px solid #F0ECE4;
@@ -255,11 +252,32 @@
   background-color: var(--users-secondary-50, #F6F3EE);
 }
 
+.modificar-materia-suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
 .modificar-materia-suggestion-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--admin-primary-900, #1A2E1C);
   font-family: 'DM Sans', system-ui, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modificar-materia-suggestion-plan-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1953B8;
+  background-color: #E8EEFB;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .modificar-materia-suggestion-sub {
@@ -269,6 +287,32 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.modificar-materia-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--admin-primary-900, #1A2E1C);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.modificar-materia-search-btn:hover:not(:disabled) {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.modificar-materia-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Blue framed Form Card */
@@ -587,7 +631,7 @@
   transform: none;
 }
 
-/* Responsive adjustments matching Alta de Materia */
+/* Responsive adjustments matching Alta de Materia and Modificar Cargo */
 @media (max-width: 900px) {
   .modificar-materia-header-row {
     flex-direction: column;
@@ -597,11 +641,21 @@
 
   .modificar-materia-search-card {
     width: 100%;
-    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .modificar-materia-search-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .modificar-materia-search-label {
+    font-size: 12px;
   }
 
   .modificar-materia-search-input-wrap {
     flex: 1;
+    min-width: 200px;
     width: auto;
   }
 
@@ -635,6 +689,20 @@
 
   .modificar-materia-card-header h2 {
     font-size: 20px;
+  }
+
+  .modificar-materia-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modificar-materia-search-input-wrap {
+    width: 100%;
+  }
+
+  .modificar-materia-search-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .modificar-materia-grid-2,
