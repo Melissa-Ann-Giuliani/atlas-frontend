@@ -56,7 +56,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       headerClass: 'header-materias',
       options: [
         { id: 'alta_materia', label: 'Alta de Materia', type: 'green', targetPage: 'alta_materia' },
-        { id: 'modificacion_materia', label: 'Modificación de Materia', type: 'blue' },
+        { id: 'modificacion_materia', label: 'Modificación de Materia', type: 'blue', targetPage: 'modificar_materia' },
         { id: 'baja_materia', label: 'Baja de Materia', type: 'red' },
       ],
     },
@@ -81,6 +81,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate('alta_cargo');
     } else if (option.id === 'alta_materia' && onNavigate) {
       onNavigate('alta_materia');
+    } else if ((option.id === 'modificacion_materia' || option.id === 'modificar_materia') && onNavigate) {
+      onNavigate('modificar_materia');
     } else if (option.id === 'modificacion_cargo' && onNavigate) {
       onNavigate('modificar_cargo');
     } else if (option.id === 'baja_cargo' && onNavigate) {
