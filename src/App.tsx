@@ -11,8 +11,9 @@ import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
 import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
 import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
 import AltaMateria from './pages/Gestion/AltaMateria/AltaMateria'
+import ModificarMateria from './pages/Gestion/ModificarMateria/ModificarMateria'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -24,6 +25,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
   if (page === 'baja_cargo') return 'gestion/baja_cargo';
   if (page === 'alta_materia') return 'gestion/alta_materia';
+  if (page === 'modificar_materia') return 'gestion/modificar_materia';
   return page;
 };
 
@@ -36,11 +38,12 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
   if (path === 'gestion/alta_materia') return 'alta_materia';
+  if (path === 'gestion/modificar_materia') return 'modificar_materia';
   if (path === 'gestion/baja_cargo') {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -382,6 +385,15 @@ function App() {
         case 'alta_materia':
           return (
             <AltaMateria
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'modificar_materia':
+          return (
+            <ModificarMateria
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate('gestion')}
