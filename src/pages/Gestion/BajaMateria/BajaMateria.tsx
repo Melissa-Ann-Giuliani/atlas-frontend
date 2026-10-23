@@ -437,7 +437,9 @@ export default function BajaMateria({
             combinedMap.set(id, m);
           }
         }
-        const candidates = Array.from(combinedMap.values());
+        const candidates = Array.from(combinedMap.values()).filter(
+          (m: any) => !isMateriaDadaDeBaja(m.estado || m.materiaEstado)
+        );
 
         // 3. Score and sort candidates by closeness to whatever the user is typing
         const scored = candidates
@@ -683,7 +685,9 @@ export default function BajaMateria({
           combinedMap.set(id, m);
         }
       }
-      const candidates = Array.from(combinedMap.values());
+      const candidates = Array.from(combinedMap.values()).filter(
+        (m: any) => !isMateriaDadaDeBaja(m.estado || m.materiaEstado)
+      );
 
       const scored = candidates
         .map((m) => ({ m, score: calculateMateriaCloseness(m, term) }))

@@ -36,8 +36,20 @@ interface MateriaSuggestion {
   unidad?: string;
   anio?: string;
   planEstudio?: number | string;
+  estado?: string;
   materia?: any;
 }
+
+export const isMateriaDadaDeBaja = (estado?: string | null): boolean => {
+  if (!estado) return false;
+  const normalized = estado.trim().toLowerCase();
+  return (
+    normalized === 'dada de baja' ||
+    normalized === 'dado de baja' ||
+    normalized === 'inactiva' ||
+    normalized === 'inactivo'
+  );
+};
 
 /**
  * Normalizes text: lowercase, removes accents/diacritics, and strips extra spaces.
@@ -400,7 +412,9 @@ export default function ModificarMateria({
             combinedMap.set(id, m);
           }
         }
-        const candidates = Array.from(combinedMap.values());
+        const candidates = Array.from(combinedMap.values()).filter(
+          (m: any) => !isMateriaDadaDeBaja(m.estado || m.materiaEstado)
+        );
 
         // 3. Score and sort candidates by closeness to whatever the user is typing
         const scored = candidates
@@ -509,12 +523,28 @@ export default function ModificarMateria({
       const response = await fetch(`${apiUrl}/api/materias/${id}`, { headers });
       if (response.ok) {
         const data = await response.json();
+        if (isMateriaDadaDeBaja(data.estado || data.materiaEstado)) {
+          setFeedback({
+            type: 'error',
+            message: `La materia "${data.nombre || id}" está dada de baja y no puede ser modificada.`,
+          });
+          setFormData(emptyFormState);
+          return;
+        }
         populateFormWithMateria(data);
         setFeedback({
           type: 'info',
           message: `Materia "${data.nombre || id}" cargada para modificación.`,
         });
       } else if (fallbackData) {
+        if (isMateriaDadaDeBaja(fallbackData.estado || fallbackData.materiaEstado)) {
+          setFeedback({
+            type: 'error',
+            message: `La materia "${fallbackData.nombre || id}" está dada de baja y no puede ser modificada.`,
+          });
+          setFormData(emptyFormState);
+          return;
+        }
         populateFormWithMateria(fallbackData);
         setFeedback({
           type: 'info',
@@ -528,6 +558,14 @@ export default function ModificarMateria({
       }
     } catch (err: any) {
       if (fallbackData) {
+        if (isMateriaDadaDeBaja(fallbackData.estado || fallbackData.materiaEstado)) {
+          setFeedback({
+            type: 'error',
+            message: `La materia "${fallbackData.nombre || id}" está dada de baja y no puede ser modificada.`,
+          });
+          setFormData(emptyFormState);
+          return;
+        }
         populateFormWithMateria(fallbackData);
       } else {
         setFeedback({
@@ -596,7 +634,9 @@ export default function ModificarMateria({
           combinedMap.set(id, m);
         }
       }
-      const candidates = Array.from(combinedMap.values());
+      const candidates = Array.from(combinedMap.values()).filter(
+        (m: any) => !isMateriaDadaDeBaja(m.estado || m.materiaEstado)
+      );
 
       // Score candidates to find the closest match
       const scored = candidates
