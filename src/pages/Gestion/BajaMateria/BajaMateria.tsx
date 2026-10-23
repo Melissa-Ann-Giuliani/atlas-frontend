@@ -198,9 +198,9 @@ export default function BajaMateria({
   onNavigate,
   onBack,
 }: BajaMateriaProps) {
+  // Role & Scoping (identical to Alta and Modificar Materia)
   const isGlobal = isGlobalAdmin();
-  const userUnitInfo = getUserUnitInfo();
-  const userUnitId = userUnitInfo.unidadId;
+  const [userUnitId, setUserUnitId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<FormState>(emptyFormState);
   const [dependencias, setDependencias] = useState<OptionItem[]>([]);
@@ -279,7 +279,22 @@ export default function BajaMateria({
     fetchCatalogs();
   }, [onLogout]);
 
-  // Pre-load materias catalog for instant search & suggestions
+  // Initialize and lock user's assigned unit & dependency if not global admin
+  useEffect(() => {
+    if (!isGlobal) {
+      const unitInfo = getUserUnitInfo();
+      if (unitInfo.unidadId) {
+        setUserUnitId(unitInfo.unidadId);
+        setFormData((prev) => ({
+          ...prev,
+          unidad: String(unitInfo.unidadId),
+          dependencia: unitInfo.tipoUnidadId ? String(unitInfo.tipoUnidadId) : prev.dependencia,
+        }));
+      }
+    }
+  }, [isGlobal]);
+
+  // Pre-load materias catalog for instant search & suggestions (scoped to unit for unit admins)
   useEffect(() => {
     const fetchAllMaterias = async () => {
       try {
@@ -300,6 +315,25 @@ export default function BajaMateria({
 
     fetchAllMaterias();
   }, []);
+
+  // Helper to extract the unidad ID from any materia record
+  const getMateriaUnidadId = (m: any): number | null => {
+    if (!m) return null;
+    const raw =
+      m.unidadId ??
+      m.unidad?.id ??
+      m.unidad?.unidadId ??
+      (m.materiaUnidadId !== undefined ? m.materiaUnidadId : null);
+    const parsed = Number(raw);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  // Helper to check if a materia belongs to the current user's permitted unit
+  const isMateriaInPermittedUnit = (m: any): boolean => {
+    if (isGlobal || !userUnitId) return true;
+    const mUnitId = getMateriaUnidadId(m);
+    return mUnitId !== null && Number(mUnitId) === Number(userUnitId);
+  };
 
   // Load Unidades when Dependencia changes (or if userUnitId is present)
   useEffect(() => {
@@ -335,6 +369,18 @@ export default function BajaMateria({
               tipoUnidadId: item.tipoUnidadId ?? (item.tipoUnidad && item.tipoUnidad.id),
             }));
             setUnidades(mapped);
+
+            // Scoping: If user is ADMIN_UNIDAD and matched assigned unit, lock it
+            if (!isGlobal && userUnitId) {
+              const matched = mapped.find((u: any) => Number(u.id) === Number(userUnitId));
+              if (matched) {
+                setFormData((prev) => ({
+                  ...prev,
+                  unidad: String(matched.id),
+                  dependencia: matched.tipoUnidadId ? String(matched.tipoUnidadId) : prev.dependencia,
+                }));
+              }
+            }
           }
         }
       } catch (err) {
@@ -345,80 +391,99 @@ export default function BajaMateria({
     };
 
     fetchUnidades();
-  }, [formData.dependencia, userUnitId, onLogout]);
+  }, [formData.dependencia, userUnitId, isGlobal, onLogout]);
 
-  // Suggestions debounced search
+  // Auto-search suggestions as user types - matching Modificar Materia behavior
   useEffect(() => {
     if (isSelectingRef.current) {
       isSelectingRef.current = false;
       return;
     }
 
-    const clean = searchQuery.trim();
-    if (!clean) {
+    const term = searchQuery.trim();
+    if (!term) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
     const timer = setTimeout(async () => {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-      let apiList: any[] = [];
       try {
-        const res = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(clean)}&size=50`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          apiList = data.content || (Array.isArray(data) ? data : []);
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+        // 1. Fetch matching candidates from backend search endpoint
+        let backendList: any[] = [];
+        try {
+          const res = await fetch(`${apiUrl}/api/materias?search=${encodeURIComponent(term)}&size=50`, { headers });
+          if (res.ok) {
+            const data = await res.json();
+            backendList = data.content || (Array.isArray(data) ? data : []);
+          }
+        } catch {
+          backendList = [];
         }
-      } catch {
-        apiList = [];
-      }
 
-      // Combine backend search with preloaded allMaterias to deduplicate
-      const candidateMap = new Map<number, any>();
-      for (const m of apiList) {
-        const id = m.id || m.materiaId;
-        if (id) candidateMap.set(id, m);
-      }
-      for (const m of allMaterias) {
-        const id = m.id || m.materiaId;
-        if (id && !candidateMap.has(id)) {
-          candidateMap.set(id, m);
+        // 2. Combine with preloaded allMaterias to catch unaccented, typos, and partial phrases
+        const combinedMap = new Map<number, any>();
+        for (const m of backendList) {
+          const id = m.id || m.materiaId;
+          if (id) combinedMap.set(id, m);
         }
+        for (const m of allMaterias) {
+          const id = m.id || m.materiaId;
+          if (id && !combinedMap.has(id)) {
+            combinedMap.set(id, m);
+          }
+        }
+        const candidates = Array.from(combinedMap.values());
+
+        // 3. Score and sort candidates by closeness to whatever the user is typing
+        const scored = candidates
+          .map((m: any) => ({
+            m,
+            score: calculateMateriaCloseness(m, term),
+          }))
+          .filter((item) => item.score > 0)
+          .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            // Higher / more recent plan de estudio first
+            const planA = Number(a.m.planEstudio ?? a.m.plan ?? a.m.nroPlan ?? 0) || 0;
+            const planB = Number(b.m.planEstudio ?? b.m.plan ?? b.m.nroPlan ?? 0) || 0;
+            if (planB !== planA) return planB - planA;
+            return String(a.m.nombre || '').localeCompare(String(b.m.nombre || ''));
+          });
+
+        const mappedSuggestions: MateriaSuggestion[] = scored.slice(0, 8).map(({ m }) => {
+          const id = m.id || m.materiaId;
+          const nombre = m.nombre || m.materiaNombre || `Materia #${id}`;
+          const unidad = m.unidad?.nombre || m.unidad?.unidadNombre || m.unidadNombre || m.unidadAcademica;
+          const anio = m.anio || m.anoEducativo || m.materiaAnio;
+          const planEstudio = m.planEstudio !== undefined && m.planEstudio !== null
+            ? m.planEstudio
+            : (m.plan !== undefined && m.plan !== null ? m.plan : (m.nroPlan ?? ''));
+          const estado = m.estado || m.materiaEstado;
+
+          return {
+            id,
+            nombre,
+            unidad,
+            anio,
+            planEstudio,
+            estado,
+            materia: m,
+          };
+        });
+
+        setSuggestions(mappedSuggestions);
+        setShowSuggestions(mappedSuggestions.length > 0);
+        setActiveSuggestionIndex(-1);
+      } catch (err) {
+        console.warn('Error calculating closest materias for Baja:', err);
+        setSuggestions([]);
       }
-
-      const scored = Array.from(candidateMap.values())
-        .map((m) => ({ m, score: calculateMateriaCloseness(m, clean) }))
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8);
-
-      const mappedSuggestions: MateriaSuggestion[] = scored.map(({ m }) => {
-        const id = m.id || m.materiaId;
-        const nombre = m.nombre || m.materiaNombre || `Materia #${id}`;
-        const unidad = m.unidadNombre || (m.unidad && (m.unidad.unidadNombre || m.unidad.nombre));
-        const anio = m.anio || m.materiaAnio;
-        const planEstudio = m.planEstudio ?? m.plan ?? m.nroPlan;
-        const estado = m.estado || m.materiaEstado;
-
-        return {
-          id,
-          nombre,
-          unidad,
-          anio,
-          planEstudio,
-          estado,
-          materia: m,
-        };
-      });
-
-      setSuggestions(mappedSuggestions);
-      setShowSuggestions(mappedSuggestions.length > 0);
-      setActiveSuggestionIndex(-1);
-    }, 220);
+    }, 180);
 
     return () => clearTimeout(timer);
   }, [searchQuery, allMaterias]);
@@ -426,9 +491,16 @@ export default function BajaMateria({
   // Initial materia loading if passed via navigation
   useEffect(() => {
     if (initialMateria) {
+      if (!isMateriaInPermittedUnit(initialMateria)) {
+        setFeedback({
+          type: 'error',
+          message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+        });
+        return;
+      }
       populateFormWithMateria(initialMateria);
     }
-  }, [initialMateria]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialMateria, userUnitId, isGlobal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const populateFormWithMateria = (m: any) => {
     const rawId = m.id || m.materiaId;
@@ -497,12 +569,26 @@ export default function BajaMateria({
       const response = await fetch(`${apiUrl}/api/materias/${id}`, { headers });
       if (response.ok) {
         const data = await response.json();
+        if (!isMateriaInPermittedUnit(data)) {
+          setFeedback({
+            type: 'error',
+            message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+          });
+          return;
+        }
         populateFormWithMateria(data);
         setFeedback({
           type: 'info',
           message: `Materia "${data.nombre || id}" cargada para dar de baja.`,
         });
       } else if (fallbackData) {
+        if (!isMateriaInPermittedUnit(fallbackData)) {
+          setFeedback({
+            type: 'error',
+            message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+          });
+          return;
+        }
         populateFormWithMateria(fallbackData);
         setFeedback({
           type: 'info',
@@ -516,6 +602,13 @@ export default function BajaMateria({
       }
     } catch (err: any) {
       if (fallbackData) {
+        if (!isMateriaInPermittedUnit(fallbackData)) {
+          setFeedback({
+            type: 'error',
+            message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+          });
+          return;
+        }
         populateFormWithMateria(fallbackData);
       } else {
         setFeedback({
@@ -536,6 +629,13 @@ export default function BajaMateria({
     if (sug.id) {
       loadMateriaDetails(sug.id, sug.materia);
     } else if (sug.materia) {
+      if (!isMateriaInPermittedUnit(sug.materia)) {
+        setFeedback({
+          type: 'error',
+          message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+        });
+        return;
+      }
       populateFormWithMateria(sug.materia);
     } else {
       handleSearch(sug.nombre);
@@ -593,6 +693,16 @@ export default function BajaMateria({
       if (scored.length > 0) {
         const chosen = scored[0].m;
         const chosenId = chosen.id || chosen.materiaId;
+
+        // Verify user has permission for this materia
+        if (!isMateriaInPermittedUnit(chosen)) {
+          setFeedback({
+            type: 'error',
+            message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+          });
+          return;
+        }
+
         isSelectingRef.current = true;
         setSearchQuery(chosen.nombre || chosen.materiaNombre || term);
         if (chosenId) {
@@ -609,7 +719,11 @@ export default function BajaMateria({
           type: 'error',
           message: `No se encontró ninguna materia coincidente con "${term}".`,
         });
-        setFormData(emptyFormState);
+        setFormData({
+          ...emptyFormState,
+          dependencia: (!isGlobal && userUnitId) ? formData.dependencia : '',
+          unidad: (!isGlobal && userUnitId) ? formData.unidad : '',
+        });
       }
     } catch (err: any) {
       setFeedback({
@@ -656,7 +770,11 @@ export default function BajaMateria({
   };
 
   const handleClear = () => {
-    setFormData(emptyFormState);
+    setFormData({
+      ...emptyFormState,
+      dependencia: (!isGlobal && userUnitId) ? formData.dependencia : '',
+      unidad: (!isGlobal && userUnitId) ? formData.unidad : '',
+    });
     setSearchQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
@@ -680,6 +798,15 @@ export default function BajaMateria({
       return;
     }
 
+    // Scoping guard: Admin de Unidad cannot make changes to other units
+    if (!isGlobal && userUnitId && formData.unidad && Number(formData.unidad) !== Number(userUnitId)) {
+      setFeedback({
+        type: 'error',
+        message: 'No posee permisos para dar de baja materias de otra unidad académica.',
+      });
+      return;
+    }
+
     if (isMateriaDadaDeBaja(formData.estado)) {
       setFeedback({
         type: 'error',
@@ -698,6 +825,15 @@ export default function BajaMateria({
       setFeedback({
         type: 'error',
         message: 'Debe buscar y seleccionar una materia antes de darla de baja.',
+      });
+      return;
+    }
+
+    // Scoping guard: Admin de Unidad cannot make changes to other units
+    if (!isGlobal && userUnitId && formData.unidad && Number(formData.unidad) !== Number(userUnitId)) {
+      setFeedback({
+        type: 'error',
+        message: 'No posee permisos para dar de baja materias de otra unidad académica.',
       });
       return;
     }
