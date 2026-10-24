@@ -1228,17 +1228,25 @@ export default function ModificarUsuario({
         });
         return;
       }
-      if (!formData.cuil.trim()) {
+      const emailInst = formData.emailInstitucional.trim() || formData.correo.trim();
+      if (!emailInst) {
         setFeedback({
           type: 'error',
-          message: 'Por favor, ingrese el CUIL.',
+          message: 'Por favor, ingrese el correo electrónico institucional.',
         });
         return;
       }
-      if (formData.emailInstitucional.trim() && !emailRegex.test(formData.emailInstitucional.trim())) {
+      if (!emailRegex.test(emailInst)) {
         setFeedback({
           type: 'error',
           message: 'Por favor, ingrese un formato de email institucional válido.',
+        });
+        return;
+      }
+      if (!formData.fechaIngreso) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese la fecha de ingreso.',
         });
         return;
       }
@@ -1255,66 +1263,80 @@ export default function ModificarUsuario({
       };
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      const payload: any = {
-        nombre: formData.nombre.trim(),
-        apellido: formData.apellido.trim(),
-        correo: formData.correo.trim(),
-        username: formData.username.trim(),
-        rol: selectedFilterRole,
-        ...(isAdminGlobal
-          ? {
-            cargo: formData.cargo,
-            cargoNombre: formData.cargo,
-          }
-          : {}),
-        ...(isAuditor
-          ? {
-            cargo: formData.cargo,
-            cargoNombre: formData.cargo,
-            cargoAudNombre: formData.cargo,
-          }
-          : {}),
-        ...(isAdminUnidad
-          ? {
-            cargo: formData.cargo,
-            cargoNombre: formData.cargo,
-            cargoAdNombre: formData.cargo,
-            unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
-            dependencia: formData.dependencia,
-            tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
-          }
-          : {}),
-        ...(isDocente
-          ? {
-            tipoDni: formData.tipoDni,
-            dni: formData.numeroDni.trim()
-              ? Number(formData.numeroDni.trim().replace(/\D/g, '')) || formData.numeroDni.trim()
-              : undefined,
-            cuil: formData.cuil.trim()
-              ? Number(formData.cuil.trim().replace(/\D/g, '')) || formData.cuil.trim()
-              : undefined,
-            domicilio: formData.domicilio.trim() || undefined,
-            emailInstitucional: formData.emailInstitucional.trim() || undefined,
-            fechaIngreso: formData.fechaIngreso || undefined,
-            antigPrevia: formData.antigPrevia.trim() ? Number(formData.antigPrevia.trim()) : 0,
-          }
-          : {}),
-      };
+      let endpoint = '';
+      let payload: any = {};
 
-      if (formData.password.trim()) {
-        payload.password = formData.password.trim();
-      }
+      if (isDocente) {
+        // DocenteProfileUpdateRequest contract:
+        // nombre, apellido, emailInstitucional, fechaIngreso (required)
+        // tipoDni, dni, cuil, domicilio, antigPrevia, estado, telefonos (optional)
+        endpoint = `${apiUrl}/api/docentes/${formData.usuarioId}`;
 
-      // Role-specific endpoints (same convention as NuevoUsuario POST endpoints)
-      let endpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
-      if (isAdminGlobal) {
-        endpoint = `${apiUrl}/api/usuarios/admin-global/${formData.usuarioId}`;
-      } else if (isAdminUnidad) {
-        endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
-      } else if (isAuditor) {
-        endpoint = `${apiUrl}/api/usuarios/auditor/${formData.usuarioId}`;
-      } else if (isDocente) {
-        endpoint = `${apiUrl}/api/usuarios/docente/${formData.usuarioId}`;
+        const dniNum = formData.numeroDni.trim()
+          ? Number(formData.numeroDni.trim().replace(/\D/g, '')) || undefined
+          : undefined;
+        const cuilNum = formData.cuil.trim()
+          ? Number(formData.cuil.trim().replace(/\D/g, '')) || undefined
+          : undefined;
+        const antigNum = formData.antigPrevia.trim()
+          ? parseInt(formData.antigPrevia.trim(), 10) || 0
+          : 0;
+
+        payload = {
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          emailInstitucional: (formData.emailInstitucional.trim() || formData.correo.trim()),
+          fechaIngreso: formData.fechaIngreso,
+          tipoDni: formData.tipoDni || undefined,
+          dni: dniNum,
+          cuil: cuilNum,
+          domicilio: formData.domicilio.trim() || undefined,
+          antigPrevia: antigNum,
+        };
+      } else {
+        endpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
+        if (isAdminGlobal) {
+          endpoint = `${apiUrl}/api/usuarios/admin-global/${formData.usuarioId}`;
+        } else if (isAdminUnidad) {
+          endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
+        } else if (isAuditor) {
+          endpoint = `${apiUrl}/api/usuarios/auditor/${formData.usuarioId}`;
+        }
+
+        payload = {
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          correo: formData.correo.trim(),
+          username: formData.username.trim(),
+          rol: selectedFilterRole,
+          ...(isAdminGlobal
+            ? {
+              cargo: formData.cargo,
+              cargoNombre: formData.cargo,
+            }
+            : {}),
+          ...(isAuditor
+            ? {
+              cargo: formData.cargo,
+              cargoNombre: formData.cargo,
+              cargoAudNombre: formData.cargo,
+            }
+            : {}),
+          ...(isAdminUnidad
+            ? {
+              cargo: formData.cargo,
+              cargoNombre: formData.cargo,
+              cargoAdNombre: formData.cargo,
+              unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
+              dependencia: formData.dependencia,
+              tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
+            }
+            : {}),
+        };
+
+        if (formData.password.trim()) {
+          payload.password = formData.password.trim();
+        }
       }
 
       let response = await fetch(endpoint, {
@@ -1323,14 +1345,16 @@ export default function ModificarUsuario({
         body: JSON.stringify(payload),
       });
 
-      if (response.status === 404 || response.status === 405) {
-        // Fallback to generic PUT /api/usuarios/{id}
-        endpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
-        response = await fetch(endpoint, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(payload),
-        });
+      // For non-docente roles only, fallback to generic /api/usuarios/{id} if 404/405
+      if (!isDocente && (response.status === 404 || response.status === 405)) {
+        const fallbackEndpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
+        if (fallbackEndpoint !== endpoint) {
+          response = await fetch(fallbackEndpoint, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(payload),
+          });
+        }
       }
 
       const data = await response.json().catch(() => null);
