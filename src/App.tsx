@@ -13,14 +13,15 @@ import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
 import AltaMateria from './pages/Gestion/AltaMateria/AltaMateria'
 import ModificarMateria from './pages/Gestion/ModificarMateria/ModificarMateria'
 import BajaMateria from './pages/Gestion/BajaMateria/BajaMateria'
+import ModificarUsuario from './pages/Gestion/ModificarUsuario/ModificarUsuario'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
   if (page === 'cargo_detalle') return 'listado/cargo_detalle';
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
-  if (page === 'modificar_docente') return 'gestion/modificar_docente';
+  if (page === 'modificar_docente' || page === 'modificar_usuario') return 'gestion/modificar_usuario';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
   if (page === 'alta_cargo') return 'gestion/alta_cargo';
   if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
@@ -35,7 +36,7 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'listado/docente_detalle' || path === 'listado/docente_listado') return 'docente_detalle';
   if (path === 'listado/cargo_detalle') return 'cargo_detalle';
   if (path === 'listado/licencia_detalle') return 'licencia_detalle';
-  if (path === 'gestion/modificar_docente') return 'modificar_docente';
+  if (path === 'gestion/modificar_docente' || path === 'gestion/modificar_usuario') return 'modificar_usuario';
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
@@ -46,7 +47,7 @@ const getPageFromPath = (path: string): Page => {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -289,6 +290,10 @@ function App() {
       setSelectedCargo(data || null);
     }
 
+    if (page === 'modificar_usuario' || page === 'modificar_docente') {
+      setSelectedDocente(data || null);
+    }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
@@ -416,6 +421,17 @@ function App() {
           return (
             <ModificarCargo
               initialCargo={selectedCargo}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'modificar_usuario':
+        case 'modificar_docente':
+          return (
+            <ModificarUsuario
+              initialDocente={selectedDocente}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate('gestion')}
