@@ -46,12 +46,6 @@ interface FormState {
   antigPrevia: string;
 }
 
-interface RoleOption {
-  id: string | number;
-  nombre?: string;
-  label: string;
-}
-
 interface CargoOption {
   id: string;
   label: string;
@@ -85,13 +79,6 @@ interface UserSuggestion {
   userData?: any;
 }
 
-const defaultRoles: RoleOption[] = [
-  { id: 'ADMIN_GLOBAL', nombre: 'ADMIN_GLOBAL', label: 'Admin Global' },
-  { id: 'ADMIN_UNIDAD', nombre: 'ADMIN_UNIDAD', label: 'Admin de Unidad' },
-  { id: 'AUDITOR', nombre: 'AUDITOR', label: 'Auditor' },
-  { id: 'DOCENTE', nombre: 'DOCENTE', label: 'Docente' },
-];
-
 const defaultTiposDni: TipoDniOption[] = [
   { value: 'DNI', label: 'DNI' },
   { value: 'PASAPORTE', label: 'Pasaporte' },
@@ -122,6 +109,45 @@ const initialFormState: FormState = {
   fechaIngreso: '',
   antigPrevia: '',
 };
+
+/**
+ * Extracts and canonicalizes the role string from diverse backend formats:
+ * - String: 'ADMIN_UNIDAD', 'ROLE_ADMIN_UNIDAD', etc.
+ * - Object: { id: 2, nombre: 'ADMIN_UNIDAD' }, { rolNombre: 'ADMIN_UNIDAD' }, etc.
+ */
+function extractRole(roleCandidate: any): string | null {
+  if (!roleCandidate) return null;
+  let raw = '';
+  if (typeof roleCandidate === 'string') {
+    raw = roleCandidate;
+  } else if (typeof roleCandidate === 'object') {
+    raw =
+      roleCandidate.nombre ||
+      roleCandidate.rolNombre ||
+      roleCandidate.rol_nombre ||
+      roleCandidate.name ||
+      roleCandidate.authority ||
+      roleCandidate.codigo ||
+      roleCandidate.id ||
+      '';
+  }
+  if (!raw || typeof raw !== 'string') return null;
+
+  const upper = raw.toUpperCase().trim();
+  if (upper.includes('ADMIN_GLOBAL') || upper === 'ADMIN GLOBAL' || upper === 'ADMINISTRADOR GLOBAL') {
+    return 'ADMIN_GLOBAL';
+  }
+  if (upper.includes('ADMIN_UNIDAD') || upper.includes('UNIDAD')) {
+    return 'ADMIN_UNIDAD';
+  }
+  if (upper.includes('AUDITOR')) {
+    return 'AUDITOR';
+  }
+  if (upper.includes('DOCENTE')) {
+    return 'DOCENTE';
+  }
+  return upper;
+}
 
 /**
  * Normalizes text: lowercase, removes accents/diacritics, and extra spaces.
@@ -161,6 +187,99 @@ function getLevenshteinDistance(a: string, b: string): number {
   return matrix[a.length][b.length];
 }
 
+/**
+ * Calculates a closeness / relevance score between a user and the search query,
+ * similar to calculateMateriaCloseness in ModificarMateria.
+ * Higher score = closer match. Returns 0 if not a relevant match.
+ */
+function calculateUserCloseness(user: any, rawQuery: string): number {
+  const q = normalizeSearchText(rawQuery);
+  if (!q) return 0;
+
+  const apellido = user.apellido || user.docenteApellido || user.usuario?.apellido || user.datosPersonales?.apellido || '';
+  const nombre = user.nombre || user.docenteNombre || user.usuario?.nombre || user.datosPersonales?.nombre || '';
+  const username = user.username || user.usuario?.username || '';
+  const correo = user.correo || user.email || user.usuario?.correo || '';
+  const dni = String(user.dni || user.numeroDni || user.datosPersonales?.dni || '').trim();
+
+  const fullDirect = normalizeSearchText(`${nombre} ${apellido}`);
+  const fullReverse = normalizeSearchText(`${apellido} ${nombre}`);
+  const normUsername = normalizeSearchText(username);
+  const normCorreo = normalizeSearchText(correo);
+
+  // 1. Exact match on DNI, username, or full name
+  if (dni && (dni === q || dni.replace(/\D/g, '') === q.replace(/\D/g, ''))) {
+    return 10000;
+  }
+  if (fullDirect === q || fullReverse === q || normUsername === q) {
+    return 9800;
+  }
+
+  // 2. Starts with query (prefix match)
+  if (fullReverse.startsWith(q) || fullDirect.startsWith(q) || normUsername.startsWith(q)) {
+    const minLen = Math.min(fullReverse.length, fullDirect.length);
+    const lengthPenalty = Math.min(300, (minLen - q.length) * 2);
+    return 8000 - lengthPenalty;
+  }
+
+  // 3. Word starts with query (e.g. query "gonzalez" matches "Carlos Gonzalez")
+  const words = [...fullReverse.split(' '), ...fullDirect.split(' '), normUsername].filter(Boolean);
+  const qWords = q.split(' ');
+  const wordIdx = words.findIndex((w) => w.startsWith(q));
+  if (wordIdx !== -1) {
+    return 6000 - wordIdx * 50 - Math.min(200, fullReverse.length - q.length);
+  }
+
+  // 4. Multi-word query where all words are contained
+  if (qWords.length > 1) {
+    const allWordsMatch = qWords.every((qw) =>
+      words.some((w) => w.startsWith(qw) || w.includes(qw))
+    );
+    if (allWordsMatch) {
+      return 5500 - Math.min(300, fullReverse.length - q.length);
+    }
+  }
+
+  // 5. Query is a substring of the full name, username, or correo
+  if (fullReverse.includes(q) || fullDirect.includes(q) || normUsername.includes(q) || normCorreo.includes(q)) {
+    return 4000 - Math.min(200, fullReverse.length - q.length);
+  }
+
+  // 6. DNI prefix match
+  if (dni && dni.startsWith(q)) {
+    return 3500;
+  }
+
+  // 7. Fuzzy matching for typos (Levenshtein distance)
+  if (q.length >= 3) {
+    let bestWordSim = 0;
+    for (const w of words) {
+      if (Math.abs(w.length - q.length) <= 2) {
+        const dist = getLevenshteinDistance(w, q);
+        const maxLen = Math.max(w.length, q.length);
+        const sim = 1 - dist / maxLen;
+        if (sim > bestWordSim) {
+          bestWordSim = sim;
+        }
+      }
+    }
+    if (bestWordSim >= 0.65) {
+      return Math.round(3000 * bestWordSim);
+    }
+
+    if (fullReverse.length >= q.length) {
+      const prefix = fullReverse.slice(0, q.length + 1);
+      const dist = getLevenshteinDistance(prefix, q);
+      const sim = 1 - dist / Math.max(prefix.length, q.length);
+      if (sim >= 0.7) {
+        return Math.round(2500 * sim);
+      }
+    }
+  }
+
+  return 0;
+}
+
 export default function ModificarUsuario({
   initialDocente,
   onLogout,
@@ -180,7 +299,6 @@ export default function ModificarUsuario({
   const [selectedFilterRole, setSelectedFilterRole] = useState<string>('DOCENTE');
 
   // Role Catalogs
-  const [roles, setRoles] = useState<RoleOption[]>(defaultRoles);
   const [tiposDni, setTiposDni] = useState<TipoDniOption[]>(defaultTiposDni);
   const [cargosAdminGlobal, setCargosAdminGlobal] = useState<CargoOption[]>([]);
   const [cargosAdminUnidad, setCargosAdminUnidad] = useState<CargoOption[]>([]);
@@ -189,7 +307,6 @@ export default function ModificarUsuario({
   const [unidades, setUnidades] = useState<UnidadOption[]>([]);
 
   // Catalogs Loading Flags
-  const [isLoadingRoles, setIsLoadingRoles] = useState<boolean>(true);
   const [isLoadingTiposDni, setIsLoadingTiposDni] = useState<boolean>(false);
   const [isLoadingCargosGlobal, setIsLoadingCargosGlobal] = useState<boolean>(false);
   const [isLoadingCargosUnidad, setIsLoadingCargosUnidad] = useState<boolean>(false);
@@ -326,9 +443,9 @@ export default function ModificarUsuario({
             const rawLabel = typeof item === 'string' ? item : item.label ?? item.nombre ?? item.descripcion ?? idVal;
             const formattedLabel = rawLabel.includes('_')
               ? rawLabel
-                  .split('_')
-                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                  .join(' ')
+                .split('_')
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join(' ')
               : rawLabel;
             return { id: idVal, label: formattedLabel };
           });
@@ -360,9 +477,9 @@ export default function ModificarUsuario({
             const rawLabel = typeof item === 'string' ? item : item.label ?? item.nombre ?? item.descripcion ?? idVal;
             const formattedLabel = rawLabel.includes('_')
               ? rawLabel
-                  .split('_')
-                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                  .join(' ')
+                .split('_')
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join(' ')
               : rawLabel;
             return { id: idVal, label: formattedLabel };
           });
@@ -432,38 +549,7 @@ export default function ModificarUsuario({
     }
   };
 
-  // Load roles on mount
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      try {
-        const res = await fetch(`${apiUrl}/api/usuarios/roles`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            const mapped: RoleOption[] = data.map((item: any) => ({
-              id: item.rolId ?? item.id ?? item.nombre,
-              nombre: item.nombre ?? item.rolNombre,
-              label:
-                item.rolNombre ??
-                item.nombre ??
-                (item.nombre === 'DOCENTE' ? 'Docente' : String(item.id || item)),
-            }));
-            setRoles(mapped);
-          }
-        }
-      } catch (e) {
-        console.warn('Error fetching roles:', e);
-      } finally {
-        setIsLoadingRoles(false);
-      }
-    };
-
-    fetchRoles();
-  }, []);
 
   // Fetch catalogs dynamically based on active role
   useEffect(() => {
@@ -530,49 +616,75 @@ export default function ModificarUsuario({
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-        let endpoint = `${apiUrl}/api/docentes?search=${encodeURIComponent(trimmed)}&size=10`;
-        if (!isDocente) {
-          endpoint = `${apiUrl}/api/usuarios?search=${encodeURIComponent(trimmed)}&rol=${encodeURIComponent(selectedFilterRole)}&size=10`;
+        let list: any[] = [];
+        if (isDocente) {
+          // Fetch docente suggestions
+          try {
+            const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(trimmed)}&size=20`, { headers });
+            if (res.ok) {
+              const data = await res.json();
+              list = data.content || (Array.isArray(data) ? data : []);
+            }
+          } catch (e) {
+            console.warn('Error fetching docentes:', e);
+          }
+        } else {
+          // Fetch usuario suggestions filtered by role
+          try {
+            const res = await fetch(
+              `${apiUrl}/api/usuarios?search=${encodeURIComponent(trimmed)}&rol=${encodeURIComponent(selectedFilterRole)}&size=20`,
+              { headers }
+            );
+            if (res.ok) {
+              const data = await res.json();
+              list = data.content || (Array.isArray(data) ? data : []);
+            }
+          } catch (e) {
+            console.warn('Error fetching usuarios:', e);
+          }
         }
 
-        const response = await fetch(endpoint, { headers });
+        if (list.length > 0) {
+          // Score and rank candidates using calculateUserCloseness
+          const scored = list
+            .map((item: any) => ({
+              item,
+              score: calculateUserCloseness(item, trimmed),
+            }))
+            .filter((entry) => entry.score > 0)
+            .sort((a, b) => b.score - a.score);
 
-        if (response.ok) {
-          const data = await response.json();
-          const list = data.content || (Array.isArray(data) ? data : []);
+          // If some items matched fuzzy score, use them; otherwise fallback to backend order
+          const rankedList = scored.length > 0 ? scored.map((s) => s.item) : list;
 
-          const mapped: UserSuggestion[] = list.map((item: any) => {
-            const apellido = item.apellido || item.docenteApellido || item.usuario?.apellido || '';
-            const nombre = item.nombre || item.docenteNombre || item.usuario?.nombre || '';
+          const mapped: UserSuggestion[] = rankedList.slice(0, 10).map((item: any) => {
+            const apellido = item.apellido || item.docenteApellido || item.usuario?.apellido || item.datosPersonales?.apellido || '';
+            const nombre = item.nombre || item.docenteNombre || item.usuario?.nombre || item.datosPersonales?.nombre || '';
             const username = item.username || item.usuario?.username || '';
             const nombreCompleto =
               apellido && nombre
                 ? `${apellido}, ${nombre}`
                 : nombre || apellido || username || `Usuario #${item.id || item.usuarioId}`;
 
+            const dniVal = item.dni ?? item.numeroDni ?? item.datosPersonales?.dni;
+            const unidadVal = item.unidad || item.unidadNombre || item.cargo || '';
+
+            const extractedItemRole =
+              extractRole(item.rol) ||
+              extractRole(item.rolNombre) ||
+              extractRole(item.usuario?.rol) ||
+              extractRole(item.role) ||
+              selectedFilterRole;
+
             return {
               id: item.usuarioId || item.id,
               usuarioId: item.usuarioId || item.id,
               nombreCompleto,
-              dni: item.dni || item.numeroDni ? String(item.dni || item.numeroDni) : undefined,
-              unidad: item.unidad || item.unidadNombre || item.cargo || '',
-              role: item.rol || item.rolNombre || selectedFilterRole,
+              dni: dniVal ? String(dniVal) : undefined,
+              unidad: unidadVal,
+              role: extractedItemRole,
               userData: item,
             };
-          });
-
-          // Sort by relevance
-          const normQuery = normalizeSearchText(trimmed);
-          mapped.sort((a, b) => {
-            const aName = normalizeSearchText(a.nombreCompleto);
-            const bName = normalizeSearchText(b.nombreCompleto);
-            const aStarts = aName.startsWith(normQuery) ? 1 : 0;
-            const bStarts = bName.startsWith(normQuery) ? 1 : 0;
-            if (aStarts !== bStarts) return bStarts - aStarts;
-
-            const aDist = getLevenshteinDistance(aName, normQuery);
-            const bDist = getLevenshteinDistance(bName, normQuery);
-            return aDist - bDist;
           });
 
           setSuggestions(mapped);
@@ -580,15 +692,17 @@ export default function ModificarUsuario({
           setActiveSuggestionIndex(-1);
         } else {
           setSuggestions([]);
+          setShowSuggestions(false);
         }
       } catch (err) {
         console.warn('Error fetching user suggestions:', err);
         setSuggestions([]);
+        setShowSuggestions(false);
       }
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedFilterRole]);
+  }, [searchQuery, selectedFilterRole, isDocente]);
 
   // Click outside listener for suggestions dropdown
   useEffect(() => {
@@ -602,42 +716,118 @@ export default function ModificarUsuario({
   }, []);
 
   const populateForm = (userData: any, roleHint?: string) => {
-    const uId = userData.usuarioId || userData.id || userData.usuario?.id;
-    const dp = userData.datosPersonales || userData;
-    const usr = userData.usuario || userData;
+    // Collect all nested containers that backend endpoints might return
+    const dp = userData.datosPersonales || {};
+    const usr = userData.usuario || {};
+    const doc = userData.docente || {};
+    const des = (userData.designacionesYCargos && userData.designacionesYCargos[0]) || {};
 
-    const apellido = dp.apellido || usr.apellido || userData.apellido || '';
-    const nombre = dp.nombre || usr.nombre || userData.nombre || '';
-    const correo = dp.correo || usr.correo || userData.correo || '';
-    const username = usr.username || userData.username || '';
-    const rol = roleHint || usr.rol || userData.rol || selectedFilterRole || 'DOCENTE';
+    const uId =
+      userData.usuarioId ||
+      userData.id ||
+      usr.id ||
+      usr.usuarioId ||
+      doc.usuarioId ||
+      doc.id;
+
+    // Names & Identity
+    const apellido =
+      dp.apellido ||
+      userData.apellido ||
+      usr.apellido ||
+      doc.apellido ||
+      userData.docenteApellido ||
+      '';
+    const nombre =
+      dp.nombre ||
+      userData.nombre ||
+      usr.nombre ||
+      doc.nombre ||
+      userData.docenteNombre ||
+      '';
+
+    // Account & Contact
+    const correo =
+      dp.correo ||
+      userData.correo ||
+      usr.correo ||
+      userData.email ||
+      usr.email ||
+      dp.email ||
+      '';
+    const username =
+      usr.username ||
+      userData.username ||
+      doc.username ||
+      '';
+    const rawRole =
+      extractRole(roleHint) ||
+      extractRole(userData.rol) ||
+      extractRole(usr.rol) ||
+      extractRole(userData.rolNombre) ||
+      extractRole(userData.role) ||
+      extractRole(selectedFilterRole) ||
+      'DOCENTE';
+
+    const rol = rawRole;
 
     if (rol && rol !== selectedFilterRole) {
       setSelectedFilterRole(rol);
     }
 
-    const cargo = userData.cargo || userData.cargoNombre || userData.cargoAudNombre || userData.cargoAdNombre || '';
-    const dependencia = userData.dependencia || userData.tipoUnidadId ? String(userData.dependencia || userData.tipoUnidadId) : '';
-    const unidad = userData.unidadId || userData.unidad ? String(userData.unidadId || userData.unidad) : '';
+    // Role specific fields
+    const cargo =
+      userData.cargo ||
+      userData.cargoNombre ||
+      userData.cargoAudNombre ||
+      userData.cargoAdNombre ||
+      des.cargo ||
+      des.cargoNombre ||
+      '';
+    const dependencia =
+      userData.dependencia ||
+        userData.tipoUnidadId ||
+        dp.tipoUnidadId ||
+        '' ? String(userData.dependencia || userData.tipoUnidadId || dp.tipoUnidadId) : '';
+    const unidad =
+      userData.unidadId ||
+        userData.unidad ||
+        dp.unidadId ||
+        dp.unidadNombre ||
+        '' ? String(userData.unidadId || userData.unidad || dp.unidadId || dp.unidadNombre) : '';
 
+    // Identification & Personal Data
     const tipoDni = dp.tipoDni || userData.tipoDni || 'DNI';
-    const numeroDni = dp.dni !== undefined ? String(dp.dni) : (userData.dni ? String(userData.dni) : '');
-    const cuil = dp.cuil !== undefined ? String(dp.cuil) : (userData.cuil ? String(userData.cuil) : '');
-    const domicilio = dp.domicilio || userData.domicilio || '';
-    const emailInstitucional = dp.emailInstitucional || userData.emailInstitucional || '';
+    const rawDni = dp.dni ?? userData.dni ?? doc.dni ?? usr.dni;
+    const numeroDni = rawDni !== undefined && rawDni !== null ? String(rawDni) : '';
+
+    const rawCuil = dp.cuil ?? userData.cuil ?? doc.cuil ?? usr.cuil;
+    const cuil = rawCuil !== undefined && rawCuil !== null ? String(rawCuil) : '';
+
+    const domicilio = dp.domicilio || userData.domicilio || doc.domicilio || '';
+    const emailInstitucional =
+      dp.emailInstitucional ||
+      userData.emailInstitucional ||
+      doc.emailInstitucional ||
+      '';
 
     let fechaIngreso = '';
-    const rawFecha = dp.fechaIngreso || userData.fechaIngreso || '';
+    const rawFecha =
+      dp.fechaIngreso ||
+      userData.fechaIngreso ||
+      doc.fechaIngreso ||
+      des.fechaInicio ||
+      '';
     if (rawFecha) {
-      fechaIngreso = rawFecha.split('T')[0];
+      fechaIngreso = String(rawFecha).split('T')[0];
     }
 
+    const rawAntig =
+      dp.antigPrevia ??
+      userData.antigPrevia ??
+      doc.antigPrevia;
     const antigPrevia =
-      dp.antigPrevia !== undefined
-        ? String(dp.antigPrevia)
-        : userData.antigPrevia !== undefined
-          ? String(userData.antigPrevia)
-          : '';
+      rawAntig !== undefined && rawAntig !== null ? String(rawAntig) : '';
 
     setFormData({
       usuarioId: uId ? Number(uId) : null,
@@ -675,14 +865,65 @@ export default function ModificarUsuario({
 
       const response = await fetch(endpoint, { headers });
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
+
+        // If it's a DOCENTE and user credentials (username, correo) are not in the response,
+        // fetch the linked usuario profile to populate them as well
+        if (role === 'DOCENTE') {
+          // Merge any personal data from fallbackData if the backend didn't supply them in data
+          if (fallbackData) {
+            data = {
+              ...fallbackData,
+              ...data,
+              datosPersonales: {
+                ...(fallbackData.datosPersonales || {}),
+                ...(data.datosPersonales || {}),
+                cuil: data.datosPersonales?.cuil ?? fallbackData.cuil ?? fallbackData.datosPersonales?.cuil,
+                domicilio: data.datosPersonales?.domicilio ?? fallbackData.domicilio ?? fallbackData.datosPersonales?.domicilio,
+                antigPrevia: data.datosPersonales?.antigPrevia ?? fallbackData.antigPrevia ?? fallbackData.datosPersonales?.antigPrevia,
+                fechaIngreso: data.datosPersonales?.fechaIngreso ?? fallbackData.fechaIngreso ?? fallbackData.datosPersonales?.fechaIngreso,
+                tipoDni: data.datosPersonales?.tipoDni ?? fallbackData.tipoDni ?? fallbackData.datosPersonales?.tipoDni,
+              },
+            };
+          }
+
+          const usrId = data.usuarioId || data.usuario?.id || fallbackData?.usuarioId || fallbackData?.id || id;
+          if (!data.usuario?.username && !data.username && !data.correo) {
+            try {
+              // Try fetching by userId first
+              let uRes = await fetch(`${apiUrl}/api/usuarios/${usrId}`, { headers });
+              if (!uRes.ok && (data.datosPersonales?.dni || data.dni)) {
+                // Fallback search by DNI to locate the linked Usuario
+                const dniToSearch = data.datosPersonales?.dni || data.dni;
+                uRes = await fetch(`${apiUrl}/api/usuarios?search=${encodeURIComponent(String(dniToSearch))}&size=1`, { headers });
+              }
+
+              if (uRes.ok) {
+                const uData = await uRes.json();
+                const resolvedUser = Array.isArray(uData?.content) ? uData.content[0] : (Array.isArray(uData) ? uData[0] : uData);
+                if (resolvedUser) {
+                  data = {
+                    ...resolvedUser,
+                    ...data,
+                    usuario: { ...(resolvedUser.usuario || resolvedUser), ...(data.usuario || {}) },
+                    correo: data.correo || resolvedUser.correo || resolvedUser.email,
+                    username: data.username || resolvedUser.username,
+                  };
+                }
+              }
+            } catch {
+              // ignore supplementary fetch failure
+            }
+          }
+        }
+
         populateForm(data, role);
         const fullName =
           data.datosPersonales?.apellido && data.datosPersonales?.nombre
             ? `${data.datosPersonales.apellido}, ${data.datosPersonales.nombre}`
             : data.apellido && data.nombre
-            ? `${data.apellido}, ${data.nombre}`
-            : data.nombre || data.username || `ID #${id}`;
+              ? `${data.apellido}, ${data.nombre}`
+              : data.nombre || data.username || `ID #${id}`;
         setFeedback({
           type: 'info',
           message: `Usuario "${fullName}" cargado para modificación.`,
@@ -748,9 +989,9 @@ export default function ModificarUsuario({
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      let endpoint = `${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=10`;
+      let endpoint = `${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=20`;
       if (!isDocente) {
-        endpoint = `${apiUrl}/api/usuarios?search=${encodeURIComponent(term)}&rol=${encodeURIComponent(selectedFilterRole)}&size=10`;
+        endpoint = `${apiUrl}/api/usuarios?search=${encodeURIComponent(term)}&rol=${encodeURIComponent(selectedFilterRole)}&size=20`;
       }
 
       const response = await fetch(endpoint, { headers });
@@ -760,15 +1001,12 @@ export default function ModificarUsuario({
         const list = data.content || (Array.isArray(data) ? data : []);
 
         if (list.length > 0) {
-          const exactOrFirst =
-            list.find((u: any) => {
-              const full = `${u.apellido || ''} ${u.nombre || ''}`.toLowerCase();
-              return (
-                full.includes(term.toLowerCase()) ||
-                String(u.username || '').toLowerCase() === term.toLowerCase() ||
-                String(u.dni || '') === term
-              );
-            }) || list[0];
+          // Rank candidates using calculateUserCloseness
+          const scored = list
+            .map((u: any) => ({ u, score: calculateUserCloseness(u, term) }))
+            .sort((a, b) => b.score - a.score);
+
+          const exactOrFirst = scored[0]?.u || list[0];
 
           const targetId = exactOrFirst.usuarioId || exactOrFirst.id;
           if (targetId) {
@@ -848,13 +1086,13 @@ export default function ModificarUsuario({
     setSearchQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
-    setFormData((prev) => ({
+    setFormData({
       ...initialFormState,
       rol: newRole,
       cargo: '',
       dependencia: '',
       unidad: '',
-    }));
+    });
     setFeedback(null);
   };
 
@@ -1025,41 +1263,41 @@ export default function ModificarUsuario({
         rol: selectedFilterRole,
         ...(isAdminGlobal
           ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-            }
+            cargo: formData.cargo,
+            cargoNombre: formData.cargo,
+          }
           : {}),
         ...(isAuditor
           ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-              cargoAudNombre: formData.cargo,
-            }
+            cargo: formData.cargo,
+            cargoNombre: formData.cargo,
+            cargoAudNombre: formData.cargo,
+          }
           : {}),
         ...(isAdminUnidad
           ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-              cargoAdNombre: formData.cargo,
-              unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
-              dependencia: formData.dependencia,
-              tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
-            }
+            cargo: formData.cargo,
+            cargoNombre: formData.cargo,
+            cargoAdNombre: formData.cargo,
+            unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
+            dependencia: formData.dependencia,
+            tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
+          }
           : {}),
         ...(isDocente
           ? {
-              tipoDni: formData.tipoDni,
-              dni: formData.numeroDni.trim()
-                ? Number(formData.numeroDni.trim().replace(/\D/g, '')) || formData.numeroDni.trim()
-                : undefined,
-              cuil: formData.cuil.trim()
-                ? Number(formData.cuil.trim().replace(/\D/g, '')) || formData.cuil.trim()
-                : undefined,
-              domicilio: formData.domicilio.trim() || undefined,
-              emailInstitucional: formData.emailInstitucional.trim() || undefined,
-              fechaIngreso: formData.fechaIngreso || undefined,
-              antigPrevia: formData.antigPrevia.trim() ? Number(formData.antigPrevia.trim()) : 0,
-            }
+            tipoDni: formData.tipoDni,
+            dni: formData.numeroDni.trim()
+              ? Number(formData.numeroDni.trim().replace(/\D/g, '')) || formData.numeroDni.trim()
+              : undefined,
+            cuil: formData.cuil.trim()
+              ? Number(formData.cuil.trim().replace(/\D/g, '')) || formData.cuil.trim()
+              : undefined,
+            domicilio: formData.domicilio.trim() || undefined,
+            emailInstitucional: formData.emailInstitucional.trim() || undefined,
+            fechaIngreso: formData.fechaIngreso || undefined,
+            antigPrevia: formData.antigPrevia.trim() ? Number(formData.antigPrevia.trim()) : 0,
+          }
           : {}),
       };
 
@@ -1111,8 +1349,8 @@ export default function ModificarUsuario({
           (response.status === 400
             ? 'Datos inválidos. Verifique los campos ingresados.'
             : response.status === 403
-            ? 'No posee permisos para modificar este usuario.'
-            : 'Ocurrió un error al guardar las modificaciones.');
+              ? 'No posee permisos para modificar este usuario.'
+              : 'Ocurrió un error al guardar las modificaciones.');
         setFeedback({
           type: 'error',
           message: errorMsg,
@@ -1226,9 +1464,8 @@ export default function ModificarUsuario({
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-usuario-suggestion-item ${
-                                idx === activeSuggestionIndex ? 'active' : ''
-                              }`}
+                              className={`modificar-usuario-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -1366,7 +1603,7 @@ export default function ModificarUsuario({
                       {/* Contraseña */}
                       <div className="modificar-usuario-field">
                         <label htmlFor="password" className="modificar-usuario-label">
-                          Contraseña (dejar vacío para mantener)
+                          Contraseña
                         </label>
                         <div className="modificar-usuario-password-wrapper">
                           <input
@@ -1390,9 +1627,8 @@ export default function ModificarUsuario({
                             </button>
                             <button
                               type="button"
-                              className={`modificar-usuario-password-action-btn ${
-                                isLoadingPassword ? 'spinning' : ''
-                              }`}
+                              className={`modificar-usuario-password-action-btn ${isLoadingPassword ? 'spinning' : ''
+                                }`}
                               onClick={fetchRandomPassword}
                               title="Generar nueva contraseña"
                               disabled={isLoadingPassword}

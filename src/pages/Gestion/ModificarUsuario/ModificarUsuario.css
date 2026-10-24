@@ -619,6 +619,7 @@
 }
 
 .modificar-usuario-password-input {
+  width: 100%;
   padding-right: 68px;
 }
 
