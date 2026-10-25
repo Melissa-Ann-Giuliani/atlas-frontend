@@ -1429,11 +1429,28 @@ export default function ModificarUsuario({
       const data = await response.json().catch(() => null);
 
       if (response.ok) {
+        // Option 2: Clear password upon success
+        if (formData.password) {
+          setFormData((prev) => ({ ...prev, password: '' }));
+        }
+
+        // Option 3: Update search query with latest name
+        const updatedFullName = formData.apellido.trim() && formData.nombre.trim()
+          ? `${formData.apellido.trim()}, ${formData.nombre.trim()}`
+          : (formData.nombre.trim() || formData.apellido.trim());
+        if (updatedFullName) {
+          isSelectingRef.current = true;
+          setSearchQuery(updatedFullName);
+          setShowSuggestions(false);
+          setTimeout(() => {
+            isSelectingRef.current = false;
+          }, 300);
+        }
+
         setFeedback({
           type: 'success',
           message:
-            data?.message ||
-            `${isDocente ? 'Docente' : isAdminGlobal ? 'Administrador Global' : isAdminUnidad ? 'Administrador de Unidad' : isAuditor ? 'Auditor' : 'Usuario'} "${formData.apellido}, ${formData.nombre}" modificado exitosamente.`,
+            `${isDocente ? 'Docente' : isAdminGlobal ? 'Administrador Global' : isAdminUnidad ? 'Administrador de Unidad' : isAuditor ? 'Auditor' : 'Usuario'} "${formData.apellido.trim()}, ${formData.nombre.trim()}" modificado exitosamente.`,
         });
       } else {
         console.warn('Backend returned error response:', response.status, data);
