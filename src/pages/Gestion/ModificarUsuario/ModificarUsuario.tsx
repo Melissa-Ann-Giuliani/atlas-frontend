@@ -703,8 +703,6 @@ export default function ModificarUsuario({
                 : nombre || apellido || username || `Usuario #${item.id || item.usuarioId}`;
 
             const dniVal = item.dni ?? item.numeroDni ?? item.datosPersonales?.dni;
-            const rawUnidadVal = item.unidad || item.unidadNombre || item.cargo || '';
-            const unidadVal = formatDisplayText(rawUnidadVal);
 
             const extractedItemRole =
               extractRole(item.rol) ||
@@ -712,6 +710,39 @@ export default function ModificarUsuario({
               extractRole(item.usuario?.rol) ||
               extractRole(item.role) ||
               selectedFilterRole;
+
+            // Compute descriptive subtitle (especially for Admin de Unidad: "Director de Departamento de Matemática")
+            let unidadVal = '';
+            if (extractedItemRole === 'ADMIN_UNIDAD') {
+              const rawCargo = item.cargo || item.cargoNombre || item.cargoAdNombre || '';
+              const rawTipo =
+                item.tipoUnidadNombre ||
+                item.tipoUnidad ||
+                item.dependencia ||
+                item.unidad?.tipoUnidad?.nombre ||
+                '';
+              const rawUni =
+                item.unidadNombre ||
+                (typeof item.unidad === 'string' ? item.unidad : item.unidad?.nombre || item.unidad?.unidadNombre || '');
+
+              const formattedCargo = formatDisplayText(rawCargo);
+              const formattedTipo = formatDisplayText(rawTipo);
+              const formattedUni = formatDisplayText(rawUni);
+
+              const parts: string[] = [];
+              if (formattedCargo) parts.push(formattedCargo);
+              if (formattedTipo) parts.push(formattedTipo);
+              if (formattedUni) parts.push(formattedUni);
+
+              if (parts.length > 0) {
+                unidadVal = parts.join(' de ');
+              } else {
+                unidadVal = formatDisplayText(item.unidad || item.cargo || '');
+              }
+            } else {
+              const rawUnidadVal = item.unidad || item.unidadNombre || item.cargo || '';
+              unidadVal = formatDisplayText(rawUnidadVal);
+            }
 
             return {
               id: item.usuarioId || item.id,
@@ -1115,7 +1146,7 @@ export default function ModificarUsuario({
       }
       return { ...prev, [field]: value };
     });
-    if (feedback && feedback.type !== 'info') setFeedback(null);
+    if (feedback) setFeedback(null);
   };
 
   const handleFilterRoleChange = (newRole: string) => {
@@ -1341,10 +1372,18 @@ export default function ModificarUsuario({
             username: formData.username.trim(),
             cargoNombre: formData.cargo,
           };
+        } else if (isAdminUnidad) {
+          endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
+          payload = {
+            nombre: formData.nombre.trim(),
+            apellido: formData.apellido.trim(),
+            correo: formData.correo.trim(),
+            username: formData.username.trim(),
+            cargoNombre: formData.cargo,
+            unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
+          };
         } else {
-          if (isAdminUnidad) {
-            endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
-          } else if (isAuditor) {
+          if (isAuditor) {
             endpoint = `${apiUrl}/api/usuarios/auditor/${formData.usuarioId}`;
           }
 
@@ -1361,16 +1400,6 @@ export default function ModificarUsuario({
                 cargoAudNombre: formData.cargo,
               }
               : {}),
-            ...(isAdminUnidad
-              ? {
-                cargo: formData.cargo,
-                cargoNombre: formData.cargo,
-                cargoAdNombre: formData.cargo,
-                unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
-                dependencia: formData.dependencia,
-                tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
-              }
-              : {}),
           };
 
           if (formData.password.trim()) {
@@ -1385,8 +1414,8 @@ export default function ModificarUsuario({
         body: JSON.stringify(payload),
       });
 
-      // For non-docente roles (except admin-global with dedicated contract), fallback to generic /api/usuarios/{id} if 404/405
-      if (!isDocente && !isAdminGlobal && (response.status === 404 || response.status === 405)) {
+      // For non-docente roles (except admin-global and admin-unidad with dedicated contracts), fallback to generic /api/usuarios/{id} if 404/405
+      if (!isDocente && !isAdminGlobal && !isAdminUnidad && (response.status === 404 || response.status === 405)) {
         const fallbackEndpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
         if (fallbackEndpoint !== endpoint) {
           response = await fetch(fallbackEndpoint, {
@@ -1404,9 +1433,10 @@ export default function ModificarUsuario({
           type: 'success',
           message:
             data?.message ||
-            `Usuario "${formData.apellido}, ${formData.nombre}" modificado exitosamente.`,
+            `${isDocente ? 'Docente' : isAdminGlobal ? 'Administrador Global' : isAdminUnidad ? 'Administrador de Unidad' : isAuditor ? 'Auditor' : 'Usuario'} "${formData.apellido}, ${formData.nombre}" modificado exitosamente.`,
         });
       } else {
+        console.warn('Backend returned error response:', response.status, data);
         const errorMsg =
           data?.message ||
           data?.error ||
@@ -1591,7 +1621,10 @@ export default function ModificarUsuario({
                     className="modificar-usuario-form"
                     onSubmit={handleSubmit}
                     onFocusCapture={() => {
-                      if (feedback && feedback.type !== 'info') setFeedback(null);
+                      if (feedback) setFeedback(null);
+                    }}
+                    onClickCapture={() => {
+                      if (feedback) setFeedback(null);
                     }}
                   >
                     {/* SECTION: DATOS DE USUARIO */}
@@ -1716,12 +1749,20 @@ export default function ModificarUsuario({
                             <label htmlFor="cargo" className="modificar-usuario-label">
                               Cargo *
                             </label>
-                            <div className="modificar-usuario-select-wrapper">
+                            <div
+                              className="modificar-usuario-select-wrapper"
+                              onClick={() => {
+                                if (feedback) setFeedback(null);
+                              }}
+                            >
                               <select
                                 id="cargo"
                                 className="modificar-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
+                                onFocus={() => {
+                                  if (feedback) setFeedback(null);
+                                }}
                                 disabled={isLoadingCargosGlobal && cargosAdminGlobal.length === 0}
                               >
                                 <option value="">
@@ -1750,12 +1791,20 @@ export default function ModificarUsuario({
                             <label htmlFor="cargo" className="modificar-usuario-label">
                               Cargo *
                             </label>
-                            <div className="modificar-usuario-select-wrapper">
+                            <div
+                              className="modificar-usuario-select-wrapper"
+                              onClick={() => {
+                                if (feedback) setFeedback(null);
+                              }}
+                            >
                               <select
                                 id="cargo"
                                 className="modificar-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
+                                onFocus={() => {
+                                  if (feedback) setFeedback(null);
+                                }}
                                 disabled={isLoadingCargosAuditor && cargosAuditor.length === 0}
                               >
                                 <option value="">
@@ -1784,12 +1833,20 @@ export default function ModificarUsuario({
                             <label htmlFor="cargo" className="modificar-usuario-label">
                               Cargo *
                             </label>
-                            <div className="modificar-usuario-select-wrapper">
+                            <div
+                              className="modificar-usuario-select-wrapper"
+                              onClick={() => {
+                                if (feedback) setFeedback(null);
+                              }}
+                            >
                               <select
                                 id="cargo"
                                 className="modificar-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
+                                onFocus={() => {
+                                  if (feedback) setFeedback(null);
+                                }}
                                 disabled={isLoadingCargosUnidad && cargosAdminUnidad.length === 0}
                               >
                                 <option value="">
@@ -1811,12 +1868,20 @@ export default function ModificarUsuario({
                             <label htmlFor="dependencia" className="modificar-usuario-label">
                               Dependencia *
                             </label>
-                            <div className="modificar-usuario-select-wrapper">
+                            <div
+                              className="modificar-usuario-select-wrapper"
+                              onClick={() => {
+                                if (feedback) setFeedback(null);
+                              }}
+                            >
                               <select
                                 id="dependencia"
                                 className="modificar-usuario-select"
                                 value={formData.dependencia}
                                 onChange={(e) => handleChange('dependencia', e.target.value)}
+                                onFocus={() => {
+                                  if (feedback) setFeedback(null);
+                                }}
                                 disabled={isLoadingDependencias && dependencias.length === 0}
                               >
                                 <option value="">
@@ -1839,12 +1904,20 @@ export default function ModificarUsuario({
                               <label htmlFor="unidad" className="modificar-usuario-label">
                                 {dynamicUnidadLabel} *
                               </label>
-                              <div className="modificar-usuario-select-wrapper">
+                              <div
+                                className="modificar-usuario-select-wrapper"
+                                onClick={() => {
+                                  if (feedback) setFeedback(null);
+                                }}
+                              >
                                 <select
                                   id="unidad"
                                   className="modificar-usuario-select"
                                   value={formData.unidad}
                                   onChange={(e) => handleChange('unidad', e.target.value)}
+                                  onFocus={() => {
+                                    if (feedback) setFeedback(null);
+                                  }}
                                   disabled={isLoadingUnidades}
                                 >
                                   <option value="">
