@@ -150,6 +150,50 @@ function extractRole(roleCandidate: any): string | null {
 }
 
 /**
+ * Formats enum-style or uppercase strings (e.g. DIRECCION_DE_PERSONAL) into
+ * human-readable title case with accents (e.g. Dirección de Personal).
+ */
+function formatDisplayText(raw: string): string {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  const upper = trimmed.toUpperCase();
+
+  const exactDict: Record<string, string> = {
+    DIRECCION_DE_PERSONAL: 'Dirección de Personal',
+    'DIRECCION DE PERSONAL': 'Dirección de Personal',
+    SECRETARIA_ADMINISTRATIVA: 'Secretaría Administrativa',
+    'SECRETARIA ADMINISTRATIVA': 'Secretaría Administrativa',
+    ADMIN_GLOBAL: 'Admin Global',
+    ADMIN_UNIDAD: 'Admin de Unidad',
+    AUDITOR: 'Auditor',
+    DOCENTE: 'Docente',
+    DECANO: 'Decano',
+    VICEDECANO: 'Vicedecano',
+  };
+
+  if (exactDict[upper]) {
+    return exactDict[upper];
+  }
+
+  // If it's UPPER_SNAKE_CASE or all caps
+  if (trimmed.includes('_') || trimmed === upper) {
+    const minorWords = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', 'a']);
+    return trimmed
+      .split(/[_\s]+/)
+      .map((word, index) => {
+        const lower = word.toLowerCase();
+        if (index > 0 && minorWords.has(lower)) {
+          return lower;
+        }
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      })
+      .join(' ');
+  }
+
+  return trimmed;
+}
+
+/**
  * Normalizes text: lowercase, removes accents/diacritics, and extra spaces.
  */
 function normalizeSearchText(text: string): string {
@@ -407,10 +451,7 @@ export default function ModificarUsuario({
           const mapped: CargoOption[] = data.map((item: any) => {
             const idVal = typeof item === 'string' ? item : item.id ?? item.nombre ?? String(item);
             const rawLabel = typeof item === 'string' ? item : item.nombre ?? item.descripcion ?? idVal;
-            const formattedLabel = rawLabel
-              .split('_')
-              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-              .join(' ');
+            const formattedLabel = formatDisplayText(rawLabel);
             return { id: idVal, label: formattedLabel };
           });
           setCargosAdminGlobal(mapped);
@@ -441,12 +482,7 @@ export default function ModificarUsuario({
           const mapped: CargoOption[] = data.map((item: any) => {
             const idVal = typeof item === 'string' ? item : item.value ?? item.id ?? item.nombre ?? String(item);
             const rawLabel = typeof item === 'string' ? item : item.label ?? item.nombre ?? item.descripcion ?? idVal;
-            const formattedLabel = rawLabel.includes('_')
-              ? rawLabel
-                .split('_')
-                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                .join(' ')
-              : rawLabel;
+            const formattedLabel = formatDisplayText(rawLabel);
             return { id: idVal, label: formattedLabel };
           });
           setCargosAuditor(mapped);
@@ -667,7 +703,8 @@ export default function ModificarUsuario({
                 : nombre || apellido || username || `Usuario #${item.id || item.usuarioId}`;
 
             const dniVal = item.dni ?? item.numeroDni ?? item.datosPersonales?.dni;
-            const unidadVal = item.unidad || item.unidadNombre || item.cargo || '';
+            const rawUnidadVal = item.unidad || item.unidadNombre || item.cargo || '';
+            const unidadVal = formatDisplayText(rawUnidadVal);
 
             const extractedItemRole =
               extractRole(item.rol) ||
@@ -1297,45 +1334,48 @@ export default function ModificarUsuario({
         endpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
         if (isAdminGlobal) {
           endpoint = `${apiUrl}/api/usuarios/admin-global/${formData.usuarioId}`;
-        } else if (isAdminUnidad) {
-          endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
-        } else if (isAuditor) {
-          endpoint = `${apiUrl}/api/usuarios/auditor/${formData.usuarioId}`;
-        }
+          payload = {
+            nombre: formData.nombre.trim(),
+            apellido: formData.apellido.trim(),
+            correo: formData.correo.trim(),
+            username: formData.username.trim(),
+            cargoNombre: formData.cargo,
+          };
+        } else {
+          if (isAdminUnidad) {
+            endpoint = `${apiUrl}/api/usuarios/admin-unidad/${formData.usuarioId}`;
+          } else if (isAuditor) {
+            endpoint = `${apiUrl}/api/usuarios/auditor/${formData.usuarioId}`;
+          }
 
-        payload = {
-          nombre: formData.nombre.trim(),
-          apellido: formData.apellido.trim(),
-          correo: formData.correo.trim(),
-          username: formData.username.trim(),
-          rol: selectedFilterRole,
-          ...(isAdminGlobal
-            ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-            }
-            : {}),
-          ...(isAuditor
-            ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-              cargoAudNombre: formData.cargo,
-            }
-            : {}),
-          ...(isAdminUnidad
-            ? {
-              cargo: formData.cargo,
-              cargoNombre: formData.cargo,
-              cargoAdNombre: formData.cargo,
-              unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
-              dependencia: formData.dependencia,
-              tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
-            }
-            : {}),
-        };
+          payload = {
+            nombre: formData.nombre.trim(),
+            apellido: formData.apellido.trim(),
+            correo: formData.correo.trim(),
+            username: formData.username.trim(),
+            rol: selectedFilterRole,
+            ...(isAuditor
+              ? {
+                cargo: formData.cargo,
+                cargoNombre: formData.cargo,
+                cargoAudNombre: formData.cargo,
+              }
+              : {}),
+            ...(isAdminUnidad
+              ? {
+                cargo: formData.cargo,
+                cargoNombre: formData.cargo,
+                cargoAdNombre: formData.cargo,
+                unidadId: !isNaN(Number(formData.unidad)) ? Number(formData.unidad) : formData.unidad,
+                dependencia: formData.dependencia,
+                tipoUnidadId: !isNaN(Number(formData.dependencia)) ? Number(formData.dependencia) : formData.dependencia,
+              }
+              : {}),
+          };
 
-        if (formData.password.trim()) {
-          payload.password = formData.password.trim();
+          if (formData.password.trim()) {
+            payload.password = formData.password.trim();
+          }
         }
       }
 
@@ -1345,8 +1385,8 @@ export default function ModificarUsuario({
         body: JSON.stringify(payload),
       });
 
-      // For non-docente roles only, fallback to generic /api/usuarios/{id} if 404/405
-      if (!isDocente && (response.status === 404 || response.status === 405)) {
+      // For non-docente roles (except admin-global with dedicated contract), fallback to generic /api/usuarios/{id} if 404/405
+      if (!isDocente && !isAdminGlobal && (response.status === 404 || response.status === 405)) {
         const fallbackEndpoint = `${apiUrl}/api/usuarios/${formData.usuarioId}`;
         if (fallbackEndpoint !== endpoint) {
           response = await fetch(fallbackEndpoint, {
@@ -1370,11 +1410,13 @@ export default function ModificarUsuario({
         const errorMsg =
           data?.message ||
           data?.error ||
-          (response.status === 400
-            ? 'Datos inválidos. Verifique los campos ingresados.'
-            : response.status === 403
-              ? 'No posee permisos para modificar este usuario.'
-              : 'Ocurrió un error al guardar las modificaciones.');
+          (response.status === 409
+            ? 'El nombre de usuario o correo electrónico ya se encuentra registrado.'
+            : response.status === 400
+              ? 'Datos inválidos. Verifique los campos ingresados.'
+              : response.status === 403
+                ? 'No posee permisos para modificar este usuario.'
+                : 'Ocurrió un error al guardar las modificaciones.');
         setFeedback({
           type: 'error',
           message: errorMsg,
