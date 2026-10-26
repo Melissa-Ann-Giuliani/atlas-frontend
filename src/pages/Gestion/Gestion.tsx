@@ -67,7 +67,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       options: [
         { id: 'alta_usuario', label: 'Alta de Usuario', type: 'green', targetPage: 'nuevo_usuario' },
         { id: 'modificacion_usuario', label: 'Modificación de Usuario', type: 'blue', targetPage: 'modificar_usuario' },
-        { id: 'baja_usuario', label: 'Baja de Usuario', type: 'red' },
+        { id: 'baja_usuario', label: 'Baja de Usuario', type: 'red', targetPage: 'baja_usuario' },
       ],
     },
   ];
@@ -79,6 +79,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate('nuevo_usuario');
     } else if ((option.id === 'modificacion_usuario' || option.id === 'modificar_usuario') && onNavigate) {
       onNavigate('modificar_usuario');
+    } else if (option.id === 'baja_usuario' && onNavigate) {
+      onNavigate('baja_usuario');
     } else if (option.id === 'alta_cargo' && onNavigate) {
       onNavigate('alta_cargo');
     } else if (option.id === 'alta_materia' && onNavigate) {

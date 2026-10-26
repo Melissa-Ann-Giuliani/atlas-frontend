@@ -641,6 +641,20 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
         });
         return;
       }
+      if (!formData.emailInstitucional.trim()) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese el correo electrónico institucional.',
+        });
+        return;
+      }
+      if (!emailRegex.test(formData.emailInstitucional.trim())) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese un formato de email institucional válido.',
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -1157,6 +1171,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
                               autoComplete="off"
+                              required
                             />
                           </div>
 
