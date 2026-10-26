@@ -750,14 +750,18 @@
   transform: translateY(-2px);
 }
 
-/* Confirmar button (Red / Dark Red for Baja actions, or green per design token) */
+/* Confirmar button (Green matching BajaCargo & BajaMateria: #305839 / var(--btn-confirm)) */
 .btn-baja-usuario-confirmar {
-  background-color: var(--btn-delete, #890505);
+  background-color: var(--btn-confirm, #305839);
 }
 
 .btn-baja-usuario-confirmar:hover:not(:disabled) {
-  background-color: #6E0404;
+  background-color: #24432B;
   transform: translateY(-2px);
+}
+
+.btn-baja-usuario-confirmar:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-baja-usuario:disabled {
