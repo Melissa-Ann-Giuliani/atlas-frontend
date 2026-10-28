@@ -688,7 +688,7 @@ export default function ModificarUsuario({
               score: calculateUserCloseness(item, trimmed),
             }))
             .filter((entry) => entry.score > 0)
-            .sort((a, b) => b.score - a.score);
+            .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
           // If some items matched fuzzy score, use them; otherwise fallback to backend order
           const rankedList = scored.length > 0 ? scored.map((s) => s.item) : list;
@@ -1072,7 +1072,7 @@ export default function ModificarUsuario({
           // Rank candidates using calculateUserCloseness
           const scored = list
             .map((u: any) => ({ u, score: calculateUserCloseness(u, term) }))
-            .sort((a, b) => b.score - a.score);
+            .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
           const exactOrFirst = scored[0]?.u || list[0];
 

@@ -72,7 +72,6 @@ const emptyFormState: FormState = {
   estado: '',
 };
 
-const ANIO_EDUCATIVO_OPTIONS = ['1°', '2°', '3°', '4°', '5°'];
 
 /**
  * Normalizes text: lowercase, removes accents/diacritics, and strips extra spaces.
@@ -205,8 +204,8 @@ export default function BajaMateria({
   const [formData, setFormData] = useState<FormState>(emptyFormState);
   const [dependencias, setDependencias] = useState<OptionItem[]>([]);
   const [unidades, setUnidades] = useState<OptionItem[]>([]);
-  const [isLoadingCatalogs, setIsLoadingCatalogs] = useState<boolean>(true);
-  const [isLoadingUnidades, setIsLoadingUnidades] = useState<boolean>(false);
+  const [, setIsLoadingCatalogs] = useState<boolean>(true);
+  const [, setIsLoadingUnidades] = useState<boolean>(false);
 
   // Searchbar & suggestions state
   const [searchQuery, setSearchQuery] = useState<string>(
