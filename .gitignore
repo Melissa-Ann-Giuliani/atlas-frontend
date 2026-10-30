@@ -25,3 +25,7 @@ dist-ssr
 
 
 **sw.js
+
+.env
+.env.*
+!.env.example
