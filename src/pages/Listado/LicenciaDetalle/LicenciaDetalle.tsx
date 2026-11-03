@@ -46,7 +46,7 @@ interface LicenciaDetalleProps {
 
 export default function LicenciaDetalle({ licencia, onBack, onLogout, onNavigate }: LicenciaDetalleProps) {
   const [detalle, setDetalle] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [, setIsLoading] = useState<boolean>(true);
   const [uploadedDocs, setUploadedDocs] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

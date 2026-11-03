@@ -10,19 +10,28 @@ import NuevoUsuario from './pages/Gestion/NuevoUsuario/NuevoUsuario'
 import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
 import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
 import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
+import AltaMateria from './pages/Gestion/AltaMateria/AltaMateria'
+import ModificarMateria from './pages/Gestion/ModificarMateria/ModificarMateria'
+import BajaMateria from './pages/Gestion/BajaMateria/BajaMateria'
+import ModificarUsuario from './pages/Gestion/ModificarUsuario/ModificarUsuario'
+import BajaUsuario from './pages/Gestion/BajaUsuario/BajaUsuario'
 import AltaCatedra from './pages/Gestion/AltaCatedra/AltaCatedra'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_catedra';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
   if (page === 'cargo_detalle') return 'listado/cargo_detalle';
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
-  if (page === 'modificar_docente') return 'gestion/modificar_docente';
+  if (page === 'modificar_docente' || page === 'modificar_usuario') return 'gestion/modificar_usuario';
+  if (page === 'baja_usuario') return 'gestion/baja_usuario';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
   if (page === 'alta_cargo') return 'gestion/alta_cargo';
   if (page === 'modificar_cargo') return 'gestion/modificar_cargo';
   if (page === 'baja_cargo') return 'gestion/baja_cargo';
+  if (page === 'alta_materia') return 'gestion/alta_materia';
+  if (page === 'modificar_materia') return 'gestion/modificar_materia';
+  if (page === 'baja_materia') return 'gestion/baja_materia';
   if (page === 'alta_catedra') return 'gestion/alta_catedra';
   return page;
 };
@@ -31,16 +40,20 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'listado/docente_detalle' || path === 'listado/docente_listado') return 'docente_detalle';
   if (path === 'listado/cargo_detalle') return 'cargo_detalle';
   if (path === 'listado/licencia_detalle') return 'licencia_detalle';
-  if (path === 'gestion/modificar_docente') return 'modificar_docente';
+  if (path === 'gestion/modificar_docente' || path === 'gestion/modificar_usuario') return 'modificar_usuario';
+  if (path === 'gestion/baja_usuario') return 'baja_usuario';
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
+  if (path === 'gestion/alta_materia') return 'alta_materia';
+  if (path === 'gestion/modificar_materia') return 'modificar_materia';
+  if (path === 'gestion/baja_materia') return 'baja_materia';
   if (path === 'gestion/alta_catedra') return 'alta_catedra';
   if (path === 'gestion/baja_cargo') {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_catedra'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -283,6 +296,10 @@ function App() {
       setSelectedCargo(data || null);
     }
 
+    if (page === 'modificar_usuario' || page === 'modificar_docente') {
+      setSelectedDocente(data || null);
+    }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
@@ -379,10 +396,58 @@ function App() {
             />
           );
 
+        case 'alta_materia':
+          return (
+            <AltaMateria
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'modificar_materia':
+          return (
+            <ModificarMateria
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'baja_materia':
+          return (
+            <BajaMateria
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
         case 'modificar_cargo':
           return (
             <ModificarCargo
               initialCargo={selectedCargo}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'modificar_usuario':
+        case 'modificar_docente':
+          return (
+            <ModificarUsuario
+              initialDocente={selectedDocente}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
+        case 'baja_usuario':
+          return (
+            <BajaUsuario
+              initialUsuario={selectedDocente}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate('gestion')}

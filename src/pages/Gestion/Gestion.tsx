@@ -55,9 +55,9 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       title: 'Materias',
       headerClass: 'header-materias',
       options: [
-        { id: 'alta_materia', label: 'Alta de Materia', type: 'green' },
-        { id: 'modificacion_materia', label: 'Modificación de Materia', type: 'blue' },
-        { id: 'baja_materia', label: 'Baja de Materia', type: 'red' },
+        { id: 'alta_materia', label: 'Alta de Materia', type: 'green', targetPage: 'alta_materia' },
+        { id: 'modificacion_materia', label: 'Modificación de Materia', type: 'blue', targetPage: 'modificar_materia' },
+        { id: 'baja_materia', label: 'Baja de Materia', type: 'red', targetPage: 'baja_materia' },
       ],
     },
     {
@@ -66,8 +66,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       headerClass: 'header-usuarios',
       options: [
         { id: 'alta_usuario', label: 'Alta de Usuario', type: 'green', targetPage: 'nuevo_usuario' },
-        { id: 'modificacion_usuario', label: 'Modificación de Usuario', type: 'blue' },
-        { id: 'baja_usuario', label: 'Baja de Usuario', type: 'red' },
+        { id: 'modificacion_usuario', label: 'Modificación de Usuario', type: 'blue', targetPage: 'modificar_usuario' },
+        { id: 'baja_usuario', label: 'Baja de Usuario', type: 'red', targetPage: 'baja_usuario' },
       ],
     },
   ];
@@ -79,8 +79,18 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate('alta_catedra');
     } else if ((option.id === 'alta_usuario' || option.id === 'nuevo_usuario') && onNavigate) {
       onNavigate('nuevo_usuario');
+    } else if ((option.id === 'modificacion_usuario' || option.id === 'modificar_usuario') && onNavigate) {
+      onNavigate('modificar_usuario');
+    } else if (option.id === 'baja_usuario' && onNavigate) {
+      onNavigate('baja_usuario');
     } else if (option.id === 'alta_cargo' && onNavigate) {
       onNavigate('alta_cargo');
+    } else if (option.id === 'alta_materia' && onNavigate) {
+      onNavigate('alta_materia');
+    } else if ((option.id === 'modificacion_materia' || option.id === 'modificar_materia') && onNavigate) {
+      onNavigate('modificar_materia');
+    } else if ((option.id === 'baja_materia') && onNavigate) {
+      onNavigate('baja_materia');
     } else if (option.id === 'modificacion_cargo' && onNavigate) {
       onNavigate('modificar_cargo');
     } else if (option.id === 'baja_cargo' && onNavigate) {

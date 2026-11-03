@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -641,6 +641,20 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
         });
         return;
       }
+      if (!formData.emailInstitucional.trim()) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese el correo electrónico institucional.',
+        });
+        return;
+      }
+      if (!emailRegex.test(formData.emailInstitucional.trim())) {
+        setFeedback({
+          type: 'error',
+          message: 'Por favor, ingrese un formato de email institucional válido.',
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -1157,6 +1171,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
                               autoComplete="off"
+                              required
                             />
                           </div>
 

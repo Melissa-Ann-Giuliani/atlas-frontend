@@ -80,7 +80,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   // Suggestions state
   const [suggestions, setSuggestions] = useState<Array<{ id: number; numero: string | number; categoria?: string; unidad?: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState<boolean>(false);
+  const [, setIsLoadingSuggestions] = useState<boolean>(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
 

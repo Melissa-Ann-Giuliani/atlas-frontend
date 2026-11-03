@@ -3,7 +3,7 @@ import './Login.css';
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [view, setView] = useState<'login' | 'forgot-password'>('login');
-  
+
   // Login states
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -58,7 +58,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: resetUsername, email: resetEmail }),
+        body: JSON.stringify({ username: resetUsername, correo: resetEmail }),
       });
 
       if (!response.ok) {
@@ -142,9 +142,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
 
             <div className="forgot-password">
               <p>Ha olvidado su contraseña?</p>
-              <a 
-                href="#" 
-                className="forgot-link" 
+              <a
+                href="#"
+                className="forgot-link"
                 onClick={(e) => {
                   e.preventDefault();
                   setView('forgot-password');
@@ -202,9 +202,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button 
-                  type="button" 
-                  className="login-button" 
+                <button
+                  type="button"
+                  className="login-button"
                   style={{ backgroundColor: '#ccc', color: '#1a1a1a' }}
                   onClick={() => {
                     setView('login');

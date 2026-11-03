@@ -1,89 +1,67 @@
-# "ATLAS" - Sistema de Gestión de Mapa Docente FFHA
+# "ATLAS" - Sistema de Gestión de Mapa Docente FFHA <!-- test-button-prompt -->
 
-Servicio frontend para automatizar la automatizar la gestión de trámites correspondientes a los docentes (designaciones, licencias, renuncias, subrogaciones), así como también realizar auditorías y brindar un acceso rápido a estadísticas e información consolidada.
+Servicio frontend para automatizar la gestión de trámites correspondientes a los docentes (designaciones, licencias, renuncias, subrogaciones), así como también realizar auditorías y brindar un acceso rápido a estadísticas e información consolidada.
 
 ## Tecnologías
-- React
-- Typescript
-# atlas-frontend
+- React 19
+- TypeScript
+- Vite
+- Docker / Nginx
 
-Frontend del proyecto: Sistema de Gestión de Mapa Docente "ATLAS"
+## Requisitos
+- Node.js 20+
+- npm 10+
+- Docker Desktop (si se ejecuta con contenedores)
 
-# React + TypeScript + Vite
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Cómo empezar
 
-Currently, two official plugins are available:
+### Opción 1: Con Docker (Recomendada para producción o pruebas integradas)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requisitos: Tener instalado Docker Desktop.
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+#### Levantar solo el Frontend en Docker:
+```bash
+docker build -t atlas-frontend .
+docker run -d -p 80:80 --name atlas_frontend atlas-frontend
 ```
+- La aplicación estará disponible en `http://localhost` (puerto 80).
+- Para detener el contenedor: `docker stop atlas_frontend` y para eliminarlo: `docker rm atlas_frontend`.
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+#### Levantar todo el sistema (Base de Datos + Backend + Frontend):
+Desde la carpeta raíz del proyecto (`atlas/`):
+```bash
+docker compose up -d
 ```
+- El frontend iniciará en `http://localhost` (puerto 80).
+- El backend iniciará en `http://localhost:8081`.
+- Para detener todos los servicios: `docker compose down`.
+
+---
+
+### Opción 2: Ejecución local para desarrollo (Vite)
+
+Requisitos: Node.js 20+ y npm instalados.
+
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+2. **Iniciar servidor de desarrollo con HMR:**
+   ```bash
+   npm run dev
+   ```
+   - La aplicación se iniciará por defecto en `http://localhost:5173`.
+   - Se conectará automáticamente al backend en `http://localhost:8081`.
+
+3. **Compilar para producción (Build y verificación de tipos):**
+   ```bash
+   npm run build
+   ```
+
+4. **Ejecutar linter:**
+   ```bash
+   npm run lint
+   ```
