@@ -1,0 +1,13 @@
+node_modules
+dist
+dev-dist
+.git
+.github
+.agents
+.tasks
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+*.log

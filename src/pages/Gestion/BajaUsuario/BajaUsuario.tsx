@@ -1047,7 +1047,7 @@ export default function BajaUsuario({
         if (list.length > 0) {
           const scored = list
             .map((u: any) => ({ u, score: calculateUserCloseness(u, term) }))
-            .sort((a, b) => b.score - a.score);
+            .sort((a: { score: number }, b: { score: number }) => b.score - a.score);
 
           const exactOrFirst = scored[0]?.u || list[0];
 
