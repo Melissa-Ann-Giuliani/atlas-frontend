@@ -235,7 +235,7 @@
 
 .alta-catedra-grid-row-2 {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px 28px;
   max-width: 1100px;
   margin-bottom: 8px;
@@ -332,6 +332,119 @@
   pointer-events: none;
   color: #1A2E1C;
   font-size: 16px;
+}
+
+/* Autocomplete search wrapper & suggestions list */
+.alta-catedra-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.alta-catedra-input-search {
+  padding-right: 36px;
+}
+
+.alta-catedra-search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757873;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.alta-catedra-suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #FFFFFF;
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #7ba688 #f1f1f1;
+}
+
+.alta-catedra-suggestions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.alta-catedra-suggestions-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.alta-catedra-suggestions-list::-webkit-scrollbar-thumb {
+  background: #7ba688;
+  border-radius: 4px;
+}
+
+.alta-catedra-suggestions-list::-webkit-scrollbar-thumb:hover {
+  background: #2b5b3a;
+}
+
+.alta-catedra-suggestion-item {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #F0ECE4;
+}
+
+.alta-catedra-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.alta-catedra-suggestion-item:hover,
+.alta-catedra-suggestion-item.active {
+  background-color: var(--users-secondary-50, #F6F3EE);
+}
+
+.alta-catedra-suggestion-item.disabled {
+  opacity: 0.6;
+  cursor: default;
+  background-color: #FFFFFF;
+}
+
+.alta-catedra-suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.alta-catedra-suggestion-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.alta-catedra-suggestion-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #E8F0FE;
+  color: #1A73E8;
+  white-space: nowrap;
+}
+
+.alta-catedra-suggestion-subtitle {
+  font-size: 12px;
+  color: #6B7280;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
 
 /* Bottom Actions Toolbar */
