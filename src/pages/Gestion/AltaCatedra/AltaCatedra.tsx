@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './AltaCatedra.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
