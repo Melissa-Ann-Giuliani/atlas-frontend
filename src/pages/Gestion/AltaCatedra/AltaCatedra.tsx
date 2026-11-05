@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './AltaCatedra.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiSearch } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare } from 'react-icons/fi';
 import { isGlobalAdmin, getUserUnitInfo } from '../../../utils/auth';
 
 interface AltaCatedraProps {
@@ -515,6 +515,7 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
       return;
     }
 
+    const createdName = formData.nombreCatedra.trim();
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
@@ -542,23 +543,36 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
         return;
       }
 
+      const responseData = await response.json().catch(() => null);
+
       if (!response.ok) {
         let errorMsg = 'Error al dar de alta la cátedra.';
-        try {
-          const errorData = await response.json();
-          if (errorData && (errorData.message || errorData.error)) {
-            errorMsg = errorData.message || errorData.error;
-          }
-        } catch {
-          // ignore parsing error
+        if (responseData && (responseData.message || responseData.error)) {
+          errorMsg = responseData.message || responseData.error;
+        } else if (response.status === 400) {
+          errorMsg = 'Datos inválidos. Verifique los campos ingresados.';
+        } else if (response.status === 403) {
+          errorMsg = 'No posee permisos para registrar cátedras en esta unidad académica.';
+        } else if (response.status === 409) {
+          errorMsg = 'Ya existe una cátedra con ese nombre o configuración.';
         }
         setFeedback({ type: 'error', message: errorMsg });
         return;
       }
 
-      setFeedback({ type: 'success', message: '¡Cátedra creada con éxito!' });
-      // Clear form except user's scoped unit
-      handleClear();
+      // Reset form values while preserving unit scoping, without overriding feedback
+      setFormData({
+        ...initialFormState,
+        dependencia: !isGlobal && userUnitId ? formData.dependencia : '',
+        unidad: !isGlobal && userUnitId ? String(userUnitId) : '',
+      });
+      setDirectorSuggestions([]);
+      setShowDirectorSuggestions(false);
+
+      setFeedback({
+        type: 'success',
+        message: responseData?.message || `Cátedra "${responseData?.nombre || createdName}" registrada exitosamente.`,
+      });
     } catch (err: any) {
       console.error('Error submitting alta catedra:', err);
       setFeedback({
@@ -757,7 +771,7 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                             id="directorCatedra"
                             name="directorCatedra"
                             type="text"
-                            className="alta-catedra-input alta-catedra-input-search"
+                            className="alta-catedra-input"
                             placeholder={
                               isGlobal && !formData.unidad
                                 ? 'Primero seleccione una unidad académica'
@@ -776,7 +790,6 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                             data-lpignore="true"
                             data-form-type="other"
                           />
-                          <FiSearch className="alta-catedra-search-icon" />
 
                           {showDirectorSuggestions && (
                             <ul className="alta-catedra-suggestions-list" role="listbox">
@@ -792,9 +805,8 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                                 directorSuggestions.map((doc, idx) => (
                                   <li
                                     key={doc.id}
-                                    className={`alta-catedra-suggestion-item ${
-                                      idx === activeSuggestionIndex ? 'active' : ''
-                                    }`}
+                                    className={`alta-catedra-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                      }`}
                                     onClick={() => handleSelectDirector(doc)}
                                   >
                                     <div className="alta-catedra-suggestion-header">
@@ -815,7 +827,7 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                       </div>
                     </div>
 
-                    <hr className="alta-catedra-divider" />
+
                   </div>
                 </div>
               </div>
