@@ -16,8 +16,9 @@ import BajaMateria from './pages/Gestion/BajaMateria/BajaMateria'
 import ModificarUsuario from './pages/Gestion/ModificarUsuario/ModificarUsuario'
 import BajaUsuario from './pages/Gestion/BajaUsuario/BajaUsuario'
 import AltaCatedra from './pages/Gestion/AltaCatedra/AltaCatedra'
+import ModificarCatedra from './pages/Gestion/ModificarCatedra/ModificarCatedra'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra';
+type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
@@ -33,6 +34,7 @@ const getPathFromPage = (page: Page): string => {
   if (page === 'modificar_materia') return 'gestion/modificar_materia';
   if (page === 'baja_materia') return 'gestion/baja_materia';
   if (page === 'alta_catedra') return 'gestion/alta_catedra';
+  if (page === 'modificar_catedra') return 'gestion/modificar_catedra';
   return page;
 };
 
@@ -49,11 +51,12 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/modificar_materia') return 'modificar_materia';
   if (path === 'gestion/baja_materia') return 'baja_materia';
   if (path === 'gestion/alta_catedra') return 'alta_catedra';
+  if (path === 'gestion/modificar_catedra') return 'modificar_catedra';
   if (path === 'gestion/baja_cargo') {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra', 'modificar_catedra'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -72,6 +75,7 @@ function App() {
   const [activePage, setActivePage] = useState<Page>(() => {
     return getPageFromPath(window.location.pathname.substring(1));
   });
+  const [selectedCatedra, setSelectedCatedra] = useState<any>(null);
   const [selectedDocente, setSelectedDocente] = useState<any>(() => {
     try {
       const saved = sessionStorage.getItem('atlas_selected_docente');
@@ -296,6 +300,10 @@ function App() {
       setSelectedCargo(data || null);
     }
 
+    if (page === 'modificar_catedra') {
+      setSelectedCatedra(data || null);
+    }
+
     if (page === 'modificar_usuario' || page === 'modificar_docente') {
       setSelectedDocente(data || null);
     }
@@ -475,6 +483,16 @@ function App() {
             />
           );
 
+        case 'modificar_catedra':
+          return (
+            <ModificarCatedra
+              initialCatedra={selectedCatedra}
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
+
         case 'gestion':
           return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
 
@@ -496,3 +514,4 @@ function App() {
 }
 
 export default App
+
