@@ -294,16 +294,17 @@
   cursor: not-allowed;
 }
 
-/* White Form Card */
+/* Blue framed Form Card */
 .modificar-cargo-form-card {
-  background: #FFFFFF;
-  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border: 1.5px solid var(--docente-primary-600, #1953B8);
   border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--users-secondary-50, #F6F3EE);
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
 /* Blue Card Header for Modificación */
