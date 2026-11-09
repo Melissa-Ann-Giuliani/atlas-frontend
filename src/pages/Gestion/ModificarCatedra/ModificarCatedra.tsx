@@ -486,6 +486,31 @@ export default function ModificarCatedra({
       }
     }
 
+    // Resolve director name if only directorId was returned by the DTO
+    let resolvedDirectorNombre = catedra.directorNombre || '';
+    if (!resolvedDirectorNombre && catedra.directorId) {
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const resDoc = await fetch(`${apiUrl}/api/docentes/${catedra.directorId}`, { headers }).catch(() => null);
+        if (resDoc && resDoc.ok) {
+          const docData = await resDoc.json();
+          const apellido = docData.apellido || docData.docenteApellido || '';
+          const nombre = docData.nombre || docData.docenteNombre || '';
+          resolvedDirectorNombre =
+            docData.nombreCompleto ||
+            (apellido && nombre ? `${apellido}, ${nombre}` : `${nombre} ${apellido}`.trim()) ||
+            `Docente #${catedra.directorId}`;
+        }
+      } catch {
+        // ignore
+      }
+      if (!resolvedDirectorNombre) {
+        resolvedDirectorNombre = `Docente #${catedra.directorId}`;
+      }
+    }
+
     const uId =
       catedra.unidadId ??
       (resolvedMateria &&
@@ -496,7 +521,11 @@ export default function ModificarCatedra({
       catedra.tipoUnidadId ??
       (resolvedMateria &&
         (resolvedMateria.tipoUnidadId ??
-          (resolvedMateria.unidad && resolvedMateria.unidad.tipoUnidadId)));
+          resolvedMateria.dependenciaId ??
+          (resolvedMateria.unidad &&
+            (resolvedMateria.unidad.tipoUnidadId ??
+              (resolvedMateria.unidad.tipoUnidad &&
+                (resolvedMateria.unidad.tipoUnidad.tipoUnidadId ?? resolvedMateria.unidad.tipoUnidad.id))))));
 
     // Verify Admin de Unidad permission
     if (!isGlobal && userUnitId && uId && Number(uId) !== Number(userUnitId)) {
@@ -516,7 +545,7 @@ export default function ModificarCatedra({
       unidad: uId ? String(uId) : (!isGlobal && userUnitId ? String(userUnitId) : ''),
       materiaId: targetMateriaId ? String(targetMateriaId) : '',
       directorId: catedra.directorId ? String(catedra.directorId) : '',
-      directorNombre: catedra.directorNombre || '',
+      directorNombre: resolvedDirectorNombre,
     });
 
     setFeedback({
@@ -1057,9 +1086,8 @@ export default function ModificarCatedra({
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-catedra-suggestion-item ${
-                                idx === activeSuggestionIndex ? 'active' : ''
-                              }`}
+                              className={`modificar-catedra-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -1319,9 +1347,8 @@ export default function ModificarCatedra({
                                 directorSuggestions.map((doc, idx) => (
                                   <li
                                     key={doc.id}
-                                    className={`modificar-catedra-director-suggestion-item ${
-                                      idx === activeDirectorIndex ? 'active' : ''
-                                    }`}
+                                    className={`modificar-catedra-director-suggestion-item ${idx === activeDirectorIndex ? 'active' : ''
+                                      }`}
                                     onClick={() => handleSelectDirector(doc)}
                                   >
                                     <div className="modificar-catedra-director-suggestion-header">

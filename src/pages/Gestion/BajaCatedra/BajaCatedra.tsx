@@ -478,6 +478,31 @@ export default function BajaCatedra({
       }
     }
 
+    // Resolve director name if only directorId was returned by the DTO
+    let resolvedDirectorNombre = catedra.directorNombre || '';
+    if (!resolvedDirectorNombre && catedra.directorId) {
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const resDoc = await fetch(`${apiUrl}/api/docentes/${catedra.directorId}`, { headers }).catch(() => null);
+        if (resDoc && resDoc.ok) {
+          const docData = await resDoc.json();
+          const apellido = docData.apellido || docData.docenteApellido || '';
+          const nombre = docData.nombre || docData.docenteNombre || '';
+          resolvedDirectorNombre =
+            docData.nombreCompleto ||
+            (apellido && nombre ? `${apellido}, ${nombre}` : `${nombre} ${apellido}`.trim()) ||
+            `Docente #${catedra.directorId}`;
+        }
+      } catch {
+        // ignore
+      }
+      if (!resolvedDirectorNombre) {
+        resolvedDirectorNombre = `Docente #${catedra.directorId}`;
+      }
+    }
+
     const uId =
       catedra.unidadId ??
       (resolvedMateria &&
@@ -488,13 +513,17 @@ export default function BajaCatedra({
       catedra.tipoUnidadId ??
       (resolvedMateria &&
         (resolvedMateria.tipoUnidadId ??
-          (resolvedMateria.unidad && resolvedMateria.unidad.tipoUnidadId)));
+          resolvedMateria.dependenciaId ??
+          (resolvedMateria.unidad &&
+            (resolvedMateria.unidad.tipoUnidadId ??
+              (resolvedMateria.unidad.tipoUnidad &&
+                (resolvedMateria.unidad.tipoUnidad.tipoUnidadId ?? resolvedMateria.unidad.tipoUnidad.id))))));
 
     // Verify Admin de Unidad permission
     if (!isGlobal && userUnitId && uId && Number(uId) !== Number(userUnitId)) {
       setFeedback({
         type: 'error',
-        message: 'No posee permisos para dar de baja cátedras pertenecientes a otra unidad académica.',
+        message: 'No tiene permisos para dar de baja cátedras en materias de otra unidad.',
       });
       setFormData({
         ...emptyFormState,
@@ -514,7 +543,7 @@ export default function BajaCatedra({
       unidad: uId ? String(uId) : (!isGlobal && userUnitId ? String(userUnitId) : ''),
       materiaId: targetMateriaId ? String(targetMateriaId) : '',
       directorId: catedra.directorId ? String(catedra.directorId) : '',
-      directorNombre: catedra.directorNombre || '',
+      directorNombre: resolvedDirectorNombre,
       estado: estadoVal,
     });
 
@@ -805,7 +834,7 @@ export default function BajaCatedra({
     if (!isGlobal && userUnitId && formData.unidad && Number(formData.unidad) !== Number(userUnitId)) {
       setFeedback({
         type: 'error',
-        message: 'No posee permisos para dar de baja cátedras de otra unidad académica.',
+        message: 'No tiene permisos para dar de baja cátedras en materias de otra unidad.',
       });
       return;
     }
@@ -813,7 +842,7 @@ export default function BajaCatedra({
     if (isCatedraDadaDeBaja(formData.estado)) {
       setFeedback({
         type: 'error',
-        message: `La cátedra "${formData.nombreCatedra}" ya está en estado "Dada de baja".`,
+        message: 'La cátedra ya se encuentra dada de baja.',
       });
       return;
     }
@@ -834,7 +863,7 @@ export default function BajaCatedra({
     if (!isGlobal && userUnitId && formData.unidad && Number(formData.unidad) !== Number(userUnitId)) {
       setFeedback({
         type: 'error',
-        message: 'No posee permisos para dar de baja cátedras de otra unidad académica.',
+        message: 'No tiene permisos para dar de baja cátedras en materias de otra unidad.',
       });
       return;
     }
@@ -842,7 +871,7 @@ export default function BajaCatedra({
     if (isCatedraDadaDeBaja(formData.estado)) {
       setFeedback({
         type: 'error',
-        message: `La cátedra "${formData.nombreCatedra}" ya está en estado "Dada de baja".`,
+        message: 'La cátedra ya se encuentra dada de baja.',
       });
       return;
     }
@@ -852,59 +881,76 @@ export default function BajaCatedra({
 
     try {
       const token = localStorage.getItem('token');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      // Execute PATCH /api/catedras/{id}/baja with fallback to DELETE /api/catedras/{id}
-      let response = await fetch(`${apiUrl}/api/catedras/${formData.catedraId}/baja`, {
+      // Execute PATCH /api/catedras/{id}/baja (RF-23) with empty request body
+      const response = await fetch(`${apiUrl}/api/catedras/${formData.catedraId}/baja`, {
         method: 'PATCH',
         headers,
       });
-
-      if (response.status === 404 || response.status === 405) {
-        const delRes = await fetch(`${apiUrl}/api/catedras/${formData.catedraId}`, {
-          method: 'DELETE',
-          headers,
-        }).catch(() => null);
-        if (delRes && delRes.ok) {
-          response = delRes;
-        }
-      }
 
       if (response.status === 401) {
         if (onLogout) onLogout();
         return;
       }
 
-      const data = await response.json().catch(() => null);
+      const rawText = await response.text().catch(() => '');
+      let data: any = null;
+      if (rawText) {
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { message: rawText };
+        }
+      }
 
       if (response.ok) {
+        const updatedEstado = data?.estado || 'De baja';
         setFormData((prev) => ({
           ...prev,
-          estado: 'Dada de baja',
+          estado: updatedEstado,
         }));
+        // Update in-memory materias/catedras state so subsequent searches reflect 'De baja'
+        setAllMaterias((prev) =>
+          prev.map((mat: any) => {
+            const catedrasList = mat.catedras || mat.catedraList;
+            if (!Array.isArray(catedrasList)) return mat;
+            const updatedCatedras = catedrasList.map((cat: any) =>
+              Number(cat.id ?? cat.catedraId) === Number(formData.catedraId)
+                ? { ...cat, estado: updatedEstado }
+                : cat
+            );
+            return {
+              ...mat,
+              ...(mat.catedras ? { catedras: updatedCatedras } : {}),
+              ...(mat.catedraList ? { catedraList: updatedCatedras } : {}),
+            };
+          })
+        );
+        setSuggestions((prev) =>
+          prev.filter((item) => Number(item.id) !== Number(formData.catedraId))
+        );
         setFeedback({
           type: 'success',
           message:
             data?.message ||
-            `La cátedra "${formData.nombreCatedra}" ha sido dada de baja exitosamente.`,
+            `La cátedra "${data?.nombre || formData.nombreCatedra}" ha sido dada de baja exitosamente (estado: "${updatedEstado}").`,
         });
       } else {
         let errorMsg = 'Error al dar de baja la cátedra.';
-        if (data && (data.message || data.error)) {
-          errorMsg = data.message || data.error;
+        if (typeof data === 'string' && data.trim()) {
+          errorMsg = data.trim();
+        } else if (data && (data.message || data.error || data.mensaje)) {
+          errorMsg = data.message || data.error || data.mensaje;
         } else if (response.status === 400) {
-          errorMsg = 'La cátedra ya se encuentra dada de baja o no cumple las condiciones requeridas.';
+          errorMsg = 'La cátedra ya se encuentra dada de baja';
         } else if (response.status === 403) {
-          errorMsg = 'No posee permisos para dar de baja cátedras en esta unidad académica.';
+          errorMsg = 'No tiene permisos para dar de baja cátedras en materias de otra unidad';
         } else if (response.status === 404) {
-          errorMsg = 'La cátedra especificada no existe o no fue encontrada.';
+          errorMsg = 'Cátedra no encontrada';
         } else if (response.status === 409) {
           errorMsg =
-            data?.message ||
             'Conflicto: No se puede dar de baja la cátedra porque posee designaciones o cargos activos asociados.';
         }
         setFeedback({ type: 'error', message: errorMsg });
@@ -1061,7 +1107,7 @@ export default function BajaCatedra({
                         <FiAlertTriangle className="baja-catedra-warning-icon" />
                         <span>
                           Esta cátedra ya ha sido dada de baja. Su estado actual es{' '}
-                          <strong>{formData.estado || 'Dada de baja'}</strong>.
+                          <strong>{formData.estado || 'De baja'}</strong>.
                         </span>
                       </div>
                     )}
@@ -1251,7 +1297,7 @@ export default function BajaCatedra({
                   {isSubmitting
                     ? 'Procesando...'
                     : isCatedraDadaDeBaja(formData.estado)
-                      ? 'Dada de baja'
+                      ? 'De baja'
                       : 'Confirmar'}
                 </span>
               </button>
@@ -1281,7 +1327,7 @@ export default function BajaCatedra({
               </p>
               <p className="baja-modal-subtext">
                 Esta acción dará de baja la cátedra en el sistema y cambiará su estado a{' '}
-                <strong>Dada de baja</strong>.
+                <strong>De baja</strong>.
               </p>
               <div className="baja-modal-actions">
                 <button
