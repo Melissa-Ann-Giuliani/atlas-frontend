@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import './Gestion.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
@@ -47,7 +47,7 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       options: [
         { id: 'alta_catedra', label: 'Alta de Cátedra', type: 'green', targetPage: 'alta_catedra' },
         { id: 'modificacion_catedra', label: 'Modificación de Cátedra', type: 'blue', targetPage: 'modificar_catedra' },
-        { id: 'baja_catedra', label: 'Baja de Cátedra', type: 'red' },
+        { id: 'baja_catedra', label: 'Baja de Cátedra', type: 'red', targetPage: 'baja_catedra' },
       ],
     },
     {
@@ -79,6 +79,8 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
       onNavigate('alta_catedra');
     } else if ((option.id === 'modificacion_catedra' || option.id === 'modificar_catedra') && onNavigate) {
       onNavigate('modificar_catedra');
+    } else if (option.id === 'baja_catedra' && onNavigate) {
+      onNavigate('baja_catedra');
     } else if ((option.id === 'alta_usuario' || option.id === 'nuevo_usuario') && onNavigate) {
       onNavigate('nuevo_usuario');
     } else if ((option.id === 'modificacion_usuario' || option.id === 'modificar_usuario') && onNavigate) {
