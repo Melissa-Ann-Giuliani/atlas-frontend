@@ -7,7 +7,6 @@ import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
   FiChevronLeft,
-  FiFilter,
   FiSearch,
   FiUserPlus,
   FiCalendar,
@@ -79,12 +78,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [activeTab, setActiveTab] = useState<TramiteTab>('designaciones');
   const [formData, setFormData] = useState<FormState>(initialFormState);
 
-  // Search & Filter state
+  // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-  const [filterCriteria, setFilterCriteria] = useState<'todos' | 'docente' | 'legajo' | 'resolucion'>('todos');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   // Modal & Cargo selection state
   const [isCargoModalOpen, setIsCargoModalOpen] = useState(false);
@@ -100,15 +99,11 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     message: string;
   } | null>(null);
 
-  const filterRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Close filter dropdown on outside click
+  // Close suggestions on outside click
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
-        setIsFilterDropdownOpen(false);
-      }
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
       }
@@ -123,6 +118,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     if (!trimmed || trimmed.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
       return;
     }
 
@@ -138,6 +134,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           const items = data.content || data || [];
           setSuggestions(items);
           setShowSuggestions(items.length > 0);
+          setActiveSuggestionIndex(-1);
         }
       } catch (err) {
         console.error('Error fetching suggestions:', err);
@@ -182,7 +179,74 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     }));
 
     setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
     setSearchQuery('');
+  };
+
+  const handleSearch = async (termToSearch?: string) => {
+    const term = (termToSearch !== undefined ? termToSearch : searchQuery).trim();
+    if (!term) return;
+
+    setIsSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=8`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        const items = data.content || data || [];
+        setSuggestions(items);
+        setActiveSuggestionIndex(-1);
+        if (items.length === 1) {
+          handleSelectDocente(items[0]);
+        } else if (items.length > 0) {
+          setShowSuggestions(true);
+        } else {
+          setFeedback({
+            type: 'info',
+            message: `No se encontraron docentes con el término "${term}".`,
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('Error al buscar docente:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length) {
+          handleSelectDocente(suggestions[activeSuggestionIndex]);
+          return;
+        }
+        setShowSuggestions(false);
+        handleSearch();
+        return;
+      }
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        return;
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
   };
 
   const handleFieldChange = (field: keyof FormState, value: any) => {
@@ -418,99 +482,76 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
             {/* Main Form Card */}
             <div className="designacion-card">
-              {/* Header Row: Title & Filter Widget */}
+              {/* Header Row: Title & Search Card */}
               <div className="designacion-card-header">
                 <h1 className="designacion-title">Datos de Designación</h1>
 
-                {/* Filter and Search Bar Widget */}
-                <div className="designacion-filter-widget" ref={searchContainerRef}>
-                  <div ref={filterRef} style={{ position: 'relative' }}>
+                {/* Search Bar matching Gestion style */}
+                <div className="designacion-search-card">
+                  <label htmlFor="searchDocenteInput" className="designacion-search-label">
+                    Buscar Docente por Nombre, Apellido o Legajo
+                  </label>
+                  <div className="designacion-search-row">
+                    <div className="designacion-search-input-wrap" ref={searchContainerRef}>
+                      <input
+                        id="searchDocenteInput"
+                        name="busqueda_docente_query"
+                        type="search"
+                        className="designacion-search-input"
+                        placeholder="Ingrese valor"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => {
+                          if (suggestions.length > 0) setShowSuggestions(true);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                      <FiSearch className="designacion-search-icon" />
+
+                      {/* Suggestions Dropdown */}
+                      {showSuggestions && suggestions.length > 0 && (
+                        <ul className="designacion-suggestions-list" role="listbox">
+                          {suggestions.map((item, idx) => (
+                            <li
+                              key={item.usuarioId || item.id || idx}
+                              className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectDocente(item);
+                              }}
+                              onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                              role="option"
+                              aria-selected={idx === activeSuggestionIndex}
+                            >
+                              <span className="designacion-suggestion-name">
+                                {item.apellido || item.apellidos}, {item.nombre || item.nombres}
+                              </span>
+                              <span className="designacion-suggestion-sub">
+                                {[
+                                  item.categoria,
+                                  item.unidad,
+                                  `ID/Legajo: ${item.usuarioId || item.id || item.legajo || ''}`,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' • ')}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
                     <button
                       type="button"
-                      className={`designacion-filter-btn ${isFilterDropdownOpen ? 'active' : ''}`}
-                      onClick={() => setIsFilterDropdownOpen((prev) => !prev)}
+                      className="designacion-search-btn"
+                      onClick={() => handleSearch()}
+                      disabled={isSearching}
                     >
-                      <FiFilter />
-                      <span>Filtros</span>
+                      <FiSearch />
+                      <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
                     </button>
-
-                    {isFilterDropdownOpen && (
-                      <div className="designacion-filter-dropdown">
-                        <button
-                          type="button"
-                          className="designacion-filter-dropdown-item"
-                          onClick={() => {
-                            setFilterCriteria('todos');
-                            setIsFilterDropdownOpen(false);
-                          }}
-                        >
-                          {filterCriteria === 'todos' ? '✓ ' : ''}Todos los campos
-                        </button>
-                        <button
-                          type="button"
-                          className="designacion-filter-dropdown-item"
-                          onClick={() => {
-                            setFilterCriteria('docente');
-                            setIsFilterDropdownOpen(false);
-                          }}
-                        >
-                          {filterCriteria === 'docente' ? '✓ ' : ''}Por Docente
-                        </button>
-                        <button
-                          type="button"
-                          className="designacion-filter-dropdown-item"
-                          onClick={() => {
-                            setFilterCriteria('legajo');
-                            setIsFilterDropdownOpen(false);
-                          }}
-                        >
-                          {filterCriteria === 'legajo' ? '✓ ' : ''}Por N° Legajo
-                        </button>
-                        <button
-                          type="button"
-                          className="designacion-filter-dropdown-item"
-                          onClick={() => {
-                            setFilterCriteria('resolucion');
-                            setIsFilterDropdownOpen(false);
-                          }}
-                        >
-                          {filterCriteria === 'resolucion' ? '✓ ' : ''}Por N° Resolución
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="designacion-search-wrapper">
-                    <input
-                      type="text"
-                      className="designacion-search-input"
-                      placeholder="Ingrese valor"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <FiSearch className="designacion-search-icon" />
-
-                    {/* Suggestions dropdown */}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div className="designacion-suggestions-menu">
-                        {suggestions.map((item) => (
-                          <div
-                            key={item.usuarioId || item.id}
-                            className="designacion-suggestion-item"
-                            onClick={() => handleSelectDocente(item)}
-                          >
-                            <span className="designacion-suggestion-name">
-                              {item.apellido || item.apellidos}, {item.nombre || item.nombres}
-                            </span>
-                            <span className="designacion-suggestion-sub">
-                              {item.categoria ? `${item.categoria} | ` : ''}
-                              {item.unidad ? `${item.unidad} | ` : ''}
-                              ID/Legajo: {item.usuarioId || item.id}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
