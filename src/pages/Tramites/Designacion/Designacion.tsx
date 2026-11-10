@@ -271,7 +271,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
   const handleIngresarDocenteNuevo = () => {
     if (onNavigate) {
-      onNavigate('nuevo_usuario');
+      onNavigate('nuevo_usuario', { initialRol: 'DOCENTE', returnPage: 'designacion' });
     }
   };
 
@@ -555,6 +555,9 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                   </div>
                 </div>
               </div>
+
+              {/* Divider between Card Header and Form */}
+              <hr className="designacion-card-divider" />
 
               {/* Form Fields */}
               <form

@@ -107,6 +107,14 @@ function App() {
     }
   });
 
+  const [newUserInitialRole, setNewUserInitialRole] = useState<string | null>(() => {
+    return sessionStorage.getItem('atlas_new_user_initial_role');
+  });
+
+  const [newUserReturnPage, setNewUserReturnPage] = useState<Page | null>(() => {
+    return (sessionStorage.getItem('atlas_new_user_return_page') as Page) || null;
+  });
+
   const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
     try {
       const saved = sessionStorage.getItem('atlas_cargo_history');
@@ -183,6 +191,8 @@ function App() {
     sessionStorage.removeItem('atlas_selected_licencia');
     sessionStorage.removeItem('atlas_cargo_history');
     sessionStorage.removeItem('atlas_listado_tab');
+    sessionStorage.removeItem('atlas_new_user_initial_role');
+    sessionStorage.removeItem('atlas_new_user_return_page');
     setIsAuthenticated(false);
   };
 
@@ -314,6 +324,23 @@ function App() {
       setSelectedDocente(data || null);
     }
 
+    if (page === 'nuevo_usuario') {
+      const role = typeof data === 'string' ? data : data?.initialRol || data?.rol || null;
+      const returnPage = data?.returnPage || null;
+      setNewUserInitialRole(role);
+      setNewUserReturnPage(returnPage);
+      if (role) {
+        sessionStorage.setItem('atlas_new_user_initial_role', role);
+      } else {
+        sessionStorage.removeItem('atlas_new_user_initial_role');
+      }
+      if (returnPage) {
+        sessionStorage.setItem('atlas_new_user_return_page', returnPage);
+      } else {
+        sessionStorage.removeItem('atlas_new_user_return_page');
+      }
+    }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
@@ -397,7 +424,8 @@ function App() {
             <NuevoUsuario
               onLogout={handleLogout}
               onNavigate={handleNavigate}
-              onBack={() => handleNavigate('gestion')}
+              onBack={() => handleNavigate(newUserReturnPage || 'gestion')}
+              initialRol={newUserInitialRole || undefined}
             />
           );
 

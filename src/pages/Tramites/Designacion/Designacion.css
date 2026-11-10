@@ -162,6 +162,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -173,20 +174,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
+/* Divider between Header and Form */
+.designacion-card-divider {
+  border: none;
+  border-top: 1px solid #D8CBB6;
+  margin: 0 0 24px 0;
+  width: 100%;
+}
+
 .designacion-title {
   font-family: 'DM Serif Display', serif;
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 500;
   color: #1A2E1C;
   margin: 0;
   text-decoration: underline;
-  text-underline-offset: 6px;
-  text-decoration-thickness: 1.5px;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
   letter-spacing: -0.2px;
 }
 
@@ -601,8 +610,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .designacion-modal-card {
@@ -624,6 +638,7 @@
     transform: scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -808,23 +823,29 @@
   .designacion-content-area {
     padding: 16px;
   }
+
   .designacion-card {
     padding: 20px;
   }
+
   .designacion-btn-nuevo-docente {
     margin-left: 0;
   }
+
   .designacion-field-group.medium,
   .designacion-field-group.small,
   .designacion-field-group.date {
     width: 100%;
   }
+
   .designacion-search-card {
     width: 100%;
   }
+
   .designacion-search-row {
     flex-wrap: wrap;
   }
+
   .designacion-search-input-wrap {
     width: 100%;
   }

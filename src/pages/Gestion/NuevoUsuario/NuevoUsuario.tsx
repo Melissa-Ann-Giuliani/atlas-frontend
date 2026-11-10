@@ -13,6 +13,7 @@ interface NuevoUsuarioProps {
   onLogout?: () => void;
   onNavigate?: (page: any, data?: any) => void;
   onBack?: () => void;
+  initialRol?: string;
 }
 
 interface FormState {
@@ -118,8 +119,23 @@ const generateSecureRandomPassword = (): string => {
   return result;
 };
 
-export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsuarioProps) {
-  const [formData, setFormData] = useState<FormState>(initialFormState);
+export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol }: NuevoUsuarioProps) {
+  const [formData, setFormData] = useState<FormState>(() => {
+    let preselectedRol = '';
+    if (initialRol) {
+      const match = defaultRoles.find(
+        (r) =>
+          String(r.id).toLowerCase() === initialRol.toLowerCase() ||
+          String(r.nombre || '').toLowerCase() === initialRol.toLowerCase() ||
+          String(r.label || '').toLowerCase() === initialRol.toLowerCase()
+      );
+      preselectedRol = match ? String(match.id) : initialRol;
+    }
+    return {
+      ...initialFormState,
+      rol: preselectedRol,
+    };
+  });
   const [roles, setRoles] = useState<RoleOption[]>(defaultRoles);
   const [isLoadingRoles, setIsLoadingRoles] = useState<boolean>(true);
   const [isLoadingPassword, setIsLoadingPassword] = useState<boolean>(false);
@@ -208,6 +224,17 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
               };
             });
             setRoles(mappedRoles);
+            if (initialRol) {
+              const match = mappedRoles.find(
+                (r) =>
+                  String(r.id).toLowerCase() === initialRol.toLowerCase() ||
+                  String(r.nombre || '').toLowerCase() === initialRol.toLowerCase() ||
+                  String(r.label || '').toLowerCase() === initialRol.toLowerCase()
+              );
+              if (match) {
+                setFormData((prev) => ({ ...prev, rol: String(match.id) }));
+              }
+            }
           }
         }
       } catch (err) {
@@ -218,7 +245,21 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack }: NuevoUsua
     };
 
     fetchInitialData();
-  }, [onLogout]);
+  }, [onLogout, initialRol]);
+
+  useEffect(() => {
+    if (initialRol && roles.length > 0) {
+      const match = roles.find(
+        (r) =>
+          String(r.id).toLowerCase() === initialRol.toLowerCase() ||
+          String(r.nombre || '').toLowerCase() === initialRol.toLowerCase() ||
+          String(r.label || '').toLowerCase() === initialRol.toLowerCase()
+      );
+      if (match) {
+        setFormData((prev) => (String(prev.rol) !== String(match.id) ? { ...prev, rol: String(match.id) } : prev));
+      }
+    }
+  }, [initialRol, roles]);
 
   const [cargosAdminGlobal, setCargosAdminGlobal] = useState<CargoOption[]>([]);
   const [isLoadingCargos, setIsLoadingCargos] = useState<boolean>(false);
