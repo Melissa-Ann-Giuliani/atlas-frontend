@@ -18,13 +18,15 @@ import BajaUsuario from './pages/Gestion/BajaUsuario/BajaUsuario'
 import AltaCatedra from './pages/Gestion/AltaCatedra/AltaCatedra'
 import ModificarCatedra from './pages/Gestion/ModificarCatedra/ModificarCatedra'
 import BajaCatedra from './pages/Gestion/BajaCatedra/BajaCatedra'
+import Designacion from './pages/Tramites/Designacion/Designacion'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra' | 'baja_catedra';
+type Page = 'inicio' | 'listado' | 'tramites' | 'designacion' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra' | 'baja_catedra';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
   if (page === 'cargo_detalle') return 'listado/cargo_detalle';
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
+  if (page === 'tramites' || page === 'designacion') return 'tramites';
   if (page === 'modificar_docente' || page === 'modificar_usuario') return 'gestion/modificar_usuario';
   if (page === 'baja_usuario') return 'gestion/baja_usuario';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
@@ -47,6 +49,7 @@ const getPageFromPath = (path: string): Page => {
   if (path === 'gestion/modificar_docente' || path === 'gestion/modificar_usuario') return 'modificar_usuario';
   if (path === 'gestion/baja_usuario') return 'baja_usuario';
   if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
+  if (path === 'tramites' || path === 'tramites/designacion' || path === 'designacion') return 'tramites';
   if (path === 'gestion/alta_cargo') return 'alta_cargo';
   if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
   if (path === 'gestion/alta_materia') return 'alta_materia';
@@ -59,7 +62,7 @@ const getPageFromPath = (path: string): Page => {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra', 'modificar_catedra', 'baja_catedra'];
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'designacion', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra', 'modificar_catedra', 'baja_catedra'];
   const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
@@ -102,6 +105,14 @@ function App() {
     } catch {
       return null;
     }
+  });
+
+  const [newUserInitialRole, setNewUserInitialRole] = useState<string | null>(() => {
+    return sessionStorage.getItem('atlas_new_user_initial_role');
+  });
+
+  const [newUserReturnPage, setNewUserReturnPage] = useState<Page | null>(() => {
+    return (sessionStorage.getItem('atlas_new_user_return_page') as Page) || null;
   });
 
   const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
@@ -180,6 +191,8 @@ function App() {
     sessionStorage.removeItem('atlas_selected_licencia');
     sessionStorage.removeItem('atlas_cargo_history');
     sessionStorage.removeItem('atlas_listado_tab');
+    sessionStorage.removeItem('atlas_new_user_initial_role');
+    sessionStorage.removeItem('atlas_new_user_return_page');
     setIsAuthenticated(false);
   };
 
@@ -311,6 +324,23 @@ function App() {
       setSelectedDocente(data || null);
     }
 
+    if (page === 'nuevo_usuario') {
+      const role = typeof data === 'string' ? data : data?.initialRol || data?.rol || null;
+      const returnPage = data?.returnPage || null;
+      setNewUserInitialRole(role);
+      setNewUserReturnPage(returnPage);
+      if (role) {
+        sessionStorage.setItem('atlas_new_user_initial_role', role);
+      } else {
+        sessionStorage.removeItem('atlas_new_user_initial_role');
+      }
+      if (returnPage) {
+        sessionStorage.setItem('atlas_new_user_return_page', returnPage);
+      } else {
+        sessionStorage.removeItem('atlas_new_user_return_page');
+      }
+    }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
@@ -394,7 +424,8 @@ function App() {
             <NuevoUsuario
               onLogout={handleLogout}
               onNavigate={handleNavigate}
-              onBack={() => handleNavigate('gestion')}
+              onBack={() => handleNavigate(newUserReturnPage || 'gestion')}
+              initialRol={newUserInitialRole || undefined}
             />
           );
 
@@ -508,6 +539,16 @@ function App() {
 
         case 'gestion':
           return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
+
+        case 'tramites':
+        case 'designacion':
+          return (
+            <Designacion
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('inicio')}
+            />
+          );
 
         case 'inicio':
         default:

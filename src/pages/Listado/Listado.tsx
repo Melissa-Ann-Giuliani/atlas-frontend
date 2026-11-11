@@ -29,6 +29,7 @@ interface Cargo {
 
 interface Docente {
   usuarioId?: number;
+  legajo?: number | string;
   nombre: string;
   apellido?: string;
   origen: string;
@@ -45,6 +46,16 @@ interface ListadoProps {
   initialTab?: 'docentes' | 'cargos' | 'licencias';
   onTabChange?: (tab: 'docentes' | 'cargos' | 'licencias') => void;
 }
+
+const calculateRowsPerPage = (height: number): number => {
+  if (height < 700) {
+    return 6;
+  } else if (height < 900) {
+    return 8;
+  } else {
+    return 12;
+  }
+};
 
 export default function Listado({
   onLogout,
@@ -131,18 +142,17 @@ export default function Listado({
   const [licenciasData, setLicenciasData] = useState<Licencia[]>([]);
 
   // Rows per page based on screen height
-  const [rowsPerPage, setRowsPerPage] = useState(12);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      return calculateRowsPerPage(window.innerHeight);
+    }
+    return 12;
+  });
 
   useEffect(() => {
     const handleResize = () => {
       const height = window.innerHeight;
-      if (height < 700) {
-        setRowsPerPage(6);
-      } else if (height < 900) {
-        setRowsPerPage(8);
-      } else {
-        setRowsPerPage(12);
-      }
+      setRowsPerPage(calculateRowsPerPage(height));
       setCurrentPage(1); // Reset to page 1 on resize to prevent out of bounds
     };
 
@@ -465,6 +475,7 @@ export default function Listado({
                       </tr>
                     ) : (
                       <tr>
+                        <th>N° Legajo</th>
                         <th>Nombre</th>
                         <th>Origen</th>
                         <th>Unidad</th>
@@ -478,7 +489,7 @@ export default function Listado({
                   <tbody>
                     {isLoading ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>Cargando {activeTab}...</td>
+                        <td colSpan={activeTab === 'docentes' ? 8 : 7} style={{ textAlign: 'center', padding: '24px' }}>Cargando {activeTab}...</td>
                       </tr>
                     ) : activeTab === 'cargos' ? (
                       cargosData.length === 0 ? (
@@ -519,11 +530,12 @@ export default function Listado({
                     ) : (
                       docentesData.length === 0 ? (
                         <tr>
-                          <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron docentes</td>
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron docentes</td>
                         </tr>
                       ) : (
                         docentesData.map((docente, idx) => (
                           <tr key={idx} onClick={() => onNavigate && onNavigate('docente_detalle', docente)} style={{ cursor: 'pointer' }}>
+                            <td>{docente.legajo ?? '-'}</td>
                             <td>{docente.apellido ? `${docente.apellido}, ${docente.nombre}` : docente.nombre}</td>
                             <td>{docente.origen}</td>
                             <td>{docente.unidad}</td>
