@@ -11,6 +11,7 @@ import {
   FiUserPlus,
   FiCalendar,
   FiTrash2,
+  FiEdit,
   FiX,
   FiCheck
 } from 'react-icons/fi';
@@ -46,10 +47,102 @@ interface CargoOption {
   estado?: string;
 }
 
-export const isDocenteLibre = (docente: any): boolean => {
+export const isDocenteInactivo = (docente: any): boolean => {
   if (!docente) return false;
-  const estado = String(docente.estado || docente.docenteEstado || docente.estadoDocente || '').trim().toLowerCase();
-  return estado === 'libre' && !estado.startsWith('activ');
+  const rawEstado =
+    docente.estado ??
+    docente.docenteEstado ??
+    docente.estadoDocente ??
+    docente.datosPersonales?.estado ??
+    docente.docente?.estado ??
+    '';
+  const estado = String(rawEstado).trim().toLowerCase();
+  // Match 'inactivo' or newly created docentes without an assigned estado yet (excluding active/licencia)
+  return estado === 'inactivo' || (!estado && !docente.cargoId && !docente.nroCargo);
+};
+
+const fetchInactivoDocentesByTerm = async (term: string, apiUrl: string, headers: HeadersInit): Promise<any[]> => {
+  const resultsMap = new Map<string | number, any>();
+
+  const addCandidates = (items: any[], fromUsuariosEndpoint = false) => {
+    for (const item of items) {
+      if (!item) continue;
+      // Exclude soft-deleted users if activo === false
+      if (item.activo === false) continue;
+
+      const key = item.usuarioId ?? item.id ?? item.legajo ?? item.dni ?? `${item.apellido}-${item.nombre}`;
+      if (fromUsuariosEndpoint) {
+        if (!resultsMap.has(key)) {
+          const rawEst = item.estado ?? item.docenteEstado ?? item.docente?.estado;
+          const normalized = {
+            ...item,
+            usuarioId: item.usuarioId ?? item.id,
+            apellido: item.apellido || item.datosPersonales?.apellido || '',
+            nombre: item.nombre || item.datosPersonales?.nombre || '',
+            legajo: item.legajo ?? item.docente?.legajo ?? item.datosPersonales?.legajo,
+            estado: rawEst || 'Inactivo',
+          };
+          if (isDocenteInactivo(normalized)) {
+            resultsMap.set(key, normalized);
+          }
+        }
+      } else if (isDocenteInactivo(item)) {
+        resultsMap.set(key, item);
+      }
+    }
+  };
+
+  // Query both /api/usuarios (with rol=Docente and rol=DOCENTE) and /api/docentes (for when backend supports estado=Inactivo)
+  const [resUsersTitle, resUsersUpper, resDocentesInactivo] = await Promise.all([
+    fetch(`${apiUrl}/api/usuarios?search=${encodeURIComponent(term)}&rol=Docente&size=20`, { headers }).catch(() => null),
+    fetch(`${apiUrl}/api/usuarios?search=${encodeURIComponent(term)}&rol=DOCENTE&size=20`, { headers }).catch(() => null),
+    fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&estado=Inactivo&size=20`, { headers }).catch(() => null),
+  ]);
+
+  if (resDocentesInactivo?.ok) {
+    const data = await resDocentesInactivo.json().catch(() => null);
+    const items: any[] = data?.content || (Array.isArray(data) ? data : []);
+    addCandidates(items);
+  }
+
+  for (const resUsers of [resUsersTitle, resUsersUpper]) {
+    if (resUsers?.ok) {
+      const data = await resUsers.json().catch(() => null);
+      const items: any[] = data?.content || (Array.isArray(data) ? data : []);
+      addCandidates(items, true);
+    }
+  }
+
+  const candidates = Array.from(resultsMap.values()).slice(0, 8);
+
+  // Enrich candidates missing legajo from /api/docentes/{id}
+  await Promise.all(
+    candidates.map(async (item) => {
+      if (item.legajo) return;
+      const docId = item.usuarioId || item.id;
+      if (!docId) return;
+      try {
+        const resDetail = await fetch(`${apiUrl}/api/docentes/${docId}`, { headers });
+        if (resDetail.ok) {
+          const detail = await resDetail.json();
+          const resolvedLegajo =
+            detail.legajo ??
+            detail.datosPersonales?.legajo ??
+            detail.designacionesYCargos?.[0]?.legajo;
+          if (resolvedLegajo) {
+            item.legajo = resolvedLegajo;
+          }
+          if (detail.datosPersonales?.estado && !item.estado) {
+            item.estado = detail.datosPersonales.estado;
+          }
+        }
+      } catch {
+        // ignore enrichment error
+      }
+    })
+  );
+
+  return candidates;
 };
 
 const initialFormState: FormState = {
@@ -61,24 +154,6 @@ const initialFormState: FormState = {
   fechaComienzo: null,
   fechaFinalizacion: null,
 };
-
-// Custom SVG icon matching the document-with-assign-arrow symbol from screenshot
-const AsignarCargoIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <path d="M9 15l3 3 5-5" />
-  </svg>
-);
 
 export default function Designacion({ onLogout, onNavigate, onBack }: DesignacionProps) {
   const [activeTab, setActiveTab] = useState<TramiteTab>('designaciones');
@@ -134,15 +209,10 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-        const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(trimmed)}&size=20`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          const items: any[] = data.content || (Array.isArray(data) ? data : []);
-          const libreDocentes = items.filter(isDocenteLibre).slice(0, 8);
-          setSuggestions(libreDocentes);
-          setShowSuggestions(libreDocentes.length > 0);
-          setActiveSuggestionIndex(-1);
-        }
+        const inactivosDocentes = await fetchInactivoDocentesByTerm(trimmed, apiUrl, headers);
+        setSuggestions(inactivosDocentes);
+        setShowSuggestions(inactivosDocentes.length > 0);
+        setActiveSuggestionIndex(-1);
       } catch (err) {
         console.error('Error fetching suggestions:', err);
       }
@@ -153,7 +223,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
   const handleSelectDocente = async (docente: any) => {
     const docId = docente.usuarioId || docente.id;
-    let resolvedLegajo = String(docente.usuarioId || docente.legajo || docente.dni || '');
+    let resolvedLegajo = String(docente.legajo || docente.usuarioId || docente.dni || '');
     let resolvedResolucion = '';
 
     // Optionally fetch full details if available
@@ -165,8 +235,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       if (res.ok) {
         const fullData = await res.json();
         const des = fullData.designacionesYCargos?.[0];
-        if (des?.legajo) {
-          resolvedLegajo = String(des.legajo);
+        if (fullData.legajo || fullData.datosPersonales?.legajo || des?.legajo) {
+          resolvedLegajo = String(fullData.legajo || fullData.datosPersonales?.legajo || des?.legajo);
         }
         if (des?.nroResolucion) {
           resolvedResolucion = String(des.nroResolucion);
@@ -200,23 +270,18 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=20`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        const items: any[] = data.content || (Array.isArray(data) ? data : []);
-        const libreDocentes = items.filter(isDocenteLibre).slice(0, 8);
-        setSuggestions(libreDocentes);
-        setActiveSuggestionIndex(-1);
-        if (libreDocentes.length === 1) {
-          handleSelectDocente(libreDocentes[0]);
-        } else if (libreDocentes.length > 0) {
-          setShowSuggestions(true);
-        } else {
-          setFeedback({
-            type: 'info',
-            message: `No se encontraron docentes disponibles en estado "Libre" con el término "${term}".`,
-          });
-        }
+      const inactivosDocentes = await fetchInactivoDocentesByTerm(term, apiUrl, headers);
+      setSuggestions(inactivosDocentes);
+      setActiveSuggestionIndex(-1);
+      if (inactivosDocentes.length === 1) {
+        handleSelectDocente(inactivosDocentes[0]);
+      } else if (inactivosDocentes.length > 0) {
+        setShowSuggestions(true);
+      } else {
+        setFeedback({
+          type: 'info',
+          message: `No se encontraron docentes disponibles en estado "Inactivo" con el término "${term}".`,
+        });
       }
     } catch (err: any) {
       console.error('Error al buscar docente:', err);
@@ -540,7 +605,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                                 {[
                                   item.categoria,
                                   item.unidad,
-                                  item.legajo ? `Legajo: ${item.legajo}` : (item.usuarioId || item.id ? `ID: ${item.usuarioId || item.id}` : ''),
+                                  item.legajo ? `Legajo: ${item.legajo}` : '',
                                   item.estado ? `Estado: ${item.estado}` : '',
                                 ]
                                   .filter(Boolean)
@@ -726,7 +791,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                 className="designacion-btn-asignar"
                 onClick={handleOpenAsignarCargo}
               >
-                <AsignarCargoIcon />
+                <FiEdit size={18} />
                 <span>Asignar cargo</span>
               </button>
             </div>
@@ -855,4 +920,3 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     </div>
   );
 }
-
