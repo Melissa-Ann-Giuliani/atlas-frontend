@@ -33,6 +33,7 @@ interface FormState {
   emailInstitucional: string;
   fechaIngreso: string;
   antigPrevia: string;
+  legajo: string;
 }
 
 interface RoleOption {
@@ -99,6 +100,7 @@ const initialFormState: FormState = {
   emailInstitucional: '',
   fechaIngreso: '',
   antigPrevia: '',
+  legajo: '',
 };
 
 const generateSecureRandomPassword = (): string => {
@@ -759,6 +761,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
             emailInstitucional: formData.emailInstitucional.trim() || undefined,
             fechaIngreso: formData.fechaIngreso || undefined,
             antigPrevia: formData.antigPrevia.trim() ? Number(formData.antigPrevia.trim()) : 0,
+            legajo: formData.legajo.trim() ? Number(formData.legajo.trim()) : undefined,
           }
           : {}),
       };
@@ -1199,6 +1202,23 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                           </div>
 
                           {/* Fila 2 */}
+                          <div className="nuevo-usuario-field">
+                            <label htmlFor="legajo" className="nuevo-usuario-label">
+                              N° Legajo
+                            </label>
+                            <input
+                              id="legajo"
+                              name="docente_legajo"
+                              type="number"
+                              min="1"
+                              className="nuevo-usuario-input"
+                              placeholder="Ingrese valor"
+                              value={formData.legajo}
+                              onChange={(e) => handleChange('legajo', e.target.value)}
+                              autoComplete="off"
+                            />
+                          </div>
+
                           <div className="nuevo-usuario-field">
                             <label htmlFor="emailInstitucional" className="nuevo-usuario-label">
                               Email Institucional

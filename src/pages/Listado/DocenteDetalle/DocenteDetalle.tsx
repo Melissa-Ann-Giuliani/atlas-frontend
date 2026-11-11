@@ -19,11 +19,14 @@ interface Docente {
   estado?: string;
   tipoUnidadNombre?: string;
   dni?: number | string;
+  legajo?: number | string;
 }
 
 interface DocenteDetailsDTO {
+  legajo?: number;
   datosPersonales: {
     dni: number;
+    legajo?: number;
     emailInstitucional: string;
     telefonos: string[];
     nombre: string;
@@ -272,6 +275,11 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                       </div>
 
                       <div className="info-group">
+                        <span className="info-label">N° LEGAJO</span>
+                        <span className="info-value">{datosPersonales?.legajo || detalle?.legajo || docente.legajo || 'No especificado'}</span>
+                      </div>
+
+                      <div className="info-group">
                         <span className="info-label">EMAIL INSTITUCIONAL</span>
                         <span className="info-value">{datosPersonales?.emailInstitucional || 'No especificado'}</span>
                       </div>
@@ -295,7 +303,7 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                     <div className="info-grid-2">
                       <div className="info-group">
                         <span className="info-label">N° LEGAJO</span>
-                        <span className="info-value">{designacion?.legajo || 'No especificado'}</span>
+                        <span className="info-value">{datosPersonales?.legajo || detalle?.legajo || designacion?.legajo || docente.legajo || 'No especificado'}</span>
                       </div>
                       <div className="info-group">
                         <span className="info-label">N° RESOLUCIÓN</span>

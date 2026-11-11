@@ -46,6 +46,12 @@ interface CargoOption {
   estado?: string;
 }
 
+export const isDocenteLibre = (docente: any): boolean => {
+  if (!docente) return false;
+  const estado = String(docente.estado || docente.docenteEstado || docente.estadoDocente || '').trim().toLowerCase();
+  return estado === 'libre' && !estado.startsWith('activ');
+};
+
 const initialFormState: FormState = {
   docenteId: null,
   legajo: '',
@@ -128,12 +134,13 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-        const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(trimmed)}&size=8`, { headers });
+        const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(trimmed)}&size=20`, { headers });
         if (res.ok) {
           const data = await res.json();
-          const items = data.content || data || [];
-          setSuggestions(items);
-          setShowSuggestions(items.length > 0);
+          const items: any[] = data.content || (Array.isArray(data) ? data : []);
+          const libreDocentes = items.filter(isDocenteLibre).slice(0, 8);
+          setSuggestions(libreDocentes);
+          setShowSuggestions(libreDocentes.length > 0);
           setActiveSuggestionIndex(-1);
         }
       } catch (err) {
@@ -193,20 +200,21 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=8`, { headers });
+      const res = await fetch(`${apiUrl}/api/docentes?search=${encodeURIComponent(term)}&size=20`, { headers });
       if (res.ok) {
         const data = await res.json();
-        const items = data.content || data || [];
-        setSuggestions(items);
+        const items: any[] = data.content || (Array.isArray(data) ? data : []);
+        const libreDocentes = items.filter(isDocenteLibre).slice(0, 8);
+        setSuggestions(libreDocentes);
         setActiveSuggestionIndex(-1);
-        if (items.length === 1) {
-          handleSelectDocente(items[0]);
-        } else if (items.length > 0) {
+        if (libreDocentes.length === 1) {
+          handleSelectDocente(libreDocentes[0]);
+        } else if (libreDocentes.length > 0) {
           setShowSuggestions(true);
         } else {
           setFeedback({
             type: 'info',
-            message: `No se encontraron docentes con el término "${term}".`,
+            message: `No se encontraron docentes disponibles en estado "Libre" con el término "${term}".`,
           });
         }
       }
@@ -532,7 +540,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                                 {[
                                   item.categoria,
                                   item.unidad,
-                                  `ID/Legajo: ${item.usuarioId || item.id || item.legajo || ''}`,
+                                  item.legajo ? `Legajo: ${item.legajo}` : (item.usuarioId || item.id ? `ID: ${item.usuarioId || item.id}` : ''),
+                                  item.estado ? `Estado: ${item.estado}` : '',
                                 ]
                                   .filter(Boolean)
                                   .join(' • ')}
@@ -567,112 +576,120 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                   handleOpenAsignarCargo();
                 }}
               >
-                {/* Row 1: N° Legajo & N° Resolución */}
-                <div className="designacion-form-row">
-                  <div className="designacion-field-group small">
-                    <label htmlFor="legajoInput" className="designacion-label">
-                      N° Legajo
-                    </label>
-                    <input
-                      id="legajoInput"
-                      type="text"
-                      className="designacion-input"
-                      placeholder="Ingrese valor"
-                      value={formData.legajo}
-                      onChange={(e) => handleFieldChange('legajo', e.target.value)}
-                    />
+                {/* Section 1: Datos del Docente */}
+                <div className="designacion-form-section">
+                  <div className="designacion-section-header">
+                    <h3 className="designacion-section-title">Datos del Docente</h3>
+                    <button
+                      type="button"
+                      className="designacion-btn-nuevo-docente"
+                      onClick={handleIngresarDocenteNuevo}
+                    >
+                      <FiUserPlus size={18} />
+                      <span>Ingresar docente nuevo</span>
+                    </button>
                   </div>
 
-                  <div className="designacion-field-group small">
-                    <label htmlFor="nroResolucionInput" className="designacion-label">
-                      N° Resolución
-                    </label>
-                    <input
-                      id="nroResolucionInput"
-                      type="text"
-                      className="designacion-input"
-                      placeholder="Ingrese valor"
-                      value={formData.nroResolucion}
-                      onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Apellido/s, Nombre/s & Button Ingresar docente nuevo */}
-                <div className="designacion-form-row">
-                  <div className="designacion-field-group medium">
-                    <label htmlFor="apellidoInput" className="designacion-label">
-                      Apellido/s
-                    </label>
-                    <input
-                      id="apellidoInput"
-                      type="text"
-                      className="designacion-input"
-                      placeholder="Castelli"
-                      value={formData.apellido}
-                      onChange={(e) => handleFieldChange('apellido', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="designacion-field-group medium">
-                    <label htmlFor="nombreInput" className="designacion-label">
-                      Nombre/s
-                    </label>
-                    <input
-                      id="nombreInput"
-                      type="text"
-                      className="designacion-input"
-                      placeholder="Sandra"
-                      value={formData.nombre}
-                      onChange={(e) => handleFieldChange('nombre', e.target.value)}
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    className="designacion-btn-nuevo-docente"
-                    onClick={handleIngresarDocenteNuevo}
-                  >
-                    <FiUserPlus size={18} />
-                    <span>Ingresar docente nuevo</span>
-                  </button>
-                </div>
-
-                {/* Row 3: Fecha de Comienzo & Fecha Finalización */}
-                <div className="designacion-form-row">
-                  <div className="designacion-field-group date">
-                    <label htmlFor="fechaComienzoInput" className="designacion-label">
-                      Fecha de Comienzo
-                    </label>
-                    <div className="designacion-date-wrapper">
-                      <DatePicker
-                        id="fechaComienzoInput"
-                        selected={formData.fechaComienzo}
-                        onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
-                        dateFormat="dd/MM/yyyy"
-                        locale="es"
-                        placeholderText="01/09/2026"
-                        autoComplete="off"
+                  <div className="designacion-form-row">
+                    <div className="designacion-field-group small">
+                      <label htmlFor="legajoInput" className="designacion-label">
+                        N° Legajo
+                      </label>
+                      <input
+                        id="legajoInput"
+                        type="text"
+                        className="designacion-input"
+                        placeholder="Ingrese valor"
+                        value={formData.legajo}
+                        onChange={(e) => handleFieldChange('legajo', e.target.value)}
                       />
-                      <FiCalendar className="designacion-calendar-icon" />
+                    </div>
+
+                    <div className="designacion-field-group medium">
+                      <label htmlFor="apellidoInput" className="designacion-label">
+                        Apellido/s
+                      </label>
+                      <input
+                        id="apellidoInput"
+                        type="text"
+                        className="designacion-input"
+                        placeholder="Castelli"
+                        value={formData.apellido}
+                        onChange={(e) => handleFieldChange('apellido', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="designacion-field-group medium">
+                      <label htmlFor="nombreInput" className="designacion-label">
+                        Nombre/s
+                      </label>
+                      <input
+                        id="nombreInput"
+                        type="text"
+                        className="designacion-input"
+                        placeholder="Sandra"
+                        value={formData.nombre}
+                        onChange={(e) => handleFieldChange('nombre', e.target.value)}
+                      />
                     </div>
                   </div>
+                </div>
 
-                  <div className="designacion-field-group date">
-                    <label htmlFor="fechaFinalizacionInput" className="designacion-label">
-                      Fecha Finalización
-                    </label>
-                    <div className="designacion-date-wrapper">
-                      <DatePicker
-                        id="fechaFinalizacionInput"
-                        selected={formData.fechaFinalizacion}
-                        onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
-                        dateFormat="dd/MM/yyyy"
-                        locale="es"
-                        placeholderText="06/10/2026"
-                        autoComplete="off"
+                {/* Section 2: Período y Resolución */}
+                <div className="designacion-form-section">
+                  <div className="designacion-section-header">
+                    <h3 className="designacion-section-title">Período y Resolución</h3>
+                  </div>
+
+                  <div className="designacion-form-row">
+                    <div className="designacion-field-group small">
+                      <label htmlFor="nroResolucionInput" className="designacion-label">
+                        N° Resolución
+                      </label>
+                      <input
+                        id="nroResolucionInput"
+                        type="text"
+                        className="designacion-input"
+                        placeholder="Ingrese valor"
+                        value={formData.nroResolucion}
+                        onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
                       />
-                      <FiCalendar className="designacion-calendar-icon" />
+                    </div>
+
+                    <div className="designacion-field-group date">
+                      <label htmlFor="fechaComienzoInput" className="designacion-label">
+                        Fecha de Comienzo
+                      </label>
+                      <div className="designacion-date-wrapper">
+                        <DatePicker
+                          id="fechaComienzoInput"
+                          selected={formData.fechaComienzo}
+                          onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
+                          dateFormat="dd/MM/yyyy"
+                          locale="es"
+                          placeholderText="01/09/2026"
+                          autoComplete="off"
+                        />
+                        <FiCalendar className="designacion-calendar-icon" />
+                      </div>
+                    </div>
+
+                    <div className="designacion-field-group date">
+                      <label htmlFor="fechaFinalizacionInput" className="designacion-label">
+                        Fecha Finalización
+                      </label>
+                      <div className="designacion-date-wrapper">
+                        <DatePicker
+                          id="fechaFinalizacionInput"
+                          selected={formData.fechaFinalizacion}
+                          onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
+                          dateFormat="dd/MM/yyyy"
+                          locale="es"
+                          placeholderText="06/10/2026"
+                          autoComplete="off"
+                        />
+                        <FiCalendar className="designacion-calendar-icon" />
+                      </div>
                     </div>
                   </div>
                 </div>
