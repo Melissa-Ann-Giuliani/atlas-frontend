@@ -12,8 +12,7 @@ import {
   FiCalendar,
   FiTrash2,
   FiEdit,
-  FiX,
-  FiCheck
+  FiX
 } from 'react-icons/fi';
 
 registerLocale('es', es);
@@ -40,12 +39,48 @@ interface CargoOption {
   id: number;
   codigo?: number;
   numero?: number;
+  fechaCreacion?: string;
+  horasOcupadas?: number | string;
+  origen?: string;
+  caracter?: string;
   categoria?: string;
   dedicacion?: string;
+  designacion?: string | number;
   unidad?: string;
   unidadNombre?: string;
+  materia?: string;
+  plan?: string | number;
   estado?: string;
 }
+
+const CrearCargoIcon = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h7" />
+    <path d="M14 2v6h6" />
+    <path d="M18.5 15.5a1.5 1.5 0 0 1 2.12 2.12L16 22.24l-3 .76.76-3 4.74-4.5z" />
+  </svg>
+);
+
+const formatCargoDate = (dateStr?: string): string => {
+  if (!dateStr) return '--/--/----';
+  const clean = String(dateStr).split('T')[0];
+  const parts = clean.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  }
+  return clean;
+};
 
 export const isDocenteInactivo = (docente: any): boolean => {
   if (!docente) return false;
@@ -166,9 +201,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
-  // Modal & Cargo selection state
-  const [isCargoModalOpen, setIsCargoModalOpen] = useState(false);
-  const [cargoSearchQuery, setCargoSearchQuery] = useState('');
+  // Cargos section & selection state
+  const [showCargosSection, setShowCargosSection] = useState(false);
   const [availableCargos, setAvailableCargos] = useState<CargoOption[]>([]);
   const [selectedCargoId, setSelectedCargoId] = useState<number | null>(null);
   const [isLoadingCargos, setIsLoadingCargos] = useState(false);
@@ -181,6 +215,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   } | null>(null);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const cargosHeaderRef = useRef<HTMLHeadingElement>(null);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -329,6 +364,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const handleLimpiar = () => {
     setFormData(initialFormState);
     setSearchQuery('');
+    setSelectedCargoId(null);
+    setShowCargosSection(false);
     setFeedback(null);
   };
 
@@ -348,6 +385,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     }
   };
 
+  const handleCrearCargo = () => {
+    if (onNavigate) {
+      onNavigate('alta_cargo', { returnPage: 'designacion' });
+    }
+  };
+
   const handleTabClick = (tab: TramiteTab) => {
     setActiveTab(tab);
     if (tab !== 'designaciones') {
@@ -360,11 +403,181 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     }
   };
 
-  // Open Assign Cargo Modal and fetch free positions
-  const handleOpenAsignarCargo = async () => {
+  const fetchAvailableCargos = async () => {
+    setIsLoadingCargos(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const [resCargosLibre, resCargosAll, resMaterias] = await Promise.all([
+        fetch(`${apiUrl}/api/cargos?estado=Libre&size=50`, { headers }).catch(() => null),
+        fetch(`${apiUrl}/api/cargos?size=50`, { headers }).catch(() => null),
+        fetch(`${apiUrl}/api/materias?size=500`, { headers }).catch(() => null),
+      ]);
+
+      let materiasList: any[] = [];
+      if (resMaterias?.ok) {
+        const matData = await resMaterias.json().catch(() => null);
+        materiasList = matData?.content || (Array.isArray(matData) ? matData : []);
+      }
+
+      const rawMap = new Map<number, any>();
+      for (const res of [resCargosLibre, resCargosAll]) {
+        if (res?.ok) {
+          const data = await res.json().catch(() => null);
+          const items: any[] = data?.content || (Array.isArray(data) ? data : []);
+          for (const item of items) {
+            if (!item) continue;
+            const id = item.id ?? item.cargoId ?? item.numero;
+            const estado = String(item.estado || '').trim().toLowerCase();
+            if (estado === 'libre' && id !== undefined && !rawMap.has(id)) {
+              rawMap.set(id, item);
+            }
+          }
+        }
+      }
+
+      const libreCargos = Array.from(rawMap.values());
+
+      // Enrich each 'Libre' cargo with full detail from /api/cargos/{id}
+      const enriched: CargoOption[] = await Promise.all(
+        libreCargos.map(async (c: any) => {
+          const cargoId = c.id ?? c.cargoId;
+          let detail: any = null;
+          if (cargoId) {
+            try {
+              const resDet = await fetch(`${apiUrl}/api/cargos/${cargoId}`, { headers });
+              if (resDet.ok) {
+                detail = await resDet.json();
+              }
+            } catch {
+              // ignore detail fetch failure
+            }
+          }
+
+          const actividades: any[] = detail?.actividadesVinculadas || c.actividadesVinculadas || [];
+          const firstAct = actividades[0];
+
+          const rawHoras =
+            detail?.horasOcupadas ??
+            c.horasOcupadas ??
+            (actividades.length > 0
+              ? actividades.reduce((sum: number, act: any) => sum + (Number(act.horas) || 0), 0)
+              : 0);
+          const formattedHoras = String(Number(rawHoras) || 0).padStart(2, '0');
+
+          const materiaName =
+            detail?.materiaNombre ??
+            detail?.materia?.nombre ??
+            firstAct?.materiaProyecto ??
+            firstAct?.materiaNombre ??
+            c.materiaNombre ??
+            c.materia ??
+            'Sin asignar';
+
+          const matchedMateria =
+            materiaName && materiaName !== 'Sin asignar'
+              ? materiasList.find(
+                  (m: any) =>
+                    String(m.nombre || m.materiaNombre || '')
+                      .trim()
+                      .toLowerCase() === String(materiaName).trim().toLowerCase()
+                )
+              : null;
+
+          const planVal =
+            detail?.planEstudio ??
+            detail?.plan ??
+            detail?.nroPlan ??
+            detail?.materia?.planEstudio ??
+            firstAct?.planEstudio ??
+            firstAct?.plan ??
+            matchedMateria?.planEstudio ??
+            matchedMateria?.plan ??
+            matchedMateria?.nroPlan ??
+            c.planEstudio ??
+            c.plan ??
+            'Sin asignar';
+
+          const origenVal =
+            detail?.origen ??
+            detail?.origenNombre ??
+            detail?.origen?.origenNombre ??
+            firstAct?.origen ??
+            c.origen ??
+            c.origenNombre ??
+            'Planta';
+
+          const unidadVal =
+            detail?.unidadNombre ??
+            detail?.unidad?.unidadNombre ??
+            detail?.unidad?.nombre ??
+            c.unidadNombre ??
+            c.unidad?.unidadNombre ??
+            c.unidad ??
+            'Sin asignar';
+
+          const designacionVal =
+            detail?.designacionNroResolucion ??
+            detail?.nroResolucionDesignacion ??
+            detail?.designacion ??
+            c.designacionNroResolucion ??
+            c.nroResolucionDesignacion ??
+            'Libre';
+
+          return {
+            id: cargoId ?? c.numero,
+            numero: detail?.numero ?? c.numero ?? c.codigo ?? cargoId,
+            fechaCreacion: detail?.fechaCreacion ?? c.fechaCreacion,
+            horasOcupadas: formattedHoras,
+            origen: String(origenVal),
+            caracter: detail?.caracter ?? detail?.caracterNombre ?? c.caracter ?? 'Ordinario',
+            categoria: detail?.categoria ?? detail?.categoriaNombre ?? c.categoria ?? 'Sin categoría',
+            dedicacion: detail?.dedicacion ?? detail?.dedicacionNombre ?? c.dedicacion ?? 'Simple',
+            designacion: String(designacionVal),
+            unidad: String(unidadVal),
+            materia: String(materiaName),
+            plan: String(planVal),
+            estado: detail?.estado ?? c.estado ?? 'Libre',
+          };
+        })
+      );
+
+      setAvailableCargos(enriched);
+    } catch (err) {
+      console.error('Error fetching cargos:', err);
+    } finally {
+      setIsLoadingCargos(false);
+    }
+  };
+
+  // Show Cargos para Designación section or submit if a cargo is already selected
+  const handleAsignarCargoClick = async () => {
     setFeedback(null);
 
-    // Form validations
+    if (!showCargosSection) {
+      setShowCargosSection(true);
+      await fetchAvailableCargos();
+      setTimeout(() => {
+        cargosHeaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+      return;
+    }
+
+    if (!selectedCargoId) {
+      setFeedback({
+        type: 'info',
+        message: 'Seleccione un cargo disponible de la ventana "Cargos para Designación".',
+      });
+      return;
+    }
+
+    await handleConfirmAsignacion();
+  };
+
+  // Submit designation
+  const handleConfirmAsignacion = async () => {
     if (!formData.apellido.trim() || !formData.nombre.trim()) {
       setFeedback({
         type: 'error',
@@ -397,38 +610,6 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       return;
     }
 
-    setIsCargoModalOpen(true);
-    fetchAvailableCargos('');
-  };
-
-  const fetchAvailableCargos = async (search: string) => {
-    setIsLoadingCargos(true);
-    try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-      const url = search
-        ? `${apiUrl}/api/cargos?search=${encodeURIComponent(search)}&size=20`
-        : `${apiUrl}/api/cargos?size=30`;
-
-      const res = await fetch(url, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        const list: CargoOption[] = data.content || data || [];
-        // Filter cargos that are 'Libre' or allow user selection
-        const libres = list.filter((c) => !c.estado || c.estado.toLowerCase() === 'libre');
-        setAvailableCargos(libres.length > 0 ? libres : list);
-      }
-    } catch (err) {
-      console.error('Error fetching cargos:', err);
-    } finally {
-      setIsLoadingCargos(false);
-    }
-  };
-
-  // Submit designation
-  const handleConfirmAsignacion = async () => {
     if (!selectedCargoId) {
       setFeedback({
         type: 'error',
@@ -472,26 +653,25 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       const data = await res.json().catch(() => null);
 
       if (res.status === 201 || res.ok) {
+        const resNum = formData.nroResolucion;
+        const docName = `${formData.apellido}, ${formData.nombre}`;
+        handleLimpiar();
         setFeedback({
           type: 'success',
-          message: `Designación con Resolución N° ${formData.nroResolucion} asignada exitosamente al docente ${formData.apellido}, ${formData.nombre}.`,
+          message: `Designación con Resolución N° ${resNum} asignada exitosamente al docente ${docName}.`,
         });
-        setIsCargoModalOpen(false);
-        handleLimpiar();
       } else {
         const errorMsg = data?.message || 'Error al procesar la asignación de la designación.';
         setFeedback({
           type: 'error',
           message: errorMsg,
         });
-        setIsCargoModalOpen(false);
       }
     } catch (err: any) {
       setFeedback({
         type: 'error',
         message: err.message || 'Error de conexión con el servidor al registrar la designación.',
       });
-      setIsCargoModalOpen(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -633,132 +813,231 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               {/* Divider between Card Header and Form */}
               <hr className="designacion-card-divider" />
 
-              {/* Form Fields */}
-              <form
-                className="designacion-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleOpenAsignarCargo();
-                }}
-              >
-                {/* Section 1: Datos del Docente */}
-                <div className="designacion-form-section">
-                  <div className="designacion-section-header">
-                    <h3 className="designacion-section-title">Datos del Docente</h3>
-                    <button
-                      type="button"
-                      className="designacion-btn-nuevo-docente"
-                      onClick={handleIngresarDocenteNuevo}
-                    >
-                      <FiUserPlus size={18} />
-                      <span>Ingresar docente nuevo</span>
-                    </button>
-                  </div>
-
-                  <div className="designacion-form-row">
-                    <div className="designacion-field-group small">
-                      <label htmlFor="legajoInput" className="designacion-label">
-                        N° Legajo
-                      </label>
-                      <input
-                        id="legajoInput"
-                        type="text"
-                        className="designacion-input"
-                        placeholder="Ingrese valor"
-                        value={formData.legajo}
-                        onChange={(e) => handleFieldChange('legajo', e.target.value)}
-                      />
+              {/* Scrollable container inside the card */}
+              <div className="designacion-card-scrollable">
+                {/* Form Fields */}
+                <form
+                  className="designacion-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAsignarCargoClick();
+                  }}
+                >
+                  {/* Section 1: Datos del Docente */}
+                  <div className="designacion-form-section">
+                    <div className="designacion-section-header">
+                      <h3 className="designacion-section-title">Datos del Docente</h3>
+                      <button
+                        type="button"
+                        className="designacion-btn-nuevo-docente"
+                        onClick={handleIngresarDocenteNuevo}
+                      >
+                        <FiUserPlus size={18} />
+                        <span>Ingresar docente nuevo</span>
+                      </button>
                     </div>
 
-                    <div className="designacion-field-group medium">
-                      <label htmlFor="apellidoInput" className="designacion-label">
-                        Apellido/s
-                      </label>
-                      <input
-                        id="apellidoInput"
-                        type="text"
-                        className="designacion-input"
-                        placeholder="Castelli"
-                        value={formData.apellido}
-                        onChange={(e) => handleFieldChange('apellido', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="designacion-field-group medium">
-                      <label htmlFor="nombreInput" className="designacion-label">
-                        Nombre/s
-                      </label>
-                      <input
-                        id="nombreInput"
-                        type="text"
-                        className="designacion-input"
-                        placeholder="Sandra"
-                        value={formData.nombre}
-                        onChange={(e) => handleFieldChange('nombre', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2: Período y Resolución */}
-                <div className="designacion-form-section">
-                  <div className="designacion-section-header">
-                    <h3 className="designacion-section-title">Período y Resolución</h3>
-                  </div>
-
-                  <div className="designacion-form-row">
-                    <div className="designacion-field-group small">
-                      <label htmlFor="nroResolucionInput" className="designacion-label">
-                        N° Resolución
-                      </label>
-                      <input
-                        id="nroResolucionInput"
-                        type="text"
-                        className="designacion-input"
-                        placeholder="Ingrese valor"
-                        value={formData.nroResolucion}
-                        onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
-                      />
-                    </div>
-
-                    <div className="designacion-field-group date">
-                      <label htmlFor="fechaComienzoInput" className="designacion-label">
-                        Fecha de Comienzo
-                      </label>
-                      <div className="designacion-date-wrapper">
-                        <DatePicker
-                          id="fechaComienzoInput"
-                          selected={formData.fechaComienzo}
-                          onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
-                          dateFormat="dd/MM/yyyy"
-                          locale="es"
-                          placeholderText="01/09/2026"
-                          autoComplete="off"
+                    <div className="designacion-form-row">
+                      <div className="designacion-field-group small">
+                        <label htmlFor="legajoInput" className="designacion-label">
+                          N° Legajo
+                        </label>
+                        <input
+                          id="legajoInput"
+                          type="text"
+                          className="designacion-input"
+                          placeholder="Ingrese valor"
+                          value={formData.legajo}
+                          onChange={(e) => handleFieldChange('legajo', e.target.value)}
                         />
-                        <FiCalendar className="designacion-calendar-icon" />
                       </div>
-                    </div>
 
-                    <div className="designacion-field-group date">
-                      <label htmlFor="fechaFinalizacionInput" className="designacion-label">
-                        Fecha Finalización
-                      </label>
-                      <div className="designacion-date-wrapper">
-                        <DatePicker
-                          id="fechaFinalizacionInput"
-                          selected={formData.fechaFinalizacion}
-                          onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
-                          dateFormat="dd/MM/yyyy"
-                          locale="es"
-                          placeholderText="06/10/2026"
-                          autoComplete="off"
+                      <div className="designacion-field-group medium">
+                        <label htmlFor="apellidoInput" className="designacion-label">
+                          Apellido/s
+                        </label>
+                        <input
+                          id="apellidoInput"
+                          type="text"
+                          className="designacion-input"
+                          placeholder="Castelli"
+                          value={formData.apellido}
+                          onChange={(e) => handleFieldChange('apellido', e.target.value)}
                         />
-                        <FiCalendar className="designacion-calendar-icon" />
+                      </div>
+
+                      <div className="designacion-field-group medium">
+                        <label htmlFor="nombreInput" className="designacion-label">
+                          Nombre/s
+                        </label>
+                        <input
+                          id="nombreInput"
+                          type="text"
+                          className="designacion-input"
+                          placeholder="Sandra"
+                          value={formData.nombre}
+                          onChange={(e) => handleFieldChange('nombre', e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
+
+                  {/* Section 2: Período y Resolución */}
+                  <div className="designacion-form-section">
+                    <div className="designacion-section-header">
+                      <h3 className="designacion-section-title">Período y Resolución</h3>
+                    </div>
+
+                    <div className="designacion-form-row">
+                      <div className="designacion-field-group small">
+                        <label htmlFor="nroResolucionInput" className="designacion-label">
+                          N° Resolución
+                        </label>
+                        <input
+                          id="nroResolucionInput"
+                          type="text"
+                          className="designacion-input"
+                          placeholder="Ingrese valor"
+                          value={formData.nroResolucion}
+                          onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="designacion-field-group date">
+                        <label htmlFor="fechaComienzoInput" className="designacion-label">
+                          Fecha de Comienzo
+                        </label>
+                        <div className="designacion-date-wrapper">
+                          <DatePicker
+                            id="fechaComienzoInput"
+                            selected={formData.fechaComienzo}
+                            onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
+                            dateFormat="dd/MM/yyyy"
+                            locale="es"
+                            placeholderText="01/09/2026"
+                            autoComplete="off"
+                          />
+                          <FiCalendar className="designacion-calendar-icon" />
+                        </div>
+                      </div>
+
+                      <div className="designacion-field-group date">
+                        <label htmlFor="fechaFinalizacionInput" className="designacion-label">
+                          Fecha Finalización
+                        </label>
+                        <div className="designacion-date-wrapper">
+                          <DatePicker
+                            id="fechaFinalizacionInput"
+                            selected={formData.fechaFinalizacion}
+                            onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
+                            dateFormat="dd/MM/yyyy"
+                            locale="es"
+                            placeholderText="06/10/2026"
+                            autoComplete="off"
+                          />
+                          <FiCalendar className="designacion-calendar-icon" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Section shown when pressing "Asignar cargo": Divider + Title + Crear Cargo button + Libre Cargos window */}
+                {showCargosSection && (
+                  <div className="designacion-cargos-section">
+                    <hr className="designacion-cargos-divider" />
+
+                    <div className="designacion-cargos-header">
+                      <h2 className="designacion-cargos-title" ref={cargosHeaderRef}>
+                        Cargos para Designación
+                      </h2>
+                      <button
+                        type="button"
+                        className="designacion-btn-crear-cargo"
+                        onClick={handleCrearCargo}
+                      >
+                        <CrearCargoIcon />
+                        <span>Crear Cargo</span>
+                      </button>
+                    </div>
+
+                    <div className="designacion-cargos-window" role="listbox" aria-label="Cargos disponibles en estado libre">
+                    {isLoadingCargos ? (
+                      <div className="designacion-cargos-empty">
+                        Cargando cargos disponibles...
+                      </div>
+                    ) : availableCargos.length === 0 ? (
+                      <div className="designacion-cargos-empty">
+                        No se encontraron cargos disponibles en estado Libre.
+                      </div>
+                    ) : (
+                      availableCargos.map((cargo) => {
+                        const isSelected = selectedCargoId === cargo.id;
+                        const numero = cargo.numero ?? cargo.codigo ?? cargo.id;
+                        return (
+                          <div
+                            key={cargo.id}
+                            role="option"
+                            aria-selected={isSelected}
+                            tabIndex={0}
+                            className={`designacion-cargo-card ${isSelected ? 'selected' : ''}`}
+                            onClick={() => setSelectedCargoId(cargo.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setSelectedCargoId(cargo.id);
+                              }
+                            }}
+                          >
+                            <div className="designacion-cargo-card-row">
+                              <span className="designacion-cargo-field">
+                                <strong>N° Cargo:</strong> {numero}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Fecha Creación:</strong> {formatCargoDate(cargo.fechaCreacion)}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Horas Ocupadas:</strong> {cargo.horasOcupadas ?? '00'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Origen:</strong> {cargo.origen || 'Sin especificar'}
+                              </span>
+                            </div>
+
+                            <div className="designacion-cargo-card-row">
+                              <span className="designacion-cargo-field">
+                                <strong>Caracter:</strong> {cargo.caracter || 'Sin especificar'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Categoría:</strong> {cargo.categoria || 'Sin especificar'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Dedicación:</strong> {cargo.dedicacion || 'Sin especificar'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Designación:</strong> {cargo.designacion || 'Libre'}
+                              </span>
+                            </div>
+
+                            <div className="designacion-cargo-card-row">
+                              <span className="designacion-cargo-field">
+                                <strong>Unidad:</strong> {cargo.unidad || cargo.unidadNombre || 'Sin especificar'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Materia:</strong> {cargo.materia || 'Sin asignar'}
+                              </span>
+                              <span className="designacion-cargo-field">
+                                <strong>Plan:</strong> {cargo.plan || 'Sin asignar'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </form>
+              )}
+              </div>
 
               {/* Feedback Alert */}
               {feedback && (
@@ -789,134 +1068,16 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               <button
                 type="button"
                 className="designacion-btn-asignar"
-                onClick={handleOpenAsignarCargo}
+                onClick={handleAsignarCargoClick}
+                disabled={isSubmitting}
               >
                 <FiEdit size={18} />
-                <span>Asignar cargo</span>
+                <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
               </button>
             </div>
           </div>
         </main>
       </div>
-
-      {/* Modal: Asignar Cargo a la Designación */}
-      {isCargoModalOpen && (
-        <div className="designacion-modal-overlay">
-          <div className="designacion-modal-card">
-            <div className="designacion-modal-header">
-              <h2 className="designacion-modal-title">Seleccionar Cargo a Asignar</h2>
-              <button
-                type="button"
-                className="designacion-modal-close"
-                onClick={() => setIsCargoModalOpen(false)}
-              >
-                <FiX />
-              </button>
-            </div>
-
-            <div className="designacion-modal-body">
-              {/* Summary of current designation data */}
-              <div className="designacion-modal-summary">
-                <div className="designacion-summary-item">
-                  <span className="designacion-summary-label">Docente</span>
-                  <span className="designacion-summary-val">
-                    {formData.apellido}, {formData.nombre}
-                  </span>
-                </div>
-                <div className="designacion-summary-item">
-                  <span className="designacion-summary-label">N° Legajo</span>
-                  <span className="designacion-summary-val">{formData.legajo || 'Sin especificar'}</span>
-                </div>
-                <div className="designacion-summary-item">
-                  <span className="designacion-summary-label">N° Resolución</span>
-                  <span className="designacion-summary-val">{formData.nroResolucion}</span>
-                </div>
-                <div className="designacion-summary-item">
-                  <span className="designacion-summary-label">Período</span>
-                  <span className="designacion-summary-val">
-                    {formData.fechaComienzo ? formData.fechaComienzo.toLocaleDateString('es-AR') : ''}
-                    {formData.fechaFinalizacion
-                      ? ` hasta ${formData.fechaFinalizacion.toLocaleDateString('es-AR')}`
-                      : ' (Indeterminado)'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Cargo search input */}
-              <div className="designacion-search-wrapper" style={{ width: '100%' }}>
-                <input
-                  type="text"
-                  className="designacion-search-input"
-                  style={{ width: '100%' }}
-                  placeholder="Buscar cargo por número, categoría o departamento..."
-                  value={cargoSearchQuery}
-                  onChange={(e) => {
-                    setCargoSearchQuery(e.target.value);
-                    fetchAvailableCargos(e.target.value);
-                  }}
-                />
-                <FiSearch className="designacion-search-icon" />
-              </div>
-
-              {/* Cargos list */}
-              <div className="designacion-modal-cargos-list">
-                {isLoadingCargos ? (
-                  <div style={{ textAlign: 'center', padding: '16px', color: '#718096' }}>
-                    Cargando cargos disponibles...
-                  </div>
-                ) : availableCargos.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '16px', color: '#718096' }}>
-                    No se encontraron cargos disponibles para asignar.
-                  </div>
-                ) : (
-                  availableCargos.map((cargo) => {
-                    const isSelected = selectedCargoId === cargo.id;
-                    const numero = cargo.codigo || cargo.numero || cargo.id;
-                    return (
-                      <div
-                        key={cargo.id}
-                        className={`designacion-cargo-option ${isSelected ? 'selected' : ''}`}
-                        onClick={() => setSelectedCargoId(cargo.id)}
-                      >
-                        <div className="designacion-cargo-info">
-                          <span className="designacion-cargo-title">
-                            Cargo N° {numero} - {cargo.categoria || 'Sin categoría'}
-                          </span>
-                          <span className="designacion-cargo-meta">
-                            Dedicación: {cargo.dedicacion || 'Simple'} | Unidad: {cargo.unidad || cargo.unidadNombre || 'FFHA'}
-                          </span>
-                        </div>
-                        <span className="designacion-cargo-badge">
-                          {isSelected ? <FiCheck size={14} /> : cargo.estado || 'Libre'}
-                        </span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            <div className="designacion-modal-footer">
-              <button
-                type="button"
-                className="designacion-modal-btn-cancel"
-                onClick={() => setIsCargoModalOpen(false)}
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="designacion-modal-btn-confirm"
-                onClick={handleConfirmAsignacion}
-                disabled={isSubmitting || !selectedCargoId}
-              >
-                {isSubmitting ? 'Asignando...' : 'Confirmar Asignación'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
