@@ -12,8 +12,12 @@ import {
   FiCalendar,
   FiTrash2,
   FiEdit,
-  FiX
+  FiX,
+  FiChevronDown,
+  FiArrowUp,
+  FiArrowDown
 } from 'react-icons/fi';
+import { LuClipboardPlus } from 'react-icons/lu';
 
 registerLocale('es', es);
 
@@ -207,6 +211,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [selectedCargoId, setSelectedCargoId] = useState<number | null>(null);
   const [isLoadingCargos, setIsLoadingCargos] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cargoSortBy, setCargoSortBy] = useState<'numero' | 'fechaCreacion' | 'materia' | 'categoria' | 'dedicacion' | 'horasOcupadas'>('numero');
+  const [cargoSortDirection, setCargoSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Feedback notification
   const [feedback, setFeedback] = useState<{
@@ -552,6 +558,37 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     }
   };
 
+  // Sorted list of available cargos
+  const sortedAvailableCargos = [...availableCargos].sort((a, b) => {
+    let comparison = 0;
+    if (cargoSortBy === 'numero') {
+      const numA = Number(a.numero ?? a.codigo ?? a.id) || 0;
+      const numB = Number(b.numero ?? b.codigo ?? b.id) || 0;
+      comparison = numA - numB;
+    } else if (cargoSortBy === 'fechaCreacion') {
+      const dateA = a.fechaCreacion ? new Date(a.fechaCreacion).getTime() : 0;
+      const dateB = b.fechaCreacion ? new Date(b.fechaCreacion).getTime() : 0;
+      comparison = dateA - dateB;
+    } else if (cargoSortBy === 'materia') {
+      const matA = (a.materia || '').toLowerCase();
+      const matB = (b.materia || '').toLowerCase();
+      comparison = matA.localeCompare(matB);
+    } else if (cargoSortBy === 'categoria') {
+      const catA = (a.categoria || '').toLowerCase();
+      const catB = (b.categoria || '').toLowerCase();
+      comparison = catA.localeCompare(catB);
+    } else if (cargoSortBy === 'dedicacion') {
+      const dedA = (a.dedicacion || '').toLowerCase();
+      const dedB = (b.dedicacion || '').toLowerCase();
+      comparison = dedA.localeCompare(dedB);
+    } else if (cargoSortBy === 'horasOcupadas') {
+      const horA = Number(a.horasOcupadas) || 0;
+      const horB = Number(b.horasOcupadas) || 0;
+      comparison = horA - horB;
+    }
+    return cargoSortDirection === 'asc' ? comparison : -comparison;
+  });
+
   // Show Cargos para Designación section or submit if a cargo is already selected
   const handleAsignarCargoClick = async () => {
     setFeedback(null);
@@ -735,86 +772,86 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
             {/* Main Form Card */}
             <div className="designacion-card">
-              {/* Header Row: Title & Search Card */}
-              <div className="designacion-card-header">
-                <h1 className="designacion-title">Datos de Designación</h1>
-
-                {/* Search Bar matching Gestion style */}
-                <div className="designacion-search-card">
-                  <label htmlFor="searchDocenteInput" className="designacion-search-label">
-                    Buscar Docente por Nombre, Apellido o Legajo
-                  </label>
-                  <div className="designacion-search-row">
-                    <div className="designacion-search-input-wrap" ref={searchContainerRef}>
-                      <input
-                        id="searchDocenteInput"
-                        name="busqueda_docente_query"
-                        type="search"
-                        className="designacion-search-input"
-                        placeholder="Ingrese valor"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => {
-                          if (suggestions.length > 0) setShowSuggestions(true);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        autoComplete="off"
-                        spellCheck={false}
-                      />
-                      <FiSearch className="designacion-search-icon" />
-
-                      {/* Suggestions Dropdown */}
-                      {showSuggestions && suggestions.length > 0 && (
-                        <ul className="designacion-suggestions-list" role="listbox">
-                          {suggestions.map((item, idx) => (
-                            <li
-                              key={item.usuarioId || item.id || idx}
-                              className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelectDocente(item);
-                              }}
-                              onMouseEnter={() => setActiveSuggestionIndex(idx)}
-                              role="option"
-                              aria-selected={idx === activeSuggestionIndex}
-                            >
-                              <span className="designacion-suggestion-name">
-                                {item.apellido || item.apellidos}, {item.nombre || item.nombres}
-                              </span>
-                              <span className="designacion-suggestion-sub">
-                                {[
-                                  item.categoria,
-                                  item.unidad,
-                                  item.legajo ? `Legajo: ${item.legajo}` : '',
-                                  item.estado ? `Estado: ${item.estado}` : '',
-                                ]
-                                  .filter(Boolean)
-                                  .join(' • ')}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      className="designacion-search-btn"
-                      onClick={() => handleSearch()}
-                      disabled={isSearching}
-                    >
-                      <FiSearch />
-                      <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider between Card Header and Form */}
-              <hr className="designacion-card-divider" />
-
               {/* Scrollable container inside the card */}
               <div className="designacion-card-scrollable">
+                {/* Header Row: Title & Search Card */}
+                <div className="designacion-card-header">
+                  <h1 className="designacion-title">Datos de Designación</h1>
+
+                  {/* Search Bar matching Gestion style */}
+                  <div className="designacion-search-card">
+                    <label htmlFor="searchDocenteInput" className="designacion-search-label">
+                      Buscar Docente por Nombre, Apellido o Legajo
+                    </label>
+                    <div className="designacion-search-row">
+                      <div className="designacion-search-input-wrap" ref={searchContainerRef}>
+                        <input
+                          id="searchDocenteInput"
+                          name="busqueda_docente_query"
+                          type="search"
+                          className="designacion-search-input"
+                          placeholder="Ingrese valor"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onFocus={() => {
+                            if (suggestions.length > 0) setShowSuggestions(true);
+                          }}
+                          onKeyDown={handleKeyDown}
+                          autoComplete="off"
+                          spellCheck={false}
+                        />
+                        <FiSearch className="designacion-search-icon" />
+
+                        {/* Suggestions Dropdown */}
+                        {showSuggestions && suggestions.length > 0 && (
+                          <ul className="designacion-suggestions-list" role="listbox">
+                            {suggestions.map((item, idx) => (
+                              <li
+                                key={item.usuarioId || item.id || idx}
+                                className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleSelectDocente(item);
+                                }}
+                                onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                                role="option"
+                                aria-selected={idx === activeSuggestionIndex}
+                              >
+                                <span className="designacion-suggestion-name">
+                                  {item.apellido || item.apellidos}, {item.nombre || item.nombres}
+                                </span>
+                                <span className="designacion-suggestion-sub">
+                                  {[
+                                    item.categoria,
+                                    item.unidad,
+                                    item.legajo ? `Legajo: ${item.legajo}` : '',
+                                    item.estado ? `Estado: ${item.estado}` : '',
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' • ')}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="designacion-search-btn"
+                        onClick={() => handleSearch()}
+                        disabled={isSearching}
+                      >
+                        <FiSearch />
+                        <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider between Card Header and Form */}
+                <hr className="designacion-card-divider" />
+
                 {/* Form Fields */}
                 <form
                   className="designacion-form"
@@ -951,14 +988,51 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                       <h2 className="designacion-cargos-title" ref={cargosHeaderRef}>
                         Cargos para Designación
                       </h2>
-                      <button
-                        type="button"
-                        className="designacion-btn-crear-cargo"
-                        onClick={handleCrearCargo}
-                      >
-                        <CrearCargoIcon />
-                        <span>Crear Cargo</span>
-                      </button>
+
+                      <div className="designacion-cargos-actions">
+                        {/* Sort Selector */}
+                        <div className="designacion-cargos-sort-wrap">
+                          <label htmlFor="cargoSortSelect" className="designacion-cargos-sort-label">
+                            Ordenar por:
+                          </label>
+                          <div className="designacion-cargos-select-box">
+                            <select
+                              id="cargoSortSelect"
+                              className="designacion-cargos-sort-select"
+                              value={cargoSortBy}
+                              onChange={(e) => setCargoSortBy(e.target.value as any)}
+                            >
+                              <option value="numero">N° Cargo</option>
+                              <option value="fechaCreacion">Fecha Creación</option>
+                              <option value="materia">Materia</option>
+                              <option value="categoria">Categoría</option>
+                              <option value="dedicacion">Dedicación</option>
+                              <option value="horasOcupadas">Horas Ocupadas</option>
+                            </select>
+                            <FiChevronDown className="designacion-cargos-select-icon" />
+                          </div>
+
+                          <button
+                            type="button"
+                            className="designacion-cargos-sort-dir-btn"
+                            onClick={() => setCargoSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                            title={cargoSortDirection === 'asc' ? 'Orden Ascendente (clic para Descendente)' : 'Orden Descendente (clic para Ascendente)'}
+                            aria-label="Cambiar dirección de orden"
+                          >
+                            {cargoSortDirection === 'asc' ? <FiArrowUp size={15} /> : <FiArrowDown size={15} />}
+                            <span>{cargoSortDirection === 'asc' ? 'Asc' : 'Desc'}</span>
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="designacion-btn-crear-cargo"
+                          onClick={handleCrearCargo}
+                        >
+                          <CrearCargoIcon />
+                          <span>Crear Cargo</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="designacion-cargos-window" role="listbox" aria-label="Cargos disponibles en estado libre">
@@ -966,12 +1040,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                       <div className="designacion-cargos-empty">
                         Cargando cargos disponibles...
                       </div>
-                    ) : availableCargos.length === 0 ? (
+                    ) : sortedAvailableCargos.length === 0 ? (
                       <div className="designacion-cargos-empty">
                         No se encontraron cargos disponibles en estado Libre.
                       </div>
                     ) : (
-                      availableCargos.map((cargo) => {
+                      sortedAvailableCargos.map((cargo) => {
                         const isSelected = selectedCargoId === cargo.id;
                         const numero = cargo.numero ?? cargo.codigo ?? cargo.id;
                         return (
@@ -1054,7 +1128,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               )}
             </div>
 
-            {/* Bottom Actions Row: Limpiar on left, Asignar cargo on right */}
+            {/* Bottom Actions Row: Limpiar on left, Asignar cargo / Asignar actividades on right */}
             <div className="designacion-actions-row">
               <button
                 type="button"
@@ -1065,15 +1139,27 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                 <span>Limpiar</span>
               </button>
 
-              <button
-                type="button"
-                className="designacion-btn-asignar"
-                onClick={handleAsignarCargoClick}
-                disabled={isSubmitting}
-              >
-                <FiEdit size={18} />
-                <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
-              </button>
+              {selectedCargoId ? (
+                <button
+                  type="button"
+                  className="designacion-btn-asignar-actividades"
+                  onClick={handleAsignarCargoClick}
+                  disabled={isSubmitting}
+                >
+                  <LuClipboardPlus size={18} />
+                  <span>{isSubmitting ? 'Asignando...' : 'Asignar actividades'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="designacion-btn-asignar"
+                  onClick={handleAsignarCargoClick}
+                  disabled={isSubmitting}
+                >
+                  <FiEdit size={18} />
+                  <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
+                </button>
+              )}
             </div>
           </div>
         </main>
