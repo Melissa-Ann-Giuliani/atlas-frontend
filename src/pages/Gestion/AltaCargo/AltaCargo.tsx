@@ -20,7 +20,7 @@ interface FormState {
   fechaCreacion: string;
   estado: string;
   dependencia: string;
-  departamento: string;
+  unidad: string;
   origen: string;
   caracter: string;
   categoria: string;
@@ -49,7 +49,7 @@ const initialFormState: FormState = {
   fechaCreacion: getTodayIso(),
   estado: 'Libre',
   dependencia: '',
-  departamento: '',
+  unidad: '',
   origen: '',
   caracter: '',
   categoria: '',
@@ -66,14 +66,14 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
 
   // Dynamic catalog options fetched from backend
   const [dependencias, setDependencias] = useState<OptionItem[]>([]);
-  const [departamentos, setDepartamentos] = useState<OptionItem[]>([]);
+  const [unidades, setUnidades] = useState<OptionItem[]>([]);
   const [origenes, setOrigenes] = useState<OptionItem[]>([]);
   const [caracteres, setCaracteres] = useState<OptionItem[]>([]);
   const [categorias, setCategorias] = useState<OptionItem[]>([]);
   const [dedicaciones, setDedicaciones] = useState<OptionItem[]>([]);
 
   const [isLoadingCatalogs, setIsLoadingCatalogs] = useState<boolean>(true);
-  const [isLoadingDepartamentos, setIsLoadingDepartamentos] = useState<boolean>(false);
+  const [isLoadingUnidades, setIsLoadingUnidades] = useState<boolean>(false);
 
   // Parse YYYY-MM-DD from formData into Date object for DatePicker
   const parseIsoToDate = (isoStr: string): Date | null => {
@@ -204,15 +204,15 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
     fetchCatalogs();
   }, [onLogout]);
 
-  // Fetch unidades / departamentos when dependencia changes
+  // Fetch unidades when dependencia changes
   useEffect(() => {
     if (!formData.dependencia) {
-      setDepartamentos([]);
+      setUnidades([]);
       return;
     }
 
-    const fetchDepartamentos = async () => {
-      setIsLoadingDepartamentos(true);
+    const fetchUnidades = async () => {
+      setIsLoadingUnidades(true);
       try {
         const token = localStorage.getItem('token');
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
@@ -222,7 +222,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
-            setDepartamentos(
+            setUnidades(
               data.map((item: any) => ({
                 id: item.unidadId ?? item.id,
                 label: item.unidadNombre ?? item.nombre ?? String(item.unidadId || item.id),
@@ -231,13 +231,13 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
           }
         }
       } catch (err) {
-        console.warn('Error loading departamentos:', err);
+        console.warn('Error loading unidades:', err);
       } finally {
-        setIsLoadingDepartamentos(false);
+        setIsLoadingUnidades(false);
       }
     };
 
-    fetchDepartamentos();
+    fetchUnidades();
   }, [formData.dependencia]);
 
   const handleBack = () => {
@@ -253,7 +253,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
   const handleChange = (field: keyof FormState, value: string) => {
     setFormData((prev) => {
       if (field === 'dependencia') {
-        return { ...prev, dependencia: value, departamento: '' };
+        return { ...prev, dependencia: value, unidad: '' };
       }
       if (field === 'dedicacion') {
         const selectedDed = dedicaciones.find((d) => String(d.id) === String(value));
@@ -301,10 +301,10 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
       return;
     }
 
-    if (!formData.departamento) {
+    if (!formData.unidad) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, seleccione una Dependencia y Departamento.',
+        message: 'Por favor, seleccione una Dependencia y Unidad.',
       });
       return;
     }
@@ -355,7 +355,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
       const payload = {
         codigo: Number(formData.numeroCargo.trim()),
         fechaCreacion: formData.fechaCreacion,
-        unidadId: Number(formData.departamento),
+        unidadId: Number(formData.unidad),
         origenId: Number(formData.origen),
         caracterId: Number(formData.caracter),
         categoriaId: Number(formData.categoria),
@@ -516,7 +516,7 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                       </div>
                     </div>
 
-                    {/* Row 2: Dependencia, Departamento */}
+                    {/* Row 2: Dependencia, Unidad */}
                     <div className="alta-cargo-grid-2">
                       <div className="alta-cargo-field">
                         <label htmlFor="dependencia" className="alta-cargo-label">
@@ -544,27 +544,27 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
                       </div>
 
                       <div className="alta-cargo-field">
-                        <label htmlFor="departamento" className="alta-cargo-label">
-                          Departamento
+                        <label htmlFor="unidad" className="alta-cargo-label">
+                          Unidad
                         </label>
                         <div className="alta-cargo-select-wrapper">
                           <select
-                            id="departamento"
+                            id="unidad"
                             className="alta-cargo-select"
-                            value={formData.departamento}
-                            onChange={(e) => handleChange('departamento', e.target.value)}
-                            disabled={!formData.dependencia || isLoadingDepartamentos}
+                            value={formData.unidad}
+                            onChange={(e) => handleChange('unidad', e.target.value)}
+                            disabled={!formData.dependencia || isLoadingUnidades}
                           >
                             <option value="">
-                              {isLoadingDepartamentos
+                              {isLoadingUnidades
                                 ? 'Cargando...'
                                 : !formData.dependencia
                                   ? 'Seleccione dependencia primero'
                                   : 'Seleccione'}
                             </option>
-                            {departamentos.map((dep) => (
-                              <option key={dep.id} value={dep.id}>
-                                {dep.label}
+                            {unidades.map((uni) => (
+                              <option key={uni.id} value={uni.id}>
+                                {uni.label}
                               </option>
                             ))}
                           </select>
