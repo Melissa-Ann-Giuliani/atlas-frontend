@@ -115,6 +115,10 @@ function App() {
     return (sessionStorage.getItem('atlas_new_user_return_page') as Page) || null;
   });
 
+  const [altaCargoReturnPage, setAltaCargoReturnPage] = useState<Page | null>(() => {
+    return (sessionStorage.getItem('atlas_alta_cargo_return_page') as Page) || null;
+  });
+
   const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
     try {
       const saved = sessionStorage.getItem('atlas_cargo_history');
@@ -193,6 +197,7 @@ function App() {
     sessionStorage.removeItem('atlas_listado_tab');
     sessionStorage.removeItem('atlas_new_user_initial_role');
     sessionStorage.removeItem('atlas_new_user_return_page');
+    sessionStorage.removeItem('atlas_alta_cargo_return_page');
     setIsAuthenticated(false);
   };
 
@@ -341,6 +346,16 @@ function App() {
       }
     }
 
+    if (page === 'alta_cargo') {
+      const returnPage = data?.returnPage || null;
+      setAltaCargoReturnPage(returnPage);
+      if (returnPage) {
+        sessionStorage.setItem('atlas_alta_cargo_return_page', returnPage);
+      } else {
+        sessionStorage.removeItem('atlas_alta_cargo_return_page');
+      }
+    }
+
 
     if (page === 'licencia_detalle' && data) {
       setSelectedLicencia(data);
@@ -434,7 +449,7 @@ function App() {
             <AltaCargo
               onLogout={handleLogout}
               onNavigate={handleNavigate}
-              onBack={() => handleNavigate('gestion')}
+              onBack={() => handleNavigate(altaCargoReturnPage || 'gestion')}
             />
           );
 
