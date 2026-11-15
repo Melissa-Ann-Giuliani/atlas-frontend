@@ -892,6 +892,554 @@
   border-radius: 8px;
 }
 
+/* =========================================================================
+   Paso 2: Asignación de Actividades / Funciones (DEV-18 RF-11)
+   ========================================================================= */
+
+/* Top bar with Retroceder */
+.designacion-actividades-top-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.designacion-actividades-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #1A2E1C;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px 4px 0;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.designacion-actividades-back-btn:hover {
+  color: #2A4B2F;
+  transform: translateX(-2px);
+}
+
+/* Summary Sections in Actividades View */
+.designacion-summary-block {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 22px;
+}
+
+.designacion-summary-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  font-weight: 500;
+  color: #1A2E1C;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.2px;
+}
+
+.designacion-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14.5px;
+  color: #2D3748;
+  line-height: 1.5;
+}
+
+.designacion-summary-item strong {
+  color: #111111;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* Cargo Info Box (enclosed border card matching mockup) */
+.designacion-cargo-box {
+  background-color: #FCFAF6;
+  border: 1px solid #D5CBB8;
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.designacion-cargo-box-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #2D3748;
+  line-height: 1.45;
+}
+
+.designacion-cargo-box-item strong {
+  color: #111111;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* Funciones Section */
+.designacion-funciones-section {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+  margin-bottom: 16px;
+}
+
+.designacion-funciones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.designacion-funciones-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: #1A2E1C;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.designacion-btn-anadir-funcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #262A26;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.designacion-btn-anadir-funcion:hover {
+  background-color: #1A2E1C;
+}
+
+.designacion-btn-anadir-funcion:active {
+  transform: scale(0.98);
+}
+
+/* Individual Function Card */
+.designacion-funcion-card {
+  background-color: #F7F4EC;
+  border: 1px solid #D8CBB6;
+  border-radius: 8px;
+  padding: 16px 20px 20px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.designacion-funcion-card:focus-within {
+  border-color: #9C8E75;
+}
+
+.designacion-funcion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.designacion-funcion-number {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1A2E1C;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.designacion-funcion-btn-eliminar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #A33A3A;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.designacion-funcion-btn-eliminar:hover {
+  background-color: #FCE8E8;
+  color: #7D1D1D;
+}
+
+.designacion-funcion-fields-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.8fr) minmax(130px, 1fr) minmax(110px, 0.8fr) minmax(220px, 2fr);
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.designacion-funcion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.designacion-funcion-label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2D3748;
+}
+
+.designacion-funcion-input {
+  height: 40px;
+  background-color: #FCFAF6;
+  border: 1px solid #B6A68E;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #1A2E1C;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.designacion-funcion-input:focus {
+  border-color: #1A2E1C;
+  box-shadow: 0 0 0 1px #1A2E1C;
+}
+
+.designacion-funcion-input::placeholder {
+  color: #8C8273;
+}
+
+.designacion-funcion-select {
+  height: 40px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #FCFAF6;
+  border: 1px solid #B6A68E;
+  border-radius: 6px;
+  padding: 0 32px 0 12px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: #1A2E1C;
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.designacion-funcion-select:focus {
+  border-color: #1A2E1C;
+  box-shadow: 0 0 0 1px #1A2E1C;
+}
+
+.designacion-funcion-select-icon {
+  position: absolute;
+  right: 12px;
+  top: 36px;
+  pointer-events: none;
+  font-size: 15px;
+  color: #4A5568;
+}
+
+/* Materia Autocomplete Suggestions */
+.designacion-materia-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #FCFAF6;
+  border: 1.5px solid #1A2E1C;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 50;
+  margin-top: 4px;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.designacion-materia-item {
+  padding: 8px 12px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #1A2E1C;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.designacion-materia-item:hover,
+.designacion-materia-item.active {
+  background-color: #E8F0E4;
+}
+
+.designacion-materia-item-sub {
+  display: block;
+  font-size: 11.5px;
+  color: #6A7280;
+  margin-top: 2px;
+}
+
+/* Hours Occupancy Summary Bar */
+.designacion-horas-counter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #EFE8DC;
+  border: 1px solid #C8B796;
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-top: 10px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #1A2E1C;
+  font-weight: 500;
+}
+
+.designacion-horas-counter-bar strong {
+  font-weight: 700;
+}
+
+.designacion-horas-badge {
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.designacion-horas-badge.valid {
+  background-color: #D1E5D4;
+  color: #1A2E1C;
+}
+
+.designacion-horas-badge.exceeded {
+  background-color: #F8D7DA;
+  color: #721C24;
+}
+
+/* Success Modal with Download / Print */
+.designacion-success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.designacion-success-modal-card {
+  background-color: #FCFAF6;
+  border: 1.5px solid #C8B796;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 580px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.designacion-success-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #E2D7C3;
+  background-color: #F3ECE0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.designacion-success-modal-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #D1E5D4;
+  color: #1A2E1C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.designacion-success-modal-title {
+  margin: 0;
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  color: #1A2E1C;
+}
+
+.designacion-success-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14.5px;
+  color: #2D3748;
+  line-height: 1.5;
+}
+
+.designacion-success-details {
+  background-color: #F7F4EC;
+  border: 1px solid #D5CBB8;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+}
+
+.designacion-success-details-row strong {
+  color: #111111;
+  font-weight: 700;
+}
+
+.designacion-success-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #E2D7C3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #FCFAF6;
+  flex-wrap: wrap;
+}
+
+.designacion-modal-btn-download,
+.designacion-modal-btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FCFAF6;
+  border: 1.5px solid #2B5B3A;
+  color: #2B5B3A;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.designacion-modal-btn-download:hover,
+.designacion-modal-btn-print:hover {
+  background-color: #EBF3ED;
+  border-color: #1A2E1C;
+  color: #1A2E1C;
+}
+
+.designacion-modal-btn-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #262A26;
+  color: #FFFFFF;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 6px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.designacion-modal-btn-close:hover {
+  background-color: #1A2E1C;
+}
+
+/* Action Button: Generar Documento */
+.designacion-btn-generar-documento {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #2B5B3A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 22px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.designacion-btn-generar-documento:hover:not(:disabled) {
+  background-color: #1A2E1C;
+}
+
+.designacion-btn-generar-documento:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.designacion-btn-generar-documento:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Action Button: Borrar (Red color matching mockup) */
+.designacion-btn-borrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #9B1C1C;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.designacion-btn-borrar:hover:not(:disabled) {
+  background-color: #771D1D;
+}
+
+.designacion-btn-borrar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.designacion-btn-borrar:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .designacion-content-area {
@@ -922,5 +1470,9 @@
 
   .designacion-search-input-wrap {
     width: 100%;
+  }
+
+  .designacion-funcion-fields-grid {
+    grid-template-columns: 1fr;
   }
 }
