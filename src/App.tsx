@@ -18,15 +18,17 @@ import BajaUsuario from './pages/Gestion/BajaUsuario/BajaUsuario'
 import AltaCatedra from './pages/Gestion/AltaCatedra/AltaCatedra'
 import ModificarCatedra from './pages/Gestion/ModificarCatedra/ModificarCatedra'
 import BajaCatedra from './pages/Gestion/BajaCatedra/BajaCatedra'
+import Vencimientos from './pages/Gestion/Vencimientos/Vencimientos'
 import Designacion from './pages/Tramites/Designacion/Designacion'
 
-type Page = 'inicio' | 'listado' | 'tramites' | 'designacion' | 'gestion' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra' | 'baja_catedra';
+type Page = 'inicio' | 'listado' | 'tramites' | 'designacion' | 'gestion' | 'vencimientos' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra' | 'baja_catedra';
 
 const getPathFromPage = (page: Page): string => {
   if (page === 'docente_detalle') return 'listado/docente_detalle';
   if (page === 'cargo_detalle') return 'listado/cargo_detalle';
   if (page === 'licencia_detalle') return 'listado/licencia_detalle';
   if (page === 'tramites' || page === 'designacion') return 'tramites';
+  if (page === 'vencimientos') return 'gestion/vencimientos';
   if (page === 'modificar_docente' || page === 'modificar_usuario') return 'gestion/modificar_usuario';
   if (page === 'baja_usuario') return 'gestion/baja_usuario';
   if (page === 'nuevo_usuario') return 'gestion/nuevo_usuario';
@@ -43,27 +45,29 @@ const getPathFromPage = (page: Page): string => {
 };
 
 const getPageFromPath = (path: string): Page => {
-  if (path === 'listado/docente_detalle' || path === 'listado/docente_listado') return 'docente_detalle';
-  if (path === 'listado/cargo_detalle') return 'cargo_detalle';
-  if (path === 'listado/licencia_detalle') return 'licencia_detalle';
-  if (path === 'gestion/modificar_docente' || path === 'gestion/modificar_usuario') return 'modificar_usuario';
-  if (path === 'gestion/baja_usuario') return 'baja_usuario';
-  if (path === 'gestion/nuevo_usuario' || path === 'gestion/alta_usuario') return 'nuevo_usuario';
-  if (path === 'tramites' || path === 'tramites/designacion' || path === 'designacion') return 'tramites';
-  if (path === 'gestion/alta_cargo') return 'alta_cargo';
-  if (path === 'gestion/modificar_cargo') return 'modificar_cargo';
-  if (path === 'gestion/alta_materia') return 'alta_materia';
-  if (path === 'gestion/modificar_materia') return 'modificar_materia';
-  if (path === 'gestion/baja_materia') return 'baja_materia';
-  if (path === 'gestion/alta_catedra') return 'alta_catedra';
-  if (path === 'gestion/modificar_catedra') return 'modificar_catedra';
-  if (path === 'gestion/baja_catedra') return 'baja_catedra';
-  if (path === 'gestion/baja_cargo') {
+  const cleanPath = path.split('?')[0].replace(/^\/+|\/+$/g, '');
+  if (cleanPath === 'listado/docente_detalle' || cleanPath === 'listado/docente_listado') return 'docente_detalle';
+  if (cleanPath === 'listado/cargo_detalle') return 'cargo_detalle';
+  if (cleanPath === 'listado/licencia_detalle') return 'licencia_detalle';
+  if (cleanPath === 'gestion/modificar_docente' || cleanPath === 'gestion/modificar_usuario') return 'modificar_usuario';
+  if (cleanPath === 'gestion/baja_usuario') return 'baja_usuario';
+  if (cleanPath === 'gestion/nuevo_usuario' || cleanPath === 'gestion/alta_usuario') return 'nuevo_usuario';
+  if (cleanPath === 'tramites' || cleanPath === 'tramites/designacion' || cleanPath === 'designacion') return 'tramites';
+  if (cleanPath === 'gestion/alta_cargo') return 'alta_cargo';
+  if (cleanPath === 'gestion/modificar_cargo') return 'modificar_cargo';
+  if (cleanPath === 'gestion/alta_materia') return 'alta_materia';
+  if (cleanPath === 'gestion/modificar_materia') return 'modificar_materia';
+  if (cleanPath === 'gestion/baja_materia') return 'baja_materia';
+  if (cleanPath === 'gestion/alta_catedra') return 'alta_catedra';
+  if (cleanPath === 'gestion/modificar_catedra') return 'modificar_catedra';
+  if (cleanPath === 'gestion/baja_catedra') return 'baja_catedra';
+  if (cleanPath === 'gestion/vencimientos' || cleanPath === 'vencimientos') return 'vencimientos';
+  if (cleanPath === 'gestion/baja_cargo') {
     return isGlobalAdmin() ? 'baja_cargo' : 'gestion';
   }
 
-  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'designacion', 'gestion', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra', 'modificar_catedra', 'baja_catedra'];
-  const resolved = validPages.includes(path as Page) ? (path as Page) : 'inicio';
+  const validPages: Page[] = ['inicio', 'listado', 'tramites', 'designacion', 'gestion', 'vencimientos', 'historial', 'docente_detalle', 'cargo_detalle', 'licencia_detalle', 'modificar_docente', 'modificar_usuario', 'baja_usuario', 'nuevo_usuario', 'alta_cargo', 'modificar_cargo', 'baja_cargo', 'alta_materia', 'modificar_materia', 'baja_materia', 'alta_catedra', 'modificar_catedra', 'baja_catedra'];
+  const resolved = validPages.includes(cleanPath as Page) ? (cleanPath as Page) : 'inicio';
   if (resolved === 'baja_cargo' && !isGlobalAdmin()) {
     return 'gestion';
   }
@@ -554,6 +558,15 @@ function App() {
 
         case 'gestion':
           return <Gestion onLogout={handleLogout} onNavigate={handleNavigate} />;
+
+        case 'vencimientos':
+          return (
+            <Vencimientos
+              onLogout={handleLogout}
+              onNavigate={handleNavigate}
+              onBack={() => handleNavigate('gestion')}
+            />
+          );
 
         case 'tramites':
         case 'designacion':
