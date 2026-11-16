@@ -389,3 +389,66 @@
     padding: 10px 20px;
   }
 }
+
+/* Vencimientos Alert Banner in Dashboard */
+.dashboard-vencimientos-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background-color: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.dashboard-vencimientos-banner.critico {
+  background-color: #FEE2E2;
+  border-color: #EF4444;
+  color: #991B1B;
+}
+
+.dashboard-vencimientos-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.dashboard-vencimientos-banner-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dashboard-vencimientos-banner-text {
+  line-height: 1.4;
+}
+
+.dashboard-vencimientos-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #1A1A1A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.dashboard-vencimientos-banner-btn:hover {
+  background-color: #333333;
+}
+
+.dashboard-vencimientos-banner-btn:active {
+  transform: scale(0.97);
+}

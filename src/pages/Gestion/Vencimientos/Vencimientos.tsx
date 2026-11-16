@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './Vencimientos.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
-import { FiChevronLeft, FiCheckCircle, FiCheckSquare } from 'react-icons/fi';
+import { FiChevronLeft, FiCheckCircle, FiCheckSquare, FiAlertTriangle, FiFilter } from 'react-icons/fi';
+import { isGlobalAdmin } from '../../../utils/auth';
 
 interface VencimientosProps {
   onLogout?: () => void;
@@ -10,7 +11,7 @@ interface VencimientosProps {
   onBack?: () => void;
 }
 
-interface DocenteResumen {
+interface DocenteDTO {
   docenteId?: number;
   nombre?: string;
   apellido?: string;
@@ -18,98 +19,36 @@ interface DocenteResumen {
   legajo?: string;
 }
 
-interface CargoResumen {
+interface CargoDTO {
   cargoId?: number;
-  codigo?: number;
+  codigo?: string | number;
   categoria?: string;
   dedicacion?: string;
   caracter?: string;
   origen?: string;
 }
 
-interface UnidadResumen {
+interface UnidadDTO {
   unidadId?: number;
   nombre?: string;
 }
 
-interface VencimientoItem {
-  id: string | number;
-  designacionId?: number;
+interface DesignacionVencimientoDTO {
+  designacionId: number;
   numeroResolucion?: string;
   fechaInicio?: string;
   fechaFin?: string;
   diasRestantes: number;
-  estadoActual?: string;
-  docente?: DocenteResumen;
-  unidad?: UnidadResumen;
-  cargos?: CargoResumen[];
-  // Display fallbacks
-  docenteNombre?: string;
-  departamento?: string;
-  origen?: string;
-  categoria?: string;
-  dedicacion?: string;
-  caracter?: string;
+  estadoActual: string;
+  docente?: DocenteDTO;
+  unidad?: UnidadDTO;
+  cargos?: CargoDTO[];
 }
 
-const DEFAULT_ITEMS: VencimientoItem[] = [
-  {
-    id: 1,
-    docenteNombre: 'CASTELLI, Sandra',
-    departamento: 'Artes Visuales',
-    estadoActual: 'Activo',
-    origen: 'De Planta',
-    categoria: 'JTP',
-    dedicacion: 'Exclusiva',
-    caracter: 'Efectivo',
-    numeroResolucion: 'XXXXX',
-    fechaInicio: 'DD/MM/YYYY',
-    fechaFin: 'DD/MM/YYYY',
-    diasRestantes: 7,
-  },
-  {
-    id: 2,
-    docenteNombre: 'CASTELLI, Sandra',
-    departamento: 'Artes Visuales',
-    estadoActual: 'Activo',
-    origen: 'De Planta',
-    categoria: 'JTP',
-    dedicacion: 'Exclusiva',
-    caracter: 'Efectivo',
-    numeroResolucion: 'XXXXX',
-    fechaInicio: 'DD/MM/YYYY',
-    fechaFin: 'DD/MM/YYYY',
-    diasRestantes: 10,
-  },
-  {
-    id: 3,
-    docenteNombre: 'CASTELLI, Sandra',
-    departamento: 'Artes Visuales',
-    estadoActual: 'Activo',
-    origen: 'De Planta',
-    categoria: 'JTP',
-    dedicacion: 'Exclusiva',
-    caracter: 'Efectivo',
-    numeroResolucion: 'XXXXX',
-    fechaInicio: 'DD/MM/YYYY',
-    fechaFin: 'DD/MM/YYYY',
-    diasRestantes: 30,
-  },
-  {
-    id: 4,
-    docenteNombre: 'CASTELLI, Sandra',
-    departamento: 'Artes Visuales',
-    estadoActual: 'Activo',
-    origen: 'De Planta',
-    categoria: 'JTP',
-    dedicacion: 'Exclusiva',
-    caracter: 'Efectivo',
-    numeroResolucion: 'XXXXX',
-    fechaInicio: 'DD/MM/YYYY',
-    fechaFin: 'DD/MM/YYYY',
-    diasRestantes: 7,
-  },
-];
+interface UnidadSelectOption {
+  unidadId: number;
+  nombre: string;
+}
 
 const formatDate = (dateStr?: string): string => {
   if (!dateStr) return 'DD/MM/YYYY';
@@ -123,9 +62,58 @@ const formatDate = (dateStr?: string): string => {
 };
 
 export default function Vencimientos({ onLogout, onNavigate, onBack }: VencimientosProps) {
-  const [items, setItems] = useState<VencimientoItem[]>(DEFAULT_ITEMS);
+  const [items, setItems] = useState<DesignacionVencimientoDTO[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Filters
+  const [incluirVencidas, setIncluirVencidas] = useState<boolean>(false);
+  const [selectedUnidadId, setSelectedUnidadId] = useState<string>('');
+  const [unidadesList, setUnidadesList] = useState<UnidadSelectOption[]>([]);
+
+  const userIsGlobalAdmin = useMemo(() => isGlobalAdmin(), []);
+
+  // Fetch Unidades if Admin Global
   useEffect(() => {
+    if (!userIsGlobalAdmin) return;
+
+    const fetchUnidades = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(`${apiUrl}/api/unidades`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setUnidadesList(
+              data.map((u: any) => ({
+                unidadId: Number(u.unidadId ?? u.id),
+                nombre: u.unidadNombre ?? u.nombre ?? `Unidad ${u.unidadId ?? u.id}`,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudieron cargar las unidades:', err);
+      }
+    };
+
+    fetchUnidades();
+  }, [userIsGlobalAdmin]);
+
+  // Fetch Vencimientos
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setErrorMessage(null);
+
     const fetchVencimientos = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
@@ -137,46 +125,53 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch(`${apiUrl}/api/designaciones/vencimientos`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const mapped: VencimientoItem[] = data.map((d: any, idx: number) => {
-              const docente = d.docente || {};
-              const nombreDocente = docente.apellido && docente.nombre
-                ? `${docente.apellido.toUpperCase()}, ${docente.nombre}`
-                : docente.nombre || 'Docente sin asignar';
-              const cargo = (d.cargos && d.cargos[0]) || {};
-
-              return {
-                id: d.designacionId || idx,
-                designacionId: d.designacionId,
-                docenteNombre: nombreDocente,
-                departamento: d.unidad?.nombre || 'Artes Visuales',
-                estadoActual: d.estadoActual || 'Activo',
-                origen: cargo.origen || 'De Planta',
-                categoria: cargo.categoria || 'JTP',
-                dedicacion: cargo.dedicacion || 'Exclusiva',
-                caracter: cargo.caracter || 'Efectivo',
-                numeroResolucion: d.numeroResolucion || 'XXXXX',
-                fechaInicio: d.fechaInicio,
-                fechaFin: d.fechaFin,
-                diasRestantes: typeof d.diasRestantes === 'number' ? d.diasRestantes : 7,
-                docente: d.docente,
-                unidad: d.unidad,
-                cargos: d.cargos,
-              };
-            });
-            setItems(mapped);
-          }
+        const query = new URLSearchParams();
+        if (incluirVencidas) {
+          query.append('incluirVencidas', 'true');
         }
-      } catch (err) {
-        console.warn('No se pudo conectar al endpoint de vencimientos, usando datos por defecto:', err);
+        if (userIsGlobalAdmin && selectedUnidadId) {
+          query.append('unidadId', selectedUnidadId);
+        }
+
+        const qs = query.toString();
+        const url = `${apiUrl}/api/designaciones/vencimientos${qs ? `?${qs}` : ''}`;
+
+        const res = await fetch(url, { headers });
+
+        if (res.status === 401) {
+          if (onLogout) onLogout();
+          return;
+        }
+
+        if (res.status === 403) {
+          throw new Error('No tienes permisos para consultar los vencimientos de la unidad seleccionada (403 Forbidden).');
+        }
+
+        if (!res.ok) {
+          throw new Error(`Error en el servidor al cargar vencimientos (${res.status}).`);
+        }
+
+        const data = await res.json();
+        if (isMounted) {
+          setItems(Array.isArray(data) ? data : []);
+          setLoading(false);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error('Error al obtener vencimientos:', err);
+          setErrorMessage(err.message || 'Error al cargar el listado de vencimientos.');
+          setItems([]);
+          setLoading(false);
+        }
       }
     };
 
     fetchVencimientos();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [incluirVencidas, selectedUnidadId, userIsGlobalAdmin, onLogout]);
 
   const handleBack = () => {
     if (onBack) {
@@ -186,17 +181,19 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
     }
   };
 
-  const handleRenovar = (item: VencimientoItem) => {
+  const handleRenovar = (item: DesignacionVencimientoDTO) => {
     if (onNavigate) {
       onNavigate('designacion', {
         docente: item.docente,
         cargo: item.cargos?.[0],
         nroResolucion: item.numeroResolucion,
+        designacionId: item.designacionId,
       });
     }
   };
 
   const getBadgeClass = (dias: number) => {
+    if (dias < 0) return 'badge-vencida';
     if (dias <= 7) return 'badge-critico';
     if (dias <= 15) return 'badge-alerta';
     return 'badge-normal';
@@ -227,6 +224,14 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
     );
   };
 
+  const totalCriticos = useMemo(() => {
+    return items.filter((i) => i.diasRestantes >= 0 && i.diasRestantes <= 7).length;
+  }, [items]);
+
+  const totalVencidas = useMemo(() => {
+    return items.filter((i) => i.diasRestantes < 0).length;
+  }, [items]);
+
   return (
     <div className="vencimientos-page-layout">
       <Topbar onLogout={onLogout} />
@@ -254,88 +259,161 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
                 <h1 className="vencimientos-page-title">Gestión</h1>
               </div>
 
+              {/* Filters Toolbar */}
+              <div className="vencimientos-toolbar">
+                <div className="vencimientos-filters-group">
+                  {userIsGlobalAdmin && (
+                    <div className="vencimientos-unit-selector">
+                      <FiFilter />
+                      <label htmlFor="unidad-select">Unidad Académica:</label>
+                      <select
+                        id="unidad-select"
+                        value={selectedUnidadId}
+                        onChange={(e) => setSelectedUnidadId(e.target.value)}
+                      >
+                        <option value="">Todas las unidades</option>
+                        {unidadesList.map((u) => (
+                          <option key={u.unidadId} value={u.unidadId}>
+                            {u.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <label className="vencimientos-toggle-vencidas">
+                    <input
+                      type="checkbox"
+                      checked={incluirVencidas}
+                      onChange={(e) => setIncluirVencidas(e.target.checked)}
+                    />
+                    <span>Incluir designaciones ya vencidas</span>
+                  </label>
+                </div>
+
+                <div className="vencimientos-summary-pills">
+                  {totalCriticos > 0 && (
+                    <span className="vencimientos-summary-pill critico">
+                      <FiAlertTriangle style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                      {totalCriticos} crítica{totalCriticos > 1 ? 's' : ''} (≤ 7 días)
+                    </span>
+                  )}
+                  {incluirVencidas && totalVencidas > 0 && (
+                    <span className="vencimientos-summary-pill">
+                      {totalVencidas} ya vencida{totalVencidas > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="vencimientos-error-msg">
+                  <FiAlertTriangle style={{ marginRight: 6 }} />
+                  {errorMessage}
+                </div>
+              )}
+
               {/* Framed Inner Card with Pink Header */}
               <div className="vencimientos-table-card">
                 <div className="vencimientos-table-header">
                   <h2>Vencimientos</h2>
+                  <span className="vencimientos-header-badge">
+                    {loading ? 'Cargando...' : `${items.length} designaciones`}
+                  </span>
                 </div>
 
                 <div className="vencimientos-table-body">
-                  {items.length === 0 ? (
+                  {loading ? (
+                    <div className="vencimientos-empty">Cargando vencimientos de designaciones...</div>
+                  ) : items.length === 0 ? (
                     <div className="vencimientos-empty">
-                      No hay designaciones próximas a vencer.
+                      No hay designaciones próximas a vencer en los próximos 30 días
+                      {incluirVencidas ? ' ni designaciones vencidas' : ''}.
                     </div>
                   ) : (
-                    items.map((item) => (
-                      <div key={item.id} className="vencimiento-card-item">
-                        <div className="vencimiento-info">
-                          {/* Row 1: Nombre, Departamento, Estado Activo */}
-                          <div className="vencimiento-row-1">
-                            <span className="vencimiento-docente-nombre">
-                              {item.docenteNombre}
-                            </span>
-                            <span className="vencimiento-departamento">
-                              <strong>Departamento:</strong> {item.departamento}
-                            </span>
-                            <span className="vencimiento-badge-activo">
-                              <FiCheckCircle className="vencimiento-badge-icon" />
-                              <span>{item.estadoActual || 'Activo'}</span>
-                            </span>
+                    items.map((item) => {
+                      const docente = item.docente;
+                      const nombreDocente = docente?.apellido && docente?.nombre
+                        ? `${docente.apellido.toUpperCase()}, ${docente.nombre}`
+                        : docente?.nombre || 'Docente sin asignar';
+                      const cargo: CargoDTO = (item.cargos && item.cargos[0]) || {};
+
+                      return (
+                        <div key={item.designacionId} className="vencimiento-card-item">
+                          <div className="vencimiento-info">
+                            {/* Row 1: Nombre, Departamento/Unidad, Estado Activo */}
+                            <div className="vencimiento-row-1">
+                              <span className="vencimiento-docente-nombre">
+                                {nombreDocente}
+                              </span>
+                              {docente?.legajo && (
+                                <span className="vencimiento-docente-doc">
+                                  Leg: {docente.legajo}
+                                </span>
+                              )}
+                              <span className="vencimiento-departamento">
+                                <strong>Unidad:</strong> {item.unidad?.nombre || 'Sin unidad asignada'}
+                              </span>
+                              <span className="vencimiento-badge-activo">
+                                <FiCheckCircle className="vencimiento-badge-icon" />
+                                <span>{item.estadoActual || 'Activa'}</span>
+                              </span>
+                            </div>
+
+                            {/* Row 2: Origen, Categoría, Dedicación, Caracter */}
+                            <div className="vencimiento-row-2">
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Origen:</span>
+                                <span className="vencimiento-meta-val">{cargo.origen || 'De Planta'}</span>
+                              </span>
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Categoría:</span>
+                                <span className="vencimiento-meta-val">{cargo.categoria || 'JTP'}</span>
+                              </span>
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Dedicación:</span>
+                                <span className="vencimiento-meta-val">{cargo.dedicacion || 'Exclusiva'}</span>
+                              </span>
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Caracter:</span>
+                                <span className="vencimiento-meta-val">{cargo.caracter || 'Efectivo'}</span>
+                              </span>
+                            </div>
+
+                            {/* Row 3: N° Resolución, Fecha Inicio, Fecha Fin */}
+                            <div className="vencimiento-row-3">
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">N° Resolución:</span>
+                                <span className="vencimiento-meta-val">{item.numeroResolucion || 'S/N'}</span>
+                              </span>
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Fecha Inicio:</span>
+                                <span className="vencimiento-meta-val">{formatDate(item.fechaInicio)}</span>
+                              </span>
+                              <span className="vencimiento-meta-item">
+                                <span className="vencimiento-meta-label">Fecha Fin:</span>
+                                <span className="vencimiento-meta-val">{formatDate(item.fechaFin)}</span>
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Row 2: Origen, Categoría, Dedicación, Caracter */}
-                          <div className="vencimiento-row-2">
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Origen:</span>
-                              <span className="vencimiento-meta-val">{item.origen || 'De Planta'}</span>
-                            </span>
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Categoría:</span>
-                              <span className="vencimiento-meta-val">{item.categoria || 'JTP'}</span>
-                            </span>
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Dedicación:</span>
-                              <span className="vencimiento-meta-val">{item.dedicacion || 'Exclusiva'}</span>
-                            </span>
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Caracter:</span>
-                              <span className="vencimiento-meta-val">{item.caracter || 'Efectivo'}</span>
-                            </span>
-                          </div>
-
-                          {/* Row 3: N° Resolución, Fecha Inicio, Fecha Fin */}
-                          <div className="vencimiento-row-3">
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">N° Resolución:</span>
-                              <span className="vencimiento-meta-val">{item.numeroResolucion || 'XXXXX'}</span>
-                            </span>
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Fecha Inicio:</span>
-                              <span className="vencimiento-meta-val">{formatDate(item.fechaInicio)}</span>
-                            </span>
-                            <span className="vencimiento-meta-item">
-                              <span className="vencimiento-meta-label">Fecha Fin:</span>
-                              <span className="vencimiento-meta-val">{formatDate(item.fechaFin)}</span>
-                            </span>
+                          {/* Right: Badge días and Renovar button */}
+                          <div className="vencimiento-actions">
+                            <div className={`vencimiento-badge-dias ${getBadgeClass(item.diasRestantes)}`}>
+                              {renderBadgeContent(item.diasRestantes)}
+                            </div>
+                            <button
+                              type="button"
+                              className="vencimiento-btn-renovar"
+                              onClick={() => handleRenovar(item)}
+                            >
+                              <FiCheckSquare className="vencimiento-renovar-icon" />
+                              <span>Renovar</span>
+                            </button>
                           </div>
                         </div>
-
-                        {/* Right: Badge días and Renovar button */}
-                        <div className="vencimiento-actions">
-                          <div className={`vencimiento-badge-dias ${getBadgeClass(item.diasRestantes)}`}>
-                            {renderBadgeContent(item.diasRestantes)}
-                          </div>
-                          <button
-                            type="button"
-                            className="vencimiento-btn-renovar"
-                            onClick={() => handleRenovar(item)}
-                          >
-                            <FiCheckSquare className="vencimiento-renovar-icon" />
-                            <span>Renovar</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

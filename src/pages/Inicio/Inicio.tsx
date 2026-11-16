@@ -2,9 +2,18 @@ import React, { useState, useEffect } from 'react';
 import './Inicio.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-
+import { FiAlertTriangle, FiClock, FiArrowRight } from 'react-icons/fi';
 
 import FilterBar, { type FilterCategory } from '../../components/FilterBar';
+
+interface DesignacionVencimientosResumen {
+  totalPorVencer: number;
+  umbralDias: number;
+  unidadId: number | null;
+  unidadNombre: string | null;
+  tieneVencimientosCriticos: boolean;
+  totalCriticos: number;
+}
 
 
 
@@ -84,6 +93,34 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
   const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]); // added some mock filters for demo
   const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
+  const [vencimientosResumen, setVencimientosResumen] = useState<DesignacionVencimientosResumen | null>(null);
+
+  useEffect(() => {
+    const fetchResumenVencimientos = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(`${apiUrl}/api/designaciones/vencimientos/resumen`, { headers });
+        if (res.ok) {
+          const data: DesignacionVencimientosResumen = await res.json();
+          if (data && data.totalPorVencer > 0) {
+            setVencimientosResumen(data);
+          } else {
+            setVencimientosResumen(null);
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo cargar el resumen de vencimientos para el dashboard:', err);
+      }
+    };
+
+    fetchResumenVencimientos();
+  }, []);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -269,6 +306,43 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
               onRemoveFilter={handleRemoveFilter}
               onSearch={(term) => console.log('Searching for:', term)}
             />
+
+            {vencimientosResumen && vencimientosResumen.totalPorVencer > 0 && (
+              <div
+                className={`dashboard-vencimientos-banner ${
+                  vencimientosResumen.tieneVencimientosCriticos ? 'critico' : ''
+                }`}
+              >
+                <div className="dashboard-vencimientos-banner-content">
+                  {vencimientosResumen.tieneVencimientosCriticos ? (
+                    <FiAlertTriangle className="dashboard-vencimientos-banner-icon" />
+                  ) : (
+                    <FiClock className="dashboard-vencimientos-banner-icon" />
+                  )}
+                  <div className="dashboard-vencimientos-banner-text">
+                    <strong>
+                      {vencimientosResumen.totalPorVencer} designaci{vencimientosResumen.totalPorVencer === 1 ? 'ón' : 'ones'} por vencer
+                    </strong>{' '}
+                    en los próximos {vencimientosResumen.umbralDias || 30} días
+                    {vencimientosResumen.unidadNombre ? ` en ${vencimientosResumen.unidadNombre}` : ''}.
+                    {vencimientosResumen.tieneVencimientosCriticos && (
+                      <span>
+                        {' '}
+                        (<strong>{vencimientosResumen.totalCriticos}</strong> con vencimiento crítico ≤ 7 días)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="dashboard-vencimientos-banner-btn"
+                  onClick={() => onNavigate && onNavigate('vencimientos')}
+                >
+                  <span>Ver vencimientos</span>
+                  <FiArrowRight />
+                </button>
+              </div>
+            )}
 
             {!data ? (
               <div className="loading-state">Cargando tablero...</div>
