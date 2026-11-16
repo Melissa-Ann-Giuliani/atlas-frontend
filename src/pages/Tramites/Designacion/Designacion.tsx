@@ -15,7 +15,12 @@ import {
   FiX,
   FiChevronDown,
   FiArrowUp,
-  FiArrowDown
+  FiArrowDown,
+  FiFileText,
+  FiPrinter,
+  FiCheckSquare,
+  FiZoomIn,
+  FiZoomOut
 } from 'react-icons/fi';
 import { LuClipboardPlus } from 'react-icons/lu';
 
@@ -49,13 +54,32 @@ interface CargoOption {
   caracter?: string;
   categoria?: string;
   dedicacion?: string;
+  dedicacionHoras?: number;
   designacion?: string | number;
   unidad?: string;
+  unidadId?: number;
   unidadNombre?: string;
   materia?: string;
   plan?: string | number;
   estado?: string;
 }
+
+interface FuncionFormItem {
+  id: string;
+  nombre: string;
+  tipo: string;
+  horas: number | '';
+  materiaNombre: string;
+  materiaId: number | null;
+}
+
+const TIPO_FUNCION_OPTIONS = [
+  'Planta',
+  'Investigación',
+  'Extensión',
+  'Gestión',
+  'Docencia'
+];
 
 const CrearCargoIcon = () => (
   <svg
@@ -194,6 +218,15 @@ const initialFormState: FormState = {
   fechaFinalizacion: null,
 };
 
+const createEmptyFuncion = (defaultMateriaName = '', defaultMateriaId: number | null = null): FuncionFormItem => ({
+  id: String(Date.now() + Math.random()),
+  nombre: '',
+  tipo: 'Planta',
+  horas: '',
+  materiaNombre: defaultMateriaName,
+  materiaId: defaultMateriaId,
+});
+
 export default function Designacion({ onLogout, onNavigate, onBack }: DesignacionProps) {
   const [activeTab, setActiveTab] = useState<TramiteTab>('designaciones');
   const [formData, setFormData] = useState<FormState>(initialFormState);
@@ -214,6 +247,26 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [cargoSortBy, setCargoSortBy] = useState<'numero' | 'fechaCreacion' | 'materia' | 'categoria' | 'dedicacion' | 'horasOcupadas'>('numero');
   const [cargoSortDirection, setCargoSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Step state: 'seleccion-cargo' (Paso 1) vs 'asignacion-funciones' (Paso 2) vs 'documento-generado' (Paso 3)
+  const [step, setStep] = useState<'seleccion-cargo' | 'asignacion-funciones' | 'documento-generado'>('seleccion-cargo');
+  const [funciones, setFunciones] = useState<FuncionFormItem[]>([]);
+  const [materiasList, setMateriasList] = useState<any[]>([]);
+  const [activeMateriaDropdownIndex, setActiveMateriaDropdownIndex] = useState<number | null>(null);
+  const [materiaFilterQueries, setMateriaFilterQueries] = useState<{ [index: number]: string }>({});
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
+
+  // Confirmed designation state (set when user presses "Confirmar" on Step 3)
+  const [confirmedData, setConfirmedData] = useState<{
+    designacionId: number;
+    documentoId?: number;
+    docenteNombre: string;
+    cargoNumero: string | number;
+    nroResolucion: string;
+    horasOcupadas: number;
+    horasDedicacion: number;
+    notificacionEnviada: boolean;
+  } | null>(null);
+
   // Feedback notification
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | 'info';
@@ -222,12 +275,16 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const cargosHeaderRef = useRef<HTMLHeadingElement>(null);
+  const a4SheetRef = useRef<HTMLDivElement>(null);
 
   // Close suggestions on outside click
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
+      }
+      if (!(e.target as HTMLElement)?.closest('.designacion-materia-field-wrap')) {
+        setActiveMateriaDropdownIndex(null);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -373,9 +430,23 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     setSelectedCargoId(null);
     setShowCargosSection(false);
     setFeedback(null);
+    setStep('seleccion-cargo');
+    setFunciones([]);
+    setConfirmedData(null);
+    setZoomLevel(100);
   };
 
   const handleBack = () => {
+    if (step === 'documento-generado') {
+      setStep('asignacion-funciones');
+      setFeedback(null);
+      return;
+    }
+    if (step === 'asignacion-funciones') {
+      setStep('seleccion-cargo');
+      setFeedback(null);
+      return;
+    }
     if (onBack) {
       onBack();
     } else if (onNavigate) {
@@ -416,16 +487,24 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      const [resCargosLibre, resCargosAll, resMaterias] = await Promise.all([
+      const [resCargosLibre, resCargosAll, resMaterias, resDedicaciones] = await Promise.all([
         fetch(`${apiUrl}/api/cargos?estado=Libre&size=50`, { headers }).catch(() => null),
         fetch(`${apiUrl}/api/cargos?size=50`, { headers }).catch(() => null),
         fetch(`${apiUrl}/api/materias?size=500`, { headers }).catch(() => null),
+        fetch(`${apiUrl}/api/dedicaciones`, { headers }).catch(() => null),
       ]);
 
-      let materiasList: any[] = [];
+      let materiasListRaw: any[] = [];
       if (resMaterias?.ok) {
         const matData = await resMaterias.json().catch(() => null);
-        materiasList = matData?.content || (Array.isArray(matData) ? matData : []);
+        materiasListRaw = matData?.content || (Array.isArray(matData) ? matData : []);
+        setMateriasList(materiasListRaw);
+      }
+
+      let dedicacionesList: any[] = [];
+      if (resDedicaciones?.ok) {
+        const dedData = await resDedicaciones.json().catch(() => null);
+        dedicacionesList = Array.isArray(dedData) ? dedData : (dedData?.content || []);
       }
 
       const rawMap = new Map<number, any>();
@@ -484,12 +563,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
           const matchedMateria =
             materiaName && materiaName !== 'Sin asignar'
-              ? materiasList.find(
-                  (m: any) =>
-                    String(m.nombre || m.materiaNombre || '')
-                      .trim()
-                      .toLowerCase() === String(materiaName).trim().toLowerCase()
-                )
+              ? materiasListRaw.find(
+                (m: any) =>
+                  String(m.nombre || m.materiaNombre || '')
+                    .trim()
+                    .toLowerCase() === String(materiaName).trim().toLowerCase()
+              )
               : null;
 
           const planVal =
@@ -515,6 +594,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
             c.origenNombre ??
             'Planta';
 
+          const resolvedUnidadId = detail?.unidadId ?? c.unidadId ?? c.unidad?.unidadId;
+
           const unidadVal =
             detail?.unidadNombre ??
             detail?.unidad?.unidadNombre ??
@@ -532,6 +613,24 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
             c.nroResolucionDesignacion ??
             'Libre';
 
+          const dedicacionStr = String(detail?.dedicacion ?? detail?.dedicacionNombre ?? c.dedicacion ?? 'Simple');
+
+          // Resolve Dedicacion Horas
+          let resolvedDedicacionHoras = 10;
+          const matchedDedicacion = dedicacionesList.find(
+            (d: any) =>
+              String(d.dedicacionNombre || '').trim().toLowerCase() === dedicacionStr.trim().toLowerCase()
+          );
+          if (matchedDedicacion?.dedicacionHoras) {
+            resolvedDedicacionHoras = Number(matchedDedicacion.dedicacionHoras);
+          } else if (dedicacionStr.toLowerCase().includes('exclusiva') && !dedicacionStr.toLowerCase().includes('semi')) {
+            resolvedDedicacionHoras = 40;
+          } else if (dedicacionStr.toLowerCase().includes('semi')) {
+            resolvedDedicacionHoras = 20;
+          } else if (dedicacionStr.toLowerCase().includes('simple')) {
+            resolvedDedicacionHoras = 10;
+          }
+
           return {
             id: cargoId ?? c.numero,
             numero: detail?.numero ?? c.numero ?? c.codigo ?? cargoId,
@@ -540,9 +639,11 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
             origen: String(origenVal),
             caracter: detail?.caracter ?? detail?.caracterNombre ?? c.caracter ?? 'Ordinario',
             categoria: detail?.categoria ?? detail?.categoriaNombre ?? c.categoria ?? 'Sin categoría',
-            dedicacion: detail?.dedicacion ?? detail?.dedicacionNombre ?? c.dedicacion ?? 'Simple',
+            dedicacion: dedicacionStr,
+            dedicacionHoras: resolvedDedicacionHoras,
             designacion: String(designacionVal),
             unidad: String(unidadVal),
+            unidadId: resolvedUnidadId ? Number(resolvedUnidadId) : undefined,
             materia: String(materiaName),
             plan: String(planVal),
             estado: detail?.estado ?? c.estado ?? 'Libre',
@@ -589,7 +690,16 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     return cargoSortDirection === 'asc' ? comparison : -comparison;
   });
 
-  // Show Cargos para Designación section or submit if a cargo is already selected
+  const selectedCargo = availableCargos.find((c) => c.id === selectedCargoId) || null;
+
+  // Filter materias scoped to the selected cargo's academic unit
+  const filteredMaterias = materiasList.filter((m: any) => {
+    if (!selectedCargo?.unidadId) return true;
+    const matUnidadId = m.unidadId ?? m.unidad?.unidadId ?? m.unidad?.id;
+    return !matUnidadId || Number(matUnidadId) === Number(selectedCargo.unidadId);
+  });
+
+  // Action button click in Step 1: Open cargos section or transition to Step 2
   const handleAsignarCargoClick = async () => {
     setFeedback(null);
 
@@ -610,15 +720,11 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       return;
     }
 
-    await handleConfirmAsignacion();
-  };
-
-  // Submit designation
-  const handleConfirmAsignacion = async () => {
+    // Validate Docente data before moving to Actividades step
     if (!formData.apellido.trim() || !formData.nombre.trim()) {
       setFeedback({
         type: 'error',
-        message: 'Por favor ingrese o seleccione el docente (Apellido y Nombre).',
+        message: 'Por favor complete o seleccione el Docente (Apellido y Nombre).',
       });
       return;
     }
@@ -647,13 +753,175 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       return;
     }
 
-    if (!selectedCargoId) {
+    // Transition to Step 2: Asignar Actividades / Funciones
+    const defaultMateriaName = selectedCargo?.materia && selectedCargo.materia !== 'Sin asignar' ? selectedCargo.materia : '';
+    const matchedMateria = defaultMateriaName
+      ? materiasList.find((m: any) => String(m.nombre || '').trim().toLowerCase() === defaultMateriaName.trim().toLowerCase())
+      : null;
+
+    setFunciones([createEmptyFuncion(defaultMateriaName, matchedMateria?.id || null)]);
+    setStep('asignacion-funciones');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Add a new function card
+  const handleAddFuncion = () => {
+    setFunciones((prev) => [...prev, createEmptyFuncion()]);
+  };
+
+  // Remove function card
+  const handleRemoveFuncion = (index: number) => {
+    if (funciones.length <= 1) {
       setFeedback({
-        type: 'error',
-        message: 'Debe seleccionar un cargo de la lista para completar la designación.',
+        type: 'info',
+        message: 'Debe conservar al menos una función para la designación.',
       });
       return;
     }
+    setFunciones((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  // Update a function field
+  const handleUpdateFuncion = (index: number, field: keyof FuncionFormItem, value: any) => {
+    setFunciones((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  // Select materia from dropdown
+  const handleSelectMateriaForFuncion = (index: number, materia: any) => {
+    handleUpdateFuncion(index, 'materiaNombre', materia.nombre);
+    handleUpdateFuncion(index, 'materiaId', materia.id);
+    setActiveMateriaDropdownIndex(null);
+  };
+
+  // Calculate current total hours
+  const totalHorasAsignadas = funciones.reduce((sum, f) => sum + (Number(f.horas) || 0), 0);
+  const maxHorasPermitidas = selectedCargo?.dedicacionHoras ?? 40;
+
+  // Validate functions and resolve materiaId for each row
+  const validateAndResolveFunciones = (): {
+    resolved: { nombre: string; tipo: string; horas: number; materiaId: number }[];
+    updatedItems: FuncionFormItem[];
+  } | null => {
+    if (!selectedCargoId || !selectedCargo) {
+      setFeedback({
+        type: 'error',
+        message: 'No se encuentra seleccionado ningún cargo válido.',
+      });
+      return null;
+    }
+
+    if (funciones.length === 0) {
+      setFeedback({
+        type: 'error',
+        message: 'Debe ingresar al menos una función.',
+      });
+      return null;
+    }
+
+    const resolvedFunciones: { nombre: string; tipo: string; horas: number; materiaId: number }[] = [];
+    const updatedItems: FuncionFormItem[] = [];
+
+    for (let i = 0; i < funciones.length; i++) {
+      const f = funciones[i];
+      const numLabel = `Función N°${i + 1}`;
+
+      if (!f.nombre.trim()) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor ingrese el Nombre de la ${numLabel}.`,
+        });
+        return null;
+      }
+
+      if (!f.tipo.trim()) {
+        setFeedback({
+          type: 'error',
+          message: `Por favor seleccione el Tipo para la ${numLabel}.`,
+        });
+        return null;
+      }
+
+      const horasNum = Number(f.horas);
+      if (isNaN(horasNum) || horasNum < 1) {
+        setFeedback({
+          type: 'error',
+          message: `La Cantidad de Horas de la ${numLabel} debe ser al menos 1 hora.`,
+        });
+        return null;
+      }
+
+      let targetMateriaId = f.materiaId;
+      let targetMateriaNombre = f.materiaNombre.trim();
+      if (!targetMateriaId) {
+        const matched =
+          filteredMaterias.find(
+            (m: any) => String(m.nombre || '').trim().toLowerCase() === targetMateriaNombre.toLowerCase()
+          ) ||
+          materiasList.find(
+            (m: any) => String(m.nombre || '').trim().toLowerCase() === targetMateriaNombre.toLowerCase()
+          );
+        if (matched?.id) {
+          targetMateriaId = matched.id;
+          targetMateriaNombre = matched.nombre || targetMateriaNombre;
+        } else {
+          setFeedback({
+            type: 'error',
+            message: `Por favor seleccione una materia válida para la ${numLabel}.`,
+          });
+          return null;
+        }
+      }
+
+      resolvedFunciones.push({
+        nombre: f.nombre.trim(),
+        tipo: f.tipo.trim(),
+        horas: horasNum,
+        materiaId: Number(targetMateriaId),
+      });
+
+      updatedItems.push({
+        ...f,
+        nombre: f.nombre.trim(),
+        tipo: f.tipo.trim(),
+        horas: horasNum,
+        materiaNombre: targetMateriaNombre,
+        materiaId: Number(targetMateriaId),
+      });
+    }
+
+    if (totalHorasAsignadas > maxHorasPermitidas) {
+      setFeedback({
+        type: 'error',
+        message: `La suma de horas asignadas (${totalHorasAsignadas} hs) supera la dedicación del cargo (${maxHorasPermitidas} hs).`,
+      });
+      return null;
+    }
+
+    return { resolved: resolvedFunciones, updatedItems };
+  };
+
+  // Step 2 Action: "Generar Documento" -> Validates and transitions to Step 3 (Vista previa de documento)
+  const handleGenerarDocumento = () => {
+    setFeedback(null);
+    const validation = validateAndResolveFunciones();
+    if (!validation) return;
+
+    setFunciones(validation.updatedItems);
+    setConfirmedData(null);
+    setZoomLevel(100);
+    setStep('documento-generado');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Step 3 Action: "Confirmar" -> Confirms Docente & Cargo Functions in backend, transitioning Docente to Activo
+  const handleConfirmarDesignacion = async () => {
+    setFeedback(null);
+    const validation = validateAndResolveFunciones();
+    if (!validation || !selectedCargo) return;
 
     setIsSubmitting(true);
     try {
@@ -664,7 +932,6 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       };
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-      // Format dates to YYYY-MM-DD
       const formatIso = (date: Date | null) => {
         if (!date) return null;
         const year = date.getFullYear();
@@ -673,32 +940,107 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         return `${year}-${month}-${day}`;
       };
 
-      const payload = {
+      // 1. Vincular cargo y crear/verificar designación
+      const desPayload = {
         docenteId: formData.docenteId || (formData.legajo ? Number(formData.legajo) : 1),
         cargoId: selectedCargoId,
-        nroResolucion: Number(formData.nroResolucion.replace(/\D/g, '') || formData.nroResolucion),
+        nroResolucion: formData.nroResolucion,
         fechaInicio: formatIso(formData.fechaComienzo),
         fechaFin: formatIso(formData.fechaFinalizacion),
       };
 
-      const res = await fetch(`${apiUrl}/api/designaciones`, {
+      const resDes = await fetch(`${apiUrl}/api/designaciones`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(desPayload),
       });
 
-      const data = await res.json().catch(() => null);
+      const desData = await resDes.json().catch(() => null);
 
-      if (res.status === 201 || res.ok) {
-        const resNum = formData.nroResolucion;
+      if (!resDes.ok && resDes.status !== 201) {
+        const errorMsg = desData?.message || 'Error al registrar la designación del docente.';
+        if (!errorMsg.toLowerCase().includes('ya posee')) {
+          setFeedback({ type: 'error', message: errorMsg });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Asignar funciones al cargo via POST /api/cargos/{cargoId}/funciones (cambia Docente a Activo y genera PDF)
+      const funcionesPayload = {
+        funciones: validation.resolved,
+      };
+
+      const resFunc = await fetch(`${apiUrl}/api/cargos/${selectedCargoId}/funciones`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(funcionesPayload),
+      });
+
+      const funcData = await resFunc.json().catch(() => null);
+
+      if (resFunc.ok || resFunc.status === 200) {
         const docName = `${formData.apellido}, ${formData.nombre}`;
-        handleLimpiar();
+        const cargoNum = selectedCargo.numero ?? selectedCargo.codigo ?? selectedCargoId ?? '';
+
+        const resultObj = {
+          designacionId: funcData?.designacionId ?? desData?.id ?? 0,
+          documentoId: funcData?.documentoId,
+          docenteNombre: docName,
+          cargoNumero: cargoNum,
+          nroResolucion: formData.nroResolucion,
+          horasOcupadas: funcData?.horasOcupadas ?? totalHorasAsignadas,
+          horasDedicacion: funcData?.horasDedicacion ?? maxHorasPermitidas,
+          notificacionEnviada: !!funcData?.notificacionEnviada,
+        };
+
+        setConfirmedData(resultObj);
+
+        // Persist rich document metadata so CargoDetalle and DocenteDetalle in Listado can display and open/download it
+        try {
+          const storedRaw = localStorage.getItem('atlas_confirmed_designaciones_docs');
+          const storedList: any[] = storedRaw ? JSON.parse(storedRaw) : [];
+          const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+          const docEntry = {
+            documentoId: resultObj.documentoId,
+            designacionId: resultObj.designacionId,
+            cargoId: selectedCargoId,
+            cargoNumero: cargoNum,
+            docenteId: formData.docenteId,
+            legajo: formData.legajo,
+            docenteApellido: formData.apellido,
+            docenteNombre: formData.nombre,
+            nroResolucion: formData.nroResolucion,
+            fechaComienzo: formData.fechaComienzo ? formData.fechaComienzo.toLocaleDateString('es-AR') : '--/--/----',
+            fechaFinalizacion: formData.fechaFinalizacion ? formData.fechaFinalizacion.toLocaleDateString('es-AR') : null,
+            categoria: selectedCargo.categoria || 'Docente',
+            dedicacion: selectedCargo.dedicacion || 'Simple',
+            caracter: selectedCargo.caracter || 'Ordinario',
+            unidad: selectedCargo.unidad || selectedCargo.unidadNombre || 'General',
+            horasTotales: totalHorasAsignadas,
+            horasDedicacion: maxHorasPermitidas,
+            funciones: validation.updatedItems,
+            sheetHtml: a4SheetRef.current?.innerHTML || '',
+            name: `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}.pdf`,
+            type: 'application/pdf',
+            size: 'PDF Oficial',
+            date: new Date().toLocaleDateString('es-AR'),
+          };
+          const filtered = storedList.filter(
+            (item) => Number(item.cargoId) !== Number(selectedCargoId) && Number(item.cargoNumero) !== Number(cargoNum)
+          );
+          filtered.unshift(docEntry);
+          localStorage.setItem('atlas_confirmed_designaciones_docs', JSON.stringify(filtered));
+        } catch {
+          // ignore storage error
+        }
+
         setFeedback({
           type: 'success',
-          message: `Designación con Resolución N° ${resNum} asignada exitosamente al docente ${docName}.`,
+          message: `Designación confirmada con éxito para ${docName}. El docente ha pasado al estado Activo.`,
         });
       } else {
-        const errorMsg = data?.message || 'Error al procesar la asignación de la designación.';
+        const errorMsg = funcData?.message || 'Error al confirmar y asignar las funciones al cargo.';
         setFeedback({
           type: 'error',
           message: errorMsg,
@@ -707,11 +1049,24 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     } catch (err: any) {
       setFeedback({
         type: 'error',
-        message: err.message || 'Error de conexión con el servidor al registrar la designación.',
+        message: err.message || 'Error de conexión con el servidor al confirmar la designación.',
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Print / Save PDF document (uses the exact A4 preview sheet and sets document.title to the system filename)
+  const handleImprimirDocumento = () => {
+    const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+    const cargoNum = selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId ?? 'SN';
+    const pdfTitle = `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}`;
+    const originalTitle = document.title;
+    document.title = pdfTitle;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 500);
   };
 
   return (
@@ -770,347 +1125,831 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               </button>
             </div>
 
-            {/* Main Form Card */}
-            <div className="designacion-card">
-              {/* Scrollable container inside the card */}
-              <div className="designacion-card-scrollable">
-                {/* Header Row: Title & Search Card */}
-                <div className="designacion-card-header">
-                  <h1 className="designacion-title">Datos de Designación</h1>
-
-                  {/* Search Bar matching Gestion style */}
-                  <div className="designacion-search-card">
-                    <label htmlFor="searchDocenteInput" className="designacion-search-label">
-                      Buscar Docente por Nombre, Apellido o Legajo
-                    </label>
-                    <div className="designacion-search-row">
-                      <div className="designacion-search-input-wrap" ref={searchContainerRef}>
-                        <input
-                          id="searchDocenteInput"
-                          name="busqueda_docente_query"
-                          type="search"
-                          className="designacion-search-input"
-                          placeholder="Ingrese valor"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onFocus={() => {
-                            if (suggestions.length > 0) setShowSuggestions(true);
-                          }}
-                          onKeyDown={handleKeyDown}
-                          autoComplete="off"
-                          spellCheck={false}
-                        />
-                        <FiSearch className="designacion-search-icon" />
-
-                        {/* Suggestions Dropdown */}
-                        {showSuggestions && suggestions.length > 0 && (
-                          <ul className="designacion-suggestions-list" role="listbox">
-                            {suggestions.map((item, idx) => (
-                              <li
-                                key={item.usuarioId || item.id || idx}
-                                className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  handleSelectDocente(item);
-                                }}
-                                onMouseEnter={() => setActiveSuggestionIndex(idx)}
-                                role="option"
-                                aria-selected={idx === activeSuggestionIndex}
-                              >
-                                <span className="designacion-suggestion-name">
-                                  {item.apellido || item.apellidos}, {item.nombre || item.nombres}
-                                </span>
-                                <span className="designacion-suggestion-sub">
-                                  {[
-                                    item.categoria,
-                                    item.unidad,
-                                    item.legajo ? `Legajo: ${item.legajo}` : '',
-                                    item.estado ? `Estado: ${item.estado}` : '',
-                                  ]
-                                    .filter(Boolean)
-                                    .join(' • ')}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        className="designacion-search-btn"
-                        onClick={() => handleSearch()}
-                        disabled={isSearching}
-                      >
-                        <FiSearch />
-                        <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
-                      </button>
-                    </div>
-                  </div>
+            {/* Main Card */}
+            <div className={`designacion-card ${step === 'documento-generado' ? 'designacion-card-generada' : ''}`}>
+              {step === 'documento-generado' && (
+                <div className="designacion-generada-banner">
+                  <h1 className="designacion-generada-banner-title">Designación Generada</h1>
                 </div>
+              )}
+              <div className="designacion-card-scrollable">
 
-                {/* Divider between Card Header and Form */}
-                <hr className="designacion-card-divider" />
+                {/* =========================================================================
+                    PASO 1: SELECCIÓN DE DOCENTE Y CARGO LIBRE
+                   ========================================================================= */}
+                {step === 'seleccion-cargo' ? (
+                  <>
+                    {/* Header Row: Title & Search Card */}
+                    <div className="designacion-card-header">
+                      <h1 className="designacion-title">Datos de Designación</h1>
 
-                {/* Form Fields */}
-                <form
-                  className="designacion-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAsignarCargoClick();
-                  }}
-                >
-                  {/* Section 1: Datos del Docente */}
-                  <div className="designacion-form-section">
-                    <div className="designacion-section-header">
-                      <h3 className="designacion-section-title">Datos del Docente</h3>
-                      <button
-                        type="button"
-                        className="designacion-btn-nuevo-docente"
-                        onClick={handleIngresarDocenteNuevo}
-                      >
-                        <FiUserPlus size={18} />
-                        <span>Ingresar docente nuevo</span>
-                      </button>
-                    </div>
-
-                    <div className="designacion-form-row">
-                      <div className="designacion-field-group small">
-                        <label htmlFor="legajoInput" className="designacion-label">
-                          N° Legajo
+                      {/* Search Bar matching Gestion style */}
+                      <div className="designacion-search-card">
+                        <label htmlFor="searchDocenteInput" className="designacion-search-label">
+                          Buscar Docente por Nombre, Apellido o Legajo
                         </label>
-                        <input
-                          id="legajoInput"
-                          type="text"
-                          className="designacion-input"
-                          placeholder="Ingrese valor"
-                          value={formData.legajo}
-                          onChange={(e) => handleFieldChange('legajo', e.target.value)}
-                        />
-                      </div>
+                        <div className="designacion-search-row">
+                          <div className="designacion-search-input-wrap" ref={searchContainerRef}>
+                            <input
+                              id="searchDocenteInput"
+                              name="busqueda_docente_query"
+                              type="search"
+                              className="designacion-search-input"
+                              placeholder="Ingrese valor"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onFocus={() => {
+                                if (suggestions.length > 0) setShowSuggestions(true);
+                              }}
+                              onKeyDown={handleKeyDown}
+                              autoComplete="off"
+                              spellCheck={false}
+                            />
+                            <FiSearch className="designacion-search-icon" />
 
-                      <div className="designacion-field-group medium">
-                        <label htmlFor="apellidoInput" className="designacion-label">
-                          Apellido/s
-                        </label>
-                        <input
-                          id="apellidoInput"
-                          type="text"
-                          className="designacion-input"
-                          placeholder="Castelli"
-                          value={formData.apellido}
-                          onChange={(e) => handleFieldChange('apellido', e.target.value)}
-                        />
-                      </div>
-
-                      <div className="designacion-field-group medium">
-                        <label htmlFor="nombreInput" className="designacion-label">
-                          Nombre/s
-                        </label>
-                        <input
-                          id="nombreInput"
-                          type="text"
-                          className="designacion-input"
-                          placeholder="Sandra"
-                          value={formData.nombre}
-                          onChange={(e) => handleFieldChange('nombre', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 2: Período y Resolución */}
-                  <div className="designacion-form-section">
-                    <div className="designacion-section-header">
-                      <h3 className="designacion-section-title">Período y Resolución</h3>
-                    </div>
-
-                    <div className="designacion-form-row">
-                      <div className="designacion-field-group small">
-                        <label htmlFor="nroResolucionInput" className="designacion-label">
-                          N° Resolución
-                        </label>
-                        <input
-                          id="nroResolucionInput"
-                          type="text"
-                          className="designacion-input"
-                          placeholder="Ingrese valor"
-                          value={formData.nroResolucion}
-                          onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
-                        />
-                      </div>
-
-                      <div className="designacion-field-group date">
-                        <label htmlFor="fechaComienzoInput" className="designacion-label">
-                          Fecha de Comienzo
-                        </label>
-                        <div className="designacion-date-wrapper">
-                          <DatePicker
-                            id="fechaComienzoInput"
-                            selected={formData.fechaComienzo}
-                            onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
-                            dateFormat="dd/MM/yyyy"
-                            locale="es"
-                            placeholderText="01/09/2026"
-                            autoComplete="off"
-                          />
-                          <FiCalendar className="designacion-calendar-icon" />
-                        </div>
-                      </div>
-
-                      <div className="designacion-field-group date">
-                        <label htmlFor="fechaFinalizacionInput" className="designacion-label">
-                          Fecha Finalización
-                        </label>
-                        <div className="designacion-date-wrapper">
-                          <DatePicker
-                            id="fechaFinalizacionInput"
-                            selected={formData.fechaFinalizacion}
-                            onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
-                            dateFormat="dd/MM/yyyy"
-                            locale="es"
-                            placeholderText="06/10/2026"
-                            autoComplete="off"
-                          />
-                          <FiCalendar className="designacion-calendar-icon" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-
-                {/* Section shown when pressing "Asignar cargo": Divider + Title + Crear Cargo button + Libre Cargos window */}
-                {showCargosSection && (
-                  <div className="designacion-cargos-section">
-                    <hr className="designacion-cargos-divider" />
-
-                    <div className="designacion-cargos-header">
-                      <h2 className="designacion-cargos-title" ref={cargosHeaderRef}>
-                        Cargos para Designación
-                      </h2>
-
-                      <div className="designacion-cargos-actions">
-                        {/* Sort Selector */}
-                        <div className="designacion-cargos-sort-wrap">
-                          <label htmlFor="cargoSortSelect" className="designacion-cargos-sort-label">
-                            Ordenar por:
-                          </label>
-                          <div className="designacion-cargos-select-box">
-                            <select
-                              id="cargoSortSelect"
-                              className="designacion-cargos-sort-select"
-                              value={cargoSortBy}
-                              onChange={(e) => setCargoSortBy(e.target.value as any)}
-                            >
-                              <option value="numero">N° Cargo</option>
-                              <option value="fechaCreacion">Fecha Creación</option>
-                              <option value="materia">Materia</option>
-                              <option value="categoria">Categoría</option>
-                              <option value="dedicacion">Dedicación</option>
-                              <option value="horasOcupadas">Horas Ocupadas</option>
-                            </select>
-                            <FiChevronDown className="designacion-cargos-select-icon" />
+                            {/* Suggestions Dropdown */}
+                            {showSuggestions && suggestions.length > 0 && (
+                              <ul className="designacion-suggestions-list" role="listbox">
+                                {suggestions.map((item, idx) => (
+                                  <li
+                                    key={item.usuarioId || item.id || idx}
+                                    className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      handleSelectDocente(item);
+                                    }}
+                                    onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                                    role="option"
+                                    aria-selected={idx === activeSuggestionIndex}
+                                  >
+                                    <span className="designacion-suggestion-name">
+                                      {item.apellido || item.apellidos}, {item.nombre || item.nombres}
+                                    </span>
+                                    <span className="designacion-suggestion-sub">
+                                      {[
+                                        item.categoria,
+                                        item.unidad,
+                                        item.legajo ? `Legajo: ${item.legajo}` : '',
+                                        item.estado ? `Estado: ${item.estado}` : '',
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' • ')}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
 
                           <button
                             type="button"
-                            className="designacion-cargos-sort-dir-btn"
-                            onClick={() => setCargoSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                            title={cargoSortDirection === 'asc' ? 'Orden Ascendente (clic para Descendente)' : 'Orden Descendente (clic para Ascendente)'}
-                            aria-label="Cambiar dirección de orden"
+                            className="designacion-search-btn"
+                            onClick={() => handleSearch()}
+                            disabled={isSearching}
                           >
-                            {cargoSortDirection === 'asc' ? <FiArrowUp size={15} /> : <FiArrowDown size={15} />}
-                            <span>{cargoSortDirection === 'asc' ? 'Asc' : 'Desc'}</span>
+                            <FiSearch />
+                            <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
                           </button>
                         </div>
-
-                        <button
-                          type="button"
-                          className="designacion-btn-crear-cargo"
-                          onClick={handleCrearCargo}
-                        >
-                          <CrearCargoIcon />
-                          <span>Crear Cargo</span>
-                        </button>
                       </div>
                     </div>
 
-                    <div className="designacion-cargos-window" role="listbox" aria-label="Cargos disponibles en estado libre">
-                    {isLoadingCargos ? (
-                      <div className="designacion-cargos-empty">
-                        Cargando cargos disponibles...
-                      </div>
-                    ) : sortedAvailableCargos.length === 0 ? (
-                      <div className="designacion-cargos-empty">
-                        No se encontraron cargos disponibles en estado Libre.
-                      </div>
-                    ) : (
-                      sortedAvailableCargos.map((cargo) => {
-                        const isSelected = selectedCargoId === cargo.id;
-                        const numero = cargo.numero ?? cargo.codigo ?? cargo.id;
-                        return (
-                          <div
-                            key={cargo.id}
-                            role="option"
-                            aria-selected={isSelected}
-                            tabIndex={0}
-                            className={`designacion-cargo-card ${isSelected ? 'selected' : ''}`}
-                            onClick={() => setSelectedCargoId(cargo.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setSelectedCargoId(cargo.id);
-                              }
-                            }}
+                    {/* Divider between Card Header and Form */}
+                    <hr className="designacion-card-divider" />
+
+                    {/* Form Fields */}
+                    <form
+                      className="designacion-form"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAsignarCargoClick();
+                      }}
+                    >
+                      {/* Section 1: Datos del Docente */}
+                      <div className="designacion-form-section">
+                        <div className="designacion-section-header">
+                          <h3 className="designacion-section-title">Datos del Docente</h3>
+                          <button
+                            type="button"
+                            className="designacion-btn-nuevo-docente"
+                            onClick={handleIngresarDocenteNuevo}
                           >
-                            <div className="designacion-cargo-card-row">
-                              <span className="designacion-cargo-field">
-                                <strong>N° Cargo:</strong> {numero}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Fecha Creación:</strong> {formatCargoDate(cargo.fechaCreacion)}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Horas Ocupadas:</strong> {cargo.horasOcupadas ?? '00'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Origen:</strong> {cargo.origen || 'Sin especificar'}
-                              </span>
+                            <FiUserPlus size={18} />
+                            <span>Ingresar docente nuevo</span>
+                          </button>
+                        </div>
+
+                        <div className="designacion-form-row">
+                          <div className="designacion-field-group small">
+                            <label htmlFor="legajoInput" className="designacion-label">
+                              N° Legajo
+                            </label>
+                            <input
+                              id="legajoInput"
+                              type="text"
+                              className="designacion-input"
+                              placeholder="Ingrese valor"
+                              value={formData.legajo}
+                              onChange={(e) => handleFieldChange('legajo', e.target.value)}
+                            />
+                          </div>
+
+                          <div className="designacion-field-group medium">
+                            <label htmlFor="apellidoInput" className="designacion-label">
+                              Apellido/s
+                            </label>
+                            <input
+                              id="apellidoInput"
+                              type="text"
+                              className="designacion-input"
+                              placeholder="Castelli"
+                              value={formData.apellido}
+                              onChange={(e) => handleFieldChange('apellido', e.target.value)}
+                            />
+                          </div>
+
+                          <div className="designacion-field-group medium">
+                            <label htmlFor="nombreInput" className="designacion-label">
+                              Nombre/s
+                            </label>
+                            <input
+                              id="nombreInput"
+                              type="text"
+                              className="designacion-input"
+                              placeholder="Sandra"
+                              value={formData.nombre}
+                              onChange={(e) => handleFieldChange('nombre', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Período y Resolución */}
+                      <div className="designacion-form-section">
+                        <div className="designacion-section-header">
+                          <h3 className="designacion-section-title">Período y Resolución</h3>
+                        </div>
+
+                        <div className="designacion-form-row">
+                          <div className="designacion-field-group small">
+                            <label htmlFor="nroResolucionInput" className="designacion-label">
+                              N° Resolución
+                            </label>
+                            <input
+                              id="nroResolucionInput"
+                              type="text"
+                              className="designacion-input"
+                              placeholder="Ingrese valor"
+                              value={formData.nroResolucion}
+                              onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
+                            />
+                          </div>
+
+                          <div className="designacion-field-group date">
+                            <label htmlFor="fechaComienzoInput" className="designacion-label">
+                              Fecha de Comienzo
+                            </label>
+                            <div className="designacion-date-wrapper">
+                              <DatePicker
+                                id="fechaComienzoInput"
+                                selected={formData.fechaComienzo}
+                                onChange={(date: Date | null) => handleFieldChange('fechaComienzo', date)}
+                                dateFormat="dd/MM/yyyy"
+                                locale="es"
+                                placeholderText="01/09/2026"
+                                autoComplete="off"
+                              />
+                              <FiCalendar className="designacion-calendar-icon" />
+                            </div>
+                          </div>
+
+                          <div className="designacion-field-group date">
+                            <label htmlFor="fechaFinalizacionInput" className="designacion-label">
+                              Fecha Finalización
+                            </label>
+                            <div className="designacion-date-wrapper">
+                              <DatePicker
+                                id="fechaFinalizacionInput"
+                                selected={formData.fechaFinalizacion}
+                                onChange={(date: Date | null) => handleFieldChange('fechaFinalizacion', date)}
+                                dateFormat="dd/MM/yyyy"
+                                locale="es"
+                                placeholderText="06/10/2026"
+                                autoComplete="off"
+                              />
+                              <FiCalendar className="designacion-calendar-icon" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+
+                    {/* Section shown when pressing "Asignar cargo": Divider + Title + Crear Cargo button + Libre Cargos window */}
+                    {showCargosSection && (
+                      <div className="designacion-cargos-section">
+                        <hr className="designacion-cargos-divider" />
+
+                        <div className="designacion-cargos-header">
+                          <h2 className="designacion-cargos-title" ref={cargosHeaderRef}>
+                            Cargos para Designación
+                          </h2>
+
+                          <div className="designacion-cargos-actions">
+                            {/* Sort Selector */}
+                            <div className="designacion-cargos-sort-wrap">
+                              <label htmlFor="cargoSortSelect" className="designacion-cargos-sort-label">
+                                Ordenar por:
+                              </label>
+                              <div className="designacion-cargos-select-box">
+                                <select
+                                  id="cargoSortSelect"
+                                  className="designacion-cargos-sort-select"
+                                  value={cargoSortBy}
+                                  onChange={(e) => setCargoSortBy(e.target.value as any)}
+                                >
+                                  <option value="numero">N° Cargo</option>
+                                  <option value="fechaCreacion">Fecha Creación</option>
+                                  <option value="materia">Materia</option>
+                                  <option value="categoria">Categoría</option>
+                                  <option value="dedicacion">Dedicación</option>
+                                  <option value="horasOcupadas">Horas Ocupadas</option>
+                                </select>
+                                <FiChevronDown className="designacion-cargos-select-icon" />
+                              </div>
+
+                              <button
+                                type="button"
+                                className="designacion-cargos-sort-dir-btn"
+                                onClick={() => setCargoSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                                title={cargoSortDirection === 'asc' ? 'Orden Ascendente (clic para Descendente)' : 'Orden Descendente (clic para Ascendente)'}
+                                aria-label="Cambiar dirección de orden"
+                              >
+                                {cargoSortDirection === 'asc' ? <FiArrowUp size={15} /> : <FiArrowDown size={15} />}
+                                <span>{cargoSortDirection === 'asc' ? 'Asc' : 'Desc'}</span>
+                              </button>
                             </div>
 
-                            <div className="designacion-cargo-card-row">
-                              <span className="designacion-cargo-field">
-                                <strong>Caracter:</strong> {cargo.caracter || 'Sin especificar'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Categoría:</strong> {cargo.categoria || 'Sin especificar'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Dedicación:</strong> {cargo.dedicacion || 'Sin especificar'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Designación:</strong> {cargo.designacion || 'Libre'}
-                              </span>
+                            <button
+                              type="button"
+                              className="designacion-btn-crear-cargo"
+                              onClick={handleCrearCargo}
+                            >
+                              <CrearCargoIcon />
+                              <span>Crear Cargo</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="designacion-cargos-window" role="listbox" aria-label="Cargos disponibles en estado libre">
+                          {isLoadingCargos ? (
+                            <div className="designacion-cargos-empty">
+                              Cargando cargos disponibles...
+                            </div>
+                          ) : sortedAvailableCargos.length === 0 ? (
+                            <div className="designacion-cargos-empty">
+                              No se encontraron cargos disponibles en estado Libre.
+                            </div>
+                          ) : (
+                            sortedAvailableCargos.map((cargo) => {
+                              const isSelected = selectedCargoId === cargo.id;
+                              const numero = cargo.numero ?? cargo.codigo ?? cargo.id;
+                              return (
+                                <div
+                                  key={cargo.id}
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  tabIndex={0}
+                                  className={`designacion-cargo-card ${isSelected ? 'selected' : ''}`}
+                                  onClick={() => setSelectedCargoId(cargo.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      setSelectedCargoId(cargo.id);
+                                    }
+                                  }}
+                                >
+                                  <div className="designacion-cargo-card-row">
+                                    <span className="designacion-cargo-field">
+                                      <strong>N° Cargo:</strong> {numero}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Fecha Creación:</strong> {formatCargoDate(cargo.fechaCreacion)}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Horas Ocupadas:</strong> {cargo.horasOcupadas ?? '00'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Origen:</strong> {cargo.origen || 'Sin especificar'}
+                                    </span>
+                                  </div>
+
+                                  <div className="designacion-cargo-card-row">
+                                    <span className="designacion-cargo-field">
+                                      <strong>Caracter:</strong> {cargo.caracter || 'Sin especificar'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Categoría:</strong> {cargo.categoria || 'Sin especificar'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Dedicación:</strong> {cargo.dedicacion || 'Sin especificar'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Designación:</strong> {cargo.designacion || 'Libre'}
+                                    </span>
+                                  </div>
+
+                                  <div className="designacion-cargo-card-row">
+                                    <span className="designacion-cargo-field">
+                                      <strong>Unidad:</strong> {cargo.unidad || cargo.unidadNombre || 'Sin especificar'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Materia:</strong> {cargo.materia || 'Sin asignar'}
+                                    </span>
+                                    <span className="designacion-cargo-field">
+                                      <strong>Plan:</strong> {cargo.plan || 'Sin asignar'}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : step === 'asignacion-funciones' ? (
+                  /* =========================================================================
+                     PASO 2: ASIGNACIÓN DE ACTIVIDADES / FUNCIONES (MOCKUP EXACT MATCH)
+                     ========================================================================= */
+                  <div className="designacion-actividades-view">
+                    {/* Header Block 1: Datos de Designación Summary */}
+                    <div className="designacion-summary-block">
+                      <h2 className="designacion-summary-title">Datos de Designación</h2>
+                      <div className="designacion-summary-row">
+                        <span className="designacion-summary-item">
+                          <strong>N° Legajo:</strong> {formData.legajo || 'Sin especificar'}
+                        </span>
+                        <span className="designacion-summary-item">
+                          <strong>N° Resolución:</strong> {formData.nroResolucion}
+                        </span>
+                        <span className="designacion-summary-item">
+                          <strong>Docente:</strong> {formData.apellido.toUpperCase()}, {formData.nombre}
+                        </span>
+                      </div>
+                      <div className="designacion-summary-row" style={{ marginTop: '8px' }}>
+                        <span className="designacion-summary-item">
+                          <strong>Fecha de Comienzo:</strong>{' '}
+                          {formData.fechaComienzo ? formData.fechaComienzo.toLocaleDateString('es-AR') : '--/--/----'}
+                        </span>
+                        <span className="designacion-summary-item">
+                          <strong>Fecha de Finalización:</strong>{' '}
+                          {formData.fechaFinalizacion
+                            ? formData.fechaFinalizacion.toLocaleDateString('es-AR')
+                            : 'Indeterminada'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <hr className="designacion-card-divider" />
+
+                    {/* Header Block 2: Cargo de Designación Summary */}
+                    <div className="designacion-summary-block">
+                      <h2 className="designacion-summary-title">Cargo de Designación</h2>
+                      <div className="designacion-cargo-box">
+                        <div className="designacion-cargo-box-row">
+                          <span className="designacion-cargo-box-item">
+                            <strong>N° Cargo:</strong> {selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Fecha Creación:</strong> {formatCargoDate(selectedCargo?.fechaCreacion)}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Horas Ocupadas:</strong> {selectedCargo?.horasOcupadas ?? '00'}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Origen:</strong> {selectedCargo?.origen || 'Sin especificar'}
+                          </span>
+                        </div>
+
+                        <div className="designacion-cargo-box-row">
+                          <span className="designacion-cargo-box-item">
+                            <strong>Caracter:</strong> {selectedCargo?.caracter || 'Sin especificar'}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Categoría:</strong> {selectedCargo?.categoria || 'Sin especificar'}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Dedicación:</strong> {selectedCargo?.dedicacion || 'Simple'} ({maxHorasPermitidas} hs)
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Designación:</strong> {selectedCargo?.designacion || 'Libre'}
+                          </span>
+                        </div>
+
+                        <div className="designacion-cargo-box-row">
+                          <span className="designacion-cargo-box-item">
+                            <strong>Unidad:</strong> {selectedCargo?.unidad || selectedCargo?.unidadNombre || 'Sin especificar'}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Materia:</strong> {selectedCargo?.materia || 'Sin asignar'}
+                          </span>
+                          <span className="designacion-cargo-box-item">
+                            <strong>Plan:</strong> {selectedCargo?.plan || 'Sin asignar'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr className="designacion-card-divider" />
+
+                    {/* Header Block 3: Funciones Dynamic Form */}
+                    <div className="designacion-funciones-section">
+                      <div className="designacion-funciones-header">
+                        <h2 className="designacion-funciones-title">Funciones</h2>
+                        <button
+                          type="button"
+                          className="designacion-btn-anadir-funcion"
+                          onClick={handleAddFuncion}
+                        >
+                          <FiFileText size={16} />
+                          <span>Añadir Función</span>
+                        </button>
+                      </div>
+
+                      {/* List of Functions Cards */}
+                      {funciones.map((funcion, idx) => {
+                        const searchQuery = materiaFilterQueries[idx] ?? '';
+                        const filteredSuggestions = filteredMaterias.filter((m: any) =>
+                          !searchQuery ||
+                          String(m.nombre || '')
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase())
+                        );
+
+                        return (
+                          <div key={funcion.id} className="designacion-funcion-card">
+                            <div className="designacion-funcion-card-header">
+                              <span className="designacion-funcion-number">FUNCIÓN N°{idx + 1}</span>
+                              {funciones.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="designacion-funcion-btn-eliminar"
+                                  onClick={() => handleRemoveFuncion(idx)}
+                                  title="Eliminar función"
+                                >
+                                  <FiTrash2 size={14} />
+                                  <span>Eliminar</span>
+                                </button>
+                              )}
                             </div>
 
-                            <div className="designacion-cargo-card-row">
-                              <span className="designacion-cargo-field">
-                                <strong>Unidad:</strong> {cargo.unidad || cargo.unidadNombre || 'Sin especificar'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Materia:</strong> {cargo.materia || 'Sin asignar'}
-                              </span>
-                              <span className="designacion-cargo-field">
-                                <strong>Plan:</strong> {cargo.plan || 'Sin asignar'}
-                              </span>
+                            <div className="designacion-funcion-fields-grid">
+                              {/* Field 1: Nombre de Función */}
+                              <div className="designacion-funcion-field">
+                                <label className="designacion-funcion-label">
+                                  Nombre de Función
+                                </label>
+                                <input
+                                  type="text"
+                                  className="designacion-funcion-input"
+                                  placeholder="Ingrese valor"
+                                  value={funcion.nombre}
+                                  onChange={(e) => handleUpdateFuncion(idx, 'nombre', e.target.value)}
+                                />
+                              </div>
+
+                              {/* Field 2: Tipo de Función */}
+                              <div className="designacion-funcion-field">
+                                <label className="designacion-funcion-label">
+                                  Tipo de Función
+                                </label>
+                                <div style={{ position: 'relative' }}>
+                                  <select
+                                    className="designacion-funcion-select"
+                                    value={funcion.tipo}
+                                    onChange={(e) => handleUpdateFuncion(idx, 'tipo', e.target.value)}
+                                  >
+                                    {TIPO_FUNCION_OPTIONS.map((opt) => (
+                                      <option key={opt} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <FiChevronDown className="designacion-funcion-select-icon" />
+                                </div>
+                              </div>
+
+                              {/* Field 3: Cantidad Horas */}
+                              <div className="designacion-funcion-field">
+                                <label className="designacion-funcion-label">
+                                  Cantidad Horas
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  className="designacion-funcion-input"
+                                  placeholder="Ingrese valor"
+                                  value={funcion.horas}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                                    handleUpdateFuncion(idx, 'horas', val);
+                                  }}
+                                />
+                              </div>
+
+                              {/* Field 4: Nombre de Materia (Autocomplete) */}
+                              <div className="designacion-funcion-field designacion-materia-field-wrap">
+                                <label className="designacion-funcion-label">
+                                  Nombre de Materia
+                                </label>
+                                <input
+                                  type="text"
+                                  className="designacion-funcion-input"
+                                  placeholder="Ingrese valor"
+                                  value={funcion.materiaNombre}
+                                  onFocus={() => {
+                                    setActiveMateriaDropdownIndex(idx);
+                                    setMateriaFilterQueries((prev) => ({ ...prev, [idx]: funcion.materiaNombre }));
+                                  }}
+                                  onChange={(e) => {
+                                    const text = e.target.value;
+                                    handleUpdateFuncion(idx, 'materiaNombre', text);
+                                    handleUpdateFuncion(idx, 'materiaId', null);
+                                    setMateriaFilterQueries((prev) => ({ ...prev, [idx]: text }));
+                                    setActiveMateriaDropdownIndex(idx);
+                                  }}
+                                />
+
+                                {activeMateriaDropdownIndex === idx && filteredSuggestions.length > 0 && (
+                                  <ul className="designacion-materia-suggestions">
+                                    {filteredSuggestions.slice(0, 8).map((m: any) => (
+                                      <li
+                                        key={m.id}
+                                        className="designacion-materia-item"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault();
+                                          handleSelectMateriaForFuncion(idx, m);
+                                        }}
+                                      >
+                                        <strong>{m.nombre}</strong>
+                                        <span className="designacion-materia-item-sub">
+                                          {[m.unidadNombre || m.unidad?.unidadNombre, m.planEstudio ? `Plan ${m.planEstudio}` : '']
+                                            .filter(Boolean)
+                                            .join(' • ')}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
-                      })
-                    )}
+                      })}
+
+                      {/* Summary Counter Bar */}
+                      <div className="designacion-horas-counter-bar">
+                        <span>
+                          Horas Asignadas:{' '}
+                          <strong>
+                            {totalHorasAsignadas} / {maxHorasPermitidas} hs
+                          </strong>
+                        </span>
+                        <span
+                          className={`designacion-horas-badge ${totalHorasAsignadas > maxHorasPermitidas ? 'exceeded' : 'valid'
+                            }`}
+                        >
+                          {totalHorasAsignadas > maxHorasPermitidas
+                            ? `Excede por ${totalHorasAsignadas - maxHorasPermitidas} hs`
+                            : `Disponibles: ${maxHorasPermitidas - totalHorasAsignadas} hs`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  /* =========================================================================
+                     PASO 3: DESIGNACIÓN GENERADA - VISTA PREVIA DE DOCUMENTO
+                     ========================================================================= */
+                  <div className="designacion-documento-view">
+                    {/* Left Column: Document Preview */}
+                    <div className="designacion-preview-main">
+                      <div className="designacion-preview-header">
+                        <h2 className="designacion-preview-title">Vista previa de documento</h2>
+                        <div className="designacion-zoom-controls">
+                          <button
+                            type="button"
+                            className="designacion-zoom-btn"
+                            onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
+                            title="Acercar documento"
+                            aria-label="Acercar documento"
+                          >
+                            <FiZoomIn size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            className="designacion-zoom-btn"
+                            onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
+                            title="Alejar documento"
+                            aria-label="Alejar documento"
+                          >
+                            <FiZoomOut size={18} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="designacion-preview-viewport">
+                        <div
+                          ref={a4SheetRef}
+                          className="designacion-a4-sheet"
+                          style={{ zoom: `${zoomLevel}%` }}
+                        >
+                          {/* A4 Top Header: Emblem + Stamp Date */}
+                          <div className="designacion-a4-header">
+                            <div className="designacion-a4-institution">
+                              <div className="designacion-a4-emblem" aria-hidden="true">
+                                <svg width="58" height="58" viewBox="0 0 64 64" fill="none">
+                                  <circle cx="32" cy="32" r="30" stroke="#111111" strokeWidth="2.5" />
+                                  <circle cx="32" cy="32" r="24" stroke="#111111" strokeWidth="1.2" />
+                                  <circle cx="32" cy="24" r="5" stroke="#111111" strokeWidth="1.8" />
+                                  <path d="M18 40h28M22 45h20M20 35h24" stroke="#111111" strokeWidth="1.6" />
+                                </svg>
+                              </div>
+                              <div className="designacion-a4-uni-script">Universidad Nacional de San Juan</div>
+                              <div className="designacion-a4-facultad">
+                                FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES
+                              </div>
+                            </div>
+
+                            <div className="designacion-a4-date-line">
+                              <span>SAN JUAN, </span>
+                              <span className="designacion-a4-stamp-date">
+                                {new Date()
+                                  .toLocaleDateString('es-AR', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                  .toUpperCase()
+                                  .replace('.', '')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* A4 Body Content */}
+                          <div className="designacion-a4-body">
+                            <p className="designacion-a4-section-heading">VISTO:</p>
+                            <p className="designacion-a4-paragraph">
+                              Las actuaciones administrativas relativas a la designación dispuesta por Resolución N°{' '}
+                              <strong>{formData.nroResolucion || 'S/N'}</strong>, para proveer UN (1) cargo de categoría{' '}
+                              <strong>{selectedCargo?.categoria || 'Docente'}</strong>, dedicación{' '}
+                              <strong>
+                                {selectedCargo?.dedicacion || 'Simple'} ({maxHorasPermitidas} hs)
+                              </strong>
+                              , carácter <strong>{selectedCargo?.caracter || 'Ordinario'}</strong>, Código N°{' '}
+                              <strong>{selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId}</strong>, para
+                              cumplir funciones en{' '}
+                              {funciones.map((f, i) => (
+                                <span key={f.id}>
+                                  {i > 0 ? (i === funciones.length - 1 ? ' y ' : ', ') : ''}
+                                  “{f.materiaNombre}” ({f.nombre})
+                                </span>
+                              ))}
+                              , en el ámbito de la Unidad Académica{' '}
+                              <strong>{selectedCargo?.unidad || selectedCargo?.unidadNombre || 'General'}</strong>, y
+                            </p>
+
+                            <p className="designacion-a4-section-heading">CONSIDERANDO:</p>
+                            <p className="designacion-a4-paragraph">
+                              Que se han cumplido los procedimientos reglamentarios vigentes en la Universidad Nacional de
+                              San Juan para la cobertura del cargo docente mencionado;
+                            </p>
+                            <p className="designacion-a4-paragraph">
+                              Que corresponde designar al/a la docente{' '}
+                              <strong>
+                                {formData.apellido.toUpperCase()}, {formData.nombre}
+                              </strong>{' '}
+                              (Legajo N° <strong>{formData.legajo || 'S/N'}</strong>), a partir del{' '}
+                              <strong>
+                                {formData.fechaComienzo
+                                  ? formData.fechaComienzo.toLocaleDateString('es-AR')
+                                  : '--/--/----'}
+                              </strong>
+                              {formData.fechaFinalizacion
+                                ? ` y hasta el ${formData.fechaFinalizacion.toLocaleDateString('es-AR')}`
+                                : ', con carácter indeterminado'}
+                              , asignándole una carga horaria total de{' '}
+                              <strong>
+                                {totalHorasAsignadas} horas semanales
+                              </strong>
+                              ;
+                            </p>
+
+                            <p className="designacion-a4-por-ello">POR ELLO,</p>
+                            <p className="designacion-a4-authority">
+                              LA DECANA DE LA FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES
+                            </p>
+                            <p className="designacion-a4-resuelve">RESUELVE:</p>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 1°.-</strong> Designar a{' '}
+                              <strong>
+                                {formData.apellido.toUpperCase()}, {formData.nombre}
+                              </strong>{' '}
+                              (Legajo N° <strong>{formData.legajo || 'S/N'}</strong>) en el Cargo N°{' '}
+                              <strong>{selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId}</strong>,
+                              Categoría <strong>{selectedCargo?.categoria || 'Sin especificar'}</strong>, Carácter{' '}
+                              <strong>{selectedCargo?.caracter || 'Sin especificar'}</strong>, Dedicación{' '}
+                              <strong>
+                                {selectedCargo?.dedicacion || 'Simple'} ({maxHorasPermitidas} hs)
+                              </strong>
+                              , dependiente de la Unidad{' '}
+                              <strong>{selectedCargo?.unidad || selectedCargo?.unidadNombre || 'Sin especificar'}</strong>
+                              , bajo Resolución N° <strong>{formData.nroResolucion}</strong>, pasando a revestir en
+                              estado <strong>ACTIVO</strong>.
+                            </p>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 2°.-</strong> Asignar al cargo mencionado las siguientes funciones
+                              académicas:
+                            </p>
+
+                            <ul className="designacion-a4-funciones-list">
+                              {funciones.map((f, idx) => (
+                                <li key={f.id}>
+                                  <strong>Función N°{idx + 1}:</strong> {f.nombre} — <em>Tipo:</em> {f.tipo} —{' '}
+                                  <em>Carga horaria:</em> {f.horas} hs semanales — <em>Materia:</em> {f.materiaNombre}.
+                                </li>
+                              ))}
+                            </ul>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 3°.-</strong> Regístrese, comuníquese, notifíquese al/a la interesado/a y
+                              archívese.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Sidebar Actions & Delete */}
+                    <aside className="designacion-preview-sidebar">
+                      <div className="designacion-acciones-card">
+                        <h3 className="designacion-acciones-title">Acciones</h3>
+                        <div className="designacion-acciones-list">
+                          <button
+                            type="button"
+                            className="designacion-accion-btn confirmar"
+                            onClick={handleConfirmarDesignacion}
+                            disabled={isSubmitting || !!confirmedData}
+                          >
+                            <FiCheckSquare size={18} />
+                            <span>
+                              {isSubmitting
+                                ? 'Confirmando...'
+                                : confirmedData
+                                  ? 'Confirmado'
+                                  : 'Confirmar'}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="designacion-accion-btn modificar"
+                            onClick={() => {
+                              setFeedback(null);
+                              setStep('asignacion-funciones');
+                            }}
+                            disabled={isSubmitting}
+                          >
+                            <FiEdit size={18} />
+                            <span>Modificar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="designacion-accion-btn imprimir"
+                            onClick={handleImprimirDocumento}
+                          >
+                            <FiPrinter size={18} />
+                            <span>Imprimir</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="designacion-eliminar-card">
+                        <button
+                          type="button"
+                          className="designacion-accion-btn eliminar"
+                          onClick={handleLimpiar}
+                          disabled={isSubmitting}
+                        >
+                          <FiTrash2 size={18} />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    </aside>
+                  </div>
+                )}
               </div>
 
               {/* Feedback Alert */}
@@ -1128,39 +1967,68 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               )}
             </div>
 
-            {/* Bottom Actions Row: Limpiar on left, Asignar cargo / Asignar actividades on right */}
-            <div className="designacion-actions-row">
-              <button
-                type="button"
-                className="designacion-btn-limpiar"
-                onClick={handleLimpiar}
-              >
-                <FiTrash2 size={18} />
-                <span>Limpiar</span>
-              </button>
+            {/* Bottom Actions Row (Only in Step 1 and Step 2) */}
+            {step !== 'documento-generado' && (
+              <div className="designacion-actions-row">
+                {step === 'seleccion-cargo' ? (
+                  <>
+                    <button
+                      type="button"
+                      className="designacion-btn-limpiar"
+                      onClick={handleLimpiar}
+                    >
+                      <FiTrash2 size={18} />
+                      <span>Limpiar</span>
+                    </button>
 
-              {selectedCargoId ? (
-                <button
-                  type="button"
-                  className="designacion-btn-asignar-actividades"
-                  onClick={handleAsignarCargoClick}
-                  disabled={isSubmitting}
-                >
-                  <LuClipboardPlus size={18} />
-                  <span>{isSubmitting ? 'Asignando...' : 'Asignar actividades'}</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="designacion-btn-asignar"
-                  onClick={handleAsignarCargoClick}
-                  disabled={isSubmitting}
-                >
-                  <FiEdit size={18} />
-                  <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
-                </button>
-              )}
-            </div>
+                    {selectedCargoId ? (
+                      <button
+                        type="button"
+                        className="designacion-btn-asignar-actividades"
+                        onClick={handleAsignarCargoClick}
+                        disabled={isSubmitting}
+                      >
+                        <LuClipboardPlus size={18} />
+                        <span>{isSubmitting ? 'Asignando...' : 'Asignar funciones'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="designacion-btn-asignar"
+                        onClick={handleAsignarCargoClick}
+                        disabled={isSubmitting}
+                      >
+                        <FiEdit size={18} />
+                        <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Step 2 Actions: Borrar (Red) on left, Generar Documento on right */}
+                    <button
+                      type="button"
+                      className="designacion-btn-borrar"
+                      onClick={handleLimpiar}
+                      disabled={isSubmitting}
+                    >
+                      <FiTrash2 size={18} />
+                      <span>Borrar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="designacion-btn-generar-documento"
+                      onClick={handleGenerarDocumento}
+                      disabled={isSubmitting || totalHorasAsignadas > maxHorasPermitidas}
+                    >
+                      <FiFileText size={18} />
+                      <span>{isSubmitting ? 'Generando...' : 'Generar Documento'}</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
