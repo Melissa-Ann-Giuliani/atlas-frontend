@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Inicio.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { FiAlertTriangle, FiClock, FiArrowRight } from 'react-icons/fi';
+import { FiAlertCircle, FiX } from 'react-icons/fi';
 
 import FilterBar, { type FilterCategory } from '../../components/FilterBar';
 
@@ -81,7 +81,7 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   );
 };
 
-export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { onLogout?: () => void, onNavigate?: (page: any) => void, onNavigateToListado?: (filter: string) => void }) {
+export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { onLogout?: () => void, onNavigate?: (page: any, data?: any) => void, onNavigateToListado?: (filter: string) => void }) {
   // Mock Data mimicking the backend RF-04 API response
   const [data, setData] = useState<{
     totalDocentes: number;
@@ -94,6 +94,12 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]); // added some mock filters for demo
   const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
   const [vencimientosResumen, setVencimientosResumen] = useState<DesignacionVencimientosResumen | null>(null);
+  const [licenciasCount, setLicenciasCount] = useState<number>(0);
+  const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
+  const [isToastPaused, setIsToastPaused] = useState<boolean>(false);
+  // Remaining milliseconds for modal auto-dismiss (10s animation + 3s delay = 13s)
+  const [toastTimeLeft, setToastTimeLeft] = useState<number>(13000);
+  const [isToastClosing, setIsToastClosing] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchResumenVencimientos = async () => {
@@ -110,6 +116,9 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
           const data: DesignacionVencimientosResumen = await res.json();
           if (data && data.totalPorVencer > 0) {
             setVencimientosResumen(data);
+            setShowNotificationToast(true);
+            setToastTimeLeft(13000);
+            setIsToastClosing(false);
           } else {
             setVencimientosResumen(null);
           }
@@ -119,8 +128,66 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
       }
     };
 
+    const fetchLicenciasActivas = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(`${apiUrl}/api/licencias?page=0&size=1`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.totalElements === 'number') {
+            setLicenciasCount(data.totalElements);
+            if (data.totalElements > 0) {
+              setShowNotificationToast(true);
+              setToastTimeLeft(13000);
+              setIsToastClosing(false);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo cargar las licencias para el dashboard:', err);
+      }
+    };
+
     fetchResumenVencimientos();
+    fetchLicenciasActivas();
   }, []);
+
+  const handleCloseToast = () => {
+    setIsToastClosing(true);
+    setTimeout(() => {
+      setShowNotificationToast(false);
+      setIsToastClosing(false);
+    }, 350);
+  };
+
+  // Timer countdown: ticks down every 100ms when modal is shown and not paused
+  useEffect(() => {
+    if (!showNotificationToast || isToastPaused || isToastClosing) return;
+
+    if (toastTimeLeft <= 0) {
+      handleCloseToast();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setToastTimeLeft(prev => {
+        if (prev <= 100) {
+          clearInterval(interval);
+          handleCloseToast();
+          return 0;
+        }
+        return prev - 100;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [showNotificationToast, isToastPaused, isToastClosing, toastTimeLeft]);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -307,43 +374,6 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
               onSearch={(term) => console.log('Searching for:', term)}
             />
 
-            {vencimientosResumen && vencimientosResumen.totalPorVencer > 0 && (
-              <div
-                className={`dashboard-vencimientos-banner ${
-                  vencimientosResumen.tieneVencimientosCriticos ? 'critico' : ''
-                }`}
-              >
-                <div className="dashboard-vencimientos-banner-content">
-                  {vencimientosResumen.tieneVencimientosCriticos ? (
-                    <FiAlertTriangle className="dashboard-vencimientos-banner-icon" />
-                  ) : (
-                    <FiClock className="dashboard-vencimientos-banner-icon" />
-                  )}
-                  <div className="dashboard-vencimientos-banner-text">
-                    <strong>
-                      {vencimientosResumen.totalPorVencer} designaci{vencimientosResumen.totalPorVencer === 1 ? 'ón' : 'ones'} por vencer
-                    </strong>{' '}
-                    en los próximos {vencimientosResumen.umbralDias || 30} días
-                    {vencimientosResumen.unidadNombre ? ` en ${vencimientosResumen.unidadNombre}` : ''}.
-                    {vencimientosResumen.tieneVencimientosCriticos && (
-                      <span>
-                        {' '}
-                        (<strong>{vencimientosResumen.totalCriticos}</strong> con vencimiento crítico ≤ 7 días)
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="dashboard-vencimientos-banner-btn"
-                  onClick={() => onNavigate && onNavigate('vencimientos')}
-                >
-                  <span>Ver vencimientos</span>
-                  <FiArrowRight />
-                </button>
-              </div>
-            )}
-
             {!data ? (
               <div className="loading-state">Cargando tablero...</div>
             ) : (
@@ -474,6 +504,70 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+            {/* Toast / Notification Floating Modal with Progress Bar */}
+            {showNotificationToast && (vencimientosResumen || licenciasCount > 0) && (
+              <div
+                className={`dashboard-alert-modal-container ${isToastClosing ? 'closing' : ''}`}
+                onMouseEnter={() => setIsToastPaused(true)}
+                onMouseLeave={() => setIsToastPaused(false)}
+                role="alert"
+                aria-live="polite"
+              >
+                <button
+                  type="button"
+                  className="dashboard-alert-modal-close"
+                  onClick={handleCloseToast}
+                  title="Cerrar notificación"
+                  aria-label="Cerrar notificación"
+                >
+                  <FiX />
+                </button>
+
+                <div className="dashboard-alert-modal-body">
+                  <div className="dashboard-alert-modal-icon-col">
+                    <FiAlertCircle className="dashboard-alert-modal-icon" />
+                  </div>
+
+                  <div className="dashboard-alert-modal-content-col">
+                    <div className="dashboard-alert-modal-row">
+                      <span className="dashboard-alert-modal-text">
+                        <strong className="dashboard-alert-modal-keyword">VENCIMIENTOS:</strong> Tiene{' '}
+                        {vencimientosResumen?.totalPorVencer || 0} docent
+                        {(vencimientosResumen?.totalPorVencer || 0) === 1 ? 'e' : 'es'} con designación por vencer
+                      </span>
+                      <button
+                        type="button"
+                        className="dashboard-alert-modal-link-btn"
+                        onClick={() => onNavigate && onNavigate('vencimientos')}
+                      >
+                        Ver más detalles
+                      </button>
+                    </div>
+
+                    <div className="dashboard-alert-modal-row">
+                      <span className="dashboard-alert-modal-text">
+                        <strong className="dashboard-alert-modal-keyword">LICENCIAS:</strong> Tiene{' '}
+                        {licenciasCount} docent{licenciasCount === 1 ? 'e' : 'es'} con solicitud de licencia
+                      </span>
+                      <button
+                        type="button"
+                        className="dashboard-alert-modal-link-btn"
+                        onClick={() => onNavigate && onNavigate('listado', { tab: 'licencias' })}
+                      >
+                        Ver más detalles
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar line that stretches/fills across to show remaining time */}
+                <div className="dashboard-alert-modal-progress-track">
+                  <div
+                    className={`dashboard-alert-modal-progress-fill ${isToastPaused ? 'paused' : ''}`}
+                  />
                 </div>
               </div>
             )}
