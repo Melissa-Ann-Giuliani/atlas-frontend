@@ -389,3 +389,252 @@
     padding: 10px 20px;
   }
 }
+
+/* Vencimientos Alert Banner in Dashboard */
+.dashboard-vencimientos-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background-color: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.dashboard-vencimientos-banner.critico {
+  background-color: #FEE2E2;
+  border-color: #EF4444;
+  color: #991B1B;
+}
+
+.dashboard-vencimientos-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.dashboard-vencimientos-banner-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dashboard-vencimientos-banner-text {
+  line-height: 1.4;
+}
+
+.dashboard-vencimientos-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #1A1A1A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.dashboard-vencimientos-banner-btn:hover {
+  background-color: #333333;
+}
+
+.dashboard-vencimientos-banner-btn:active {
+  transform: scale(0.97);
+}
+
+/* Floating Notification Toast / Modal at Bottom Right (Option A: Sage / Light Brand Green) */
+.dashboard-alert-modal-container {
+  position: fixed;
+  bottom: 24px;
+  right: 28px;
+  width: 90%;
+  max-width: 580px;
+  background-color: #E8F3ED;
+  border: 1px solid #A3CFBB;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(27, 67, 50, 0.15), 0 8px 10px -6px rgba(27, 67, 50, 0.1);
+  overflow: hidden;
+  z-index: 1050;
+  animation: dashboardModalSlideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  color: #1B4332;
+  font-family: inherit;
+}
+
+.dashboard-alert-modal-container.closing {
+  animation: dashboardModalSlideOutRight 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes dashboardModalSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes dashboardModalSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+}
+
+.dashboard-alert-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #406954;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 2;
+}
+
+.dashboard-alert-modal-close:hover {
+  color: #0E291E;
+  background-color: rgba(27, 67, 50, 0.08);
+}
+
+.dashboard-alert-modal-body {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px 14px 16px;
+  gap: 14px;
+}
+
+.dashboard-alert-modal-icon-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dashboard-alert-modal-icon {
+  font-size: 28px;
+  color: #1B4332;
+}
+
+.dashboard-alert-modal-content-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.dashboard-alert-modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+.dashboard-alert-modal-text {
+  color: #1E3A2F;
+}
+
+.dashboard-alert-modal-keyword {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-right: 4px;
+  color: #112D21;
+}
+
+.dashboard-alert-modal-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  color: #2D6A4F;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.dashboard-alert-modal-link-btn:hover {
+  color: #081C15;
+  text-decoration: underline;
+}
+
+/* Progress bar timer line at the bottom */
+.dashboard-alert-modal-progress-track {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(27, 67, 50, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-alert-modal-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1B4332, #40916C);
+  animation: dashboardModalProgress 10s linear forwards;
+}
+
+.dashboard-alert-modal-progress-fill.paused {
+  animation-play-state: paused;
+}
+
+@keyframes dashboardModalProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-alert-modal-container {
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+
+  .dashboard-alert-modal-body {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .dashboard-alert-modal-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .dashboard-alert-modal-link-btn {
+    align-self: flex-end;
+  }
+}

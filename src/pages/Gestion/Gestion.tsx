@@ -108,7 +108,9 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
   };
 
   const handleVencimientosClick = () => {
-    console.log('Reporte de vencimientos seleccionado');
+    if (onNavigate) {
+      onNavigate('vencimientos');
+    }
   };
 
   return (
@@ -190,7 +192,11 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
                   ))}
 
                   {/* Vencimientos card */}
-                  <div className="gestion-card">
+                  <div
+                    className="gestion-card gestion-card-vencimientos"
+                    onClick={handleVencimientosClick}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="gestion-card-header header-vencimientos">
                       <h2>Vencimientos</h2>
                     </div>
@@ -201,7 +207,10 @@ export default function Gestion({ onLogout, onNavigate }: GestionProps) {
                       <button
                         type="button"
                         className="vencimientos-link"
-                        onClick={handleVencimientosClick}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVencimientosClick();
+                        }}
                       >
                         <span>Ver reporte</span>
                         <FiChevronRight className="vencimientos-arrow" />
