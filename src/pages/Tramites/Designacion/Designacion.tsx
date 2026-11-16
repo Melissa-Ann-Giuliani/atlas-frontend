@@ -17,9 +17,10 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiFileText,
-  FiDownload,
   FiPrinter,
-  FiCheck
+  FiCheckSquare,
+  FiZoomIn,
+  FiZoomOut
 } from 'react-icons/fi';
 import { LuClipboardPlus } from 'react-icons/lu';
 
@@ -246,15 +247,16 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [cargoSortBy, setCargoSortBy] = useState<'numero' | 'fechaCreacion' | 'materia' | 'categoria' | 'dedicacion' | 'horasOcupadas'>('numero');
   const [cargoSortDirection, setCargoSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Step state: 'seleccion-cargo' (Paso 1) vs 'asignacion-funciones' (Paso 2)
-  const [step, setStep] = useState<'seleccion-cargo' | 'asignacion-funciones'>('seleccion-cargo');
+  // Step state: 'seleccion-cargo' (Paso 1) vs 'asignacion-funciones' (Paso 2) vs 'documento-generado' (Paso 3)
+  const [step, setStep] = useState<'seleccion-cargo' | 'asignacion-funciones' | 'documento-generado'>('seleccion-cargo');
   const [funciones, setFunciones] = useState<FuncionFormItem[]>([]);
   const [materiasList, setMateriasList] = useState<any[]>([]);
   const [activeMateriaDropdownIndex, setActiveMateriaDropdownIndex] = useState<number | null>(null);
   const [materiaFilterQueries, setMateriaFilterQueries] = useState<{ [index: number]: string }>({});
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
 
-  // Success Modal state
-  const [successModalData, setSuccessModalData] = useState<{
+  // Confirmed designation state (set when user presses "Confirmar" on Step 3)
+  const [confirmedData, setConfirmedData] = useState<{
     designacionId: number;
     documentoId?: number;
     docenteNombre: string;
@@ -273,6 +275,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const cargosHeaderRef = useRef<HTMLHeadingElement>(null);
+  const a4SheetRef = useRef<HTMLDivElement>(null);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -429,10 +432,16 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     setFeedback(null);
     setStep('seleccion-cargo');
     setFunciones([]);
-    setSuccessModalData(null);
+    setConfirmedData(null);
+    setZoomLevel(100);
   };
 
   const handleBack = () => {
+    if (step === 'documento-generado') {
+      setStep('asignacion-funciones');
+      setFeedback(null);
+      return;
+    }
     if (step === 'asignacion-funciones') {
       setStep('seleccion-cargo');
       setFeedback(null);
@@ -555,11 +564,11 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           const matchedMateria =
             materiaName && materiaName !== 'Sin asignar'
               ? materiasListRaw.find(
-                  (m: any) =>
-                    String(m.nombre || m.materiaNombre || '')
-                      .trim()
-                      .toLowerCase() === String(materiaName).trim().toLowerCase()
-                )
+                (m: any) =>
+                  String(m.nombre || m.materiaNombre || '')
+                    .trim()
+                    .toLowerCase() === String(materiaName).trim().toLowerCase()
+              )
               : null;
 
           const planVal =
@@ -792,16 +801,17 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const totalHorasAsignadas = funciones.reduce((sum, f) => sum + (Number(f.horas) || 0), 0);
   const maxHorasPermitidas = selectedCargo?.dedicacionHoras ?? 40;
 
-  // Final Action in Step 2: "Generar Documento"
-  const handleGenerarDocumento = async () => {
-    setFeedback(null);
-
+  // Validate functions and resolve materiaId for each row
+  const validateAndResolveFunciones = (): {
+    resolved: { nombre: string; tipo: string; horas: number; materiaId: number }[];
+    updatedItems: FuncionFormItem[];
+  } | null => {
     if (!selectedCargoId || !selectedCargo) {
       setFeedback({
         type: 'error',
         message: 'No se encuentra seleccionado ningún cargo válido.',
       });
-      return;
+      return null;
     }
 
     if (funciones.length === 0) {
@@ -809,13 +819,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         type: 'error',
         message: 'Debe ingresar al menos una función.',
       });
-      return;
+      return null;
     }
 
-    // Prepare validated functions payload
     const resolvedFunciones: { nombre: string; tipo: string; horas: number; materiaId: number }[] = [];
+    const updatedItems: FuncionFormItem[] = [];
 
-    // Validate each function row
     for (let i = 0; i < funciones.length; i++) {
       const f = funciones[i];
       const numLabel = `Función N°${i + 1}`;
@@ -825,7 +834,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           type: 'error',
           message: `Por favor ingrese el Nombre de la ${numLabel}.`,
         });
-        return;
+        return null;
       }
 
       if (!f.tipo.trim()) {
@@ -833,7 +842,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           type: 'error',
           message: `Por favor seleccione el Tipo para la ${numLabel}.`,
         });
-        return;
+        return null;
       }
 
       const horasNum = Number(f.horas);
@@ -842,23 +851,28 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           type: 'error',
           message: `La Cantidad de Horas de la ${numLabel} debe ser al menos 1 hora.`,
         });
-        return;
+        return null;
       }
 
       let targetMateriaId = f.materiaId;
+      let targetMateriaNombre = f.materiaNombre.trim();
       if (!targetMateriaId) {
-        // Attempt to match by name in filteredMaterias or materiasList
-        const matched = filteredMaterias.find(
-          (m: any) => String(m.nombre || '').trim().toLowerCase() === f.materiaNombre.trim().toLowerCase()
-        );
+        const matched =
+          filteredMaterias.find(
+            (m: any) => String(m.nombre || '').trim().toLowerCase() === targetMateriaNombre.toLowerCase()
+          ) ||
+          materiasList.find(
+            (m: any) => String(m.nombre || '').trim().toLowerCase() === targetMateriaNombre.toLowerCase()
+          );
         if (matched?.id) {
           targetMateriaId = matched.id;
+          targetMateriaNombre = matched.nombre || targetMateriaNombre;
         } else {
           setFeedback({
             type: 'error',
             message: `Por favor seleccione una materia válida para la ${numLabel}.`,
           });
-          return;
+          return null;
         }
       }
 
@@ -868,16 +882,46 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         horas: horasNum,
         materiaId: Number(targetMateriaId),
       });
+
+      updatedItems.push({
+        ...f,
+        nombre: f.nombre.trim(),
+        tipo: f.tipo.trim(),
+        horas: horasNum,
+        materiaNombre: targetMateriaNombre,
+        materiaId: Number(targetMateriaId),
+      });
     }
 
-    // Validate total hours vs Dedicación
     if (totalHorasAsignadas > maxHorasPermitidas) {
       setFeedback({
         type: 'error',
         message: `La suma de horas asignadas (${totalHorasAsignadas} hs) supera la dedicación del cargo (${maxHorasPermitidas} hs).`,
       });
-      return;
+      return null;
     }
+
+    return { resolved: resolvedFunciones, updatedItems };
+  };
+
+  // Step 2 Action: "Generar Documento" -> Validates and transitions to Step 3 (Vista previa de documento)
+  const handleGenerarDocumento = () => {
+    setFeedback(null);
+    const validation = validateAndResolveFunciones();
+    if (!validation) return;
+
+    setFunciones(validation.updatedItems);
+    setConfirmedData(null);
+    setZoomLevel(100);
+    setStep('documento-generado');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Step 3 Action: "Confirmar" -> Confirms Docente & Cargo Functions in backend, transitioning Docente to Activo
+  const handleConfirmarDesignacion = async () => {
+    setFeedback(null);
+    const validation = validateAndResolveFunciones();
+    if (!validation || !selectedCargo) return;
 
     setIsSubmitting(true);
     try {
@@ -915,7 +959,6 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
       if (!resDes.ok && resDes.status !== 201) {
         const errorMsg = desData?.message || 'Error al registrar la designación del docente.';
-        // If already linked, try continuing or report error
         if (!errorMsg.toLowerCase().includes('ya posee')) {
           setFeedback({ type: 'error', message: errorMsg });
           setIsSubmitting(false);
@@ -923,9 +966,9 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         }
       }
 
-      // 2. Asignar funciones al cargo via POST /api/cargos/{cargoId}/funciones
+      // 2. Asignar funciones al cargo via POST /api/cargos/{cargoId}/funciones (cambia Docente a Activo y genera PDF)
       const funcionesPayload = {
-        funciones: resolvedFunciones,
+        funciones: validation.resolved,
       };
 
       const resFunc = await fetch(`${apiUrl}/api/cargos/${selectedCargoId}/funciones`, {
@@ -938,9 +981,9 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
       if (resFunc.ok || resFunc.status === 200) {
         const docName = `${formData.apellido}, ${formData.nombre}`;
-        const cargoNum = selectedCargo.numero ?? selectedCargo.codigo ?? selectedCargoId;
+        const cargoNum = selectedCargo.numero ?? selectedCargo.codigo ?? selectedCargoId ?? '';
 
-        setSuccessModalData({
+        const resultObj = {
           designacionId: funcData?.designacionId ?? desData?.id ?? 0,
           documentoId: funcData?.documentoId,
           docenteNombre: docName,
@@ -949,14 +992,55 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
           horasOcupadas: funcData?.horasOcupadas ?? totalHorasAsignadas,
           horasDedicacion: funcData?.horasDedicacion ?? maxHorasPermitidas,
           notificacionEnviada: !!funcData?.notificacionEnviada,
-        });
+        };
+
+        setConfirmedData(resultObj);
+
+        // Persist rich document metadata so CargoDetalle and DocenteDetalle in Listado can display and open/download it
+        try {
+          const storedRaw = localStorage.getItem('atlas_confirmed_designaciones_docs');
+          const storedList: any[] = storedRaw ? JSON.parse(storedRaw) : [];
+          const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+          const docEntry = {
+            documentoId: resultObj.documentoId,
+            designacionId: resultObj.designacionId,
+            cargoId: selectedCargoId,
+            cargoNumero: cargoNum,
+            docenteId: formData.docenteId,
+            legajo: formData.legajo,
+            docenteApellido: formData.apellido,
+            docenteNombre: formData.nombre,
+            nroResolucion: formData.nroResolucion,
+            fechaComienzo: formData.fechaComienzo ? formData.fechaComienzo.toLocaleDateString('es-AR') : '--/--/----',
+            fechaFinalizacion: formData.fechaFinalizacion ? formData.fechaFinalizacion.toLocaleDateString('es-AR') : null,
+            categoria: selectedCargo.categoria || 'Docente',
+            dedicacion: selectedCargo.dedicacion || 'Simple',
+            caracter: selectedCargo.caracter || 'Ordinario',
+            unidad: selectedCargo.unidad || selectedCargo.unidadNombre || 'General',
+            horasTotales: totalHorasAsignadas,
+            horasDedicacion: maxHorasPermitidas,
+            funciones: validation.updatedItems,
+            sheetHtml: a4SheetRef.current?.innerHTML || '',
+            name: `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}.pdf`,
+            type: 'application/pdf',
+            size: 'PDF Oficial',
+            date: new Date().toLocaleDateString('es-AR'),
+          };
+          const filtered = storedList.filter(
+            (item) => Number(item.cargoId) !== Number(selectedCargoId) && Number(item.cargoNumero) !== Number(cargoNum)
+          );
+          filtered.unshift(docEntry);
+          localStorage.setItem('atlas_confirmed_designaciones_docs', JSON.stringify(filtered));
+        } catch {
+          // ignore storage error
+        }
 
         setFeedback({
           type: 'success',
-          message: `Designación y funciones registradas con éxito para ${docName}. Documento oficial generado.`,
+          message: `Designación confirmada con éxito para ${docName}. El docente ha pasado al estado Activo.`,
         });
       } else {
-        const errorMsg = funcData?.message || 'Error al asignar las funciones al cargo.';
+        const errorMsg = funcData?.message || 'Error al confirmar y asignar las funciones al cargo.';
         setFeedback({
           type: 'error',
           message: errorMsg,
@@ -965,92 +1049,24 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     } catch (err: any) {
       setFeedback({
         type: 'error',
-        message: err.message || 'Error de conexión con el servidor al procesar la designación.',
+        message: err.message || 'Error de conexión con el servidor al confirmar la designación.',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Download PDF document
-  const handleDescargarDocumento = async () => {
-    if (!successModalData) return;
-    try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-      // 1. Fetch archivo details from /api/archivos/tramite/DESIGNACION/{designacionId}
-      const res = await fetch(`${apiUrl}/api/archivos/tramite/DESIGNACION/${successModalData.designacionId}`, { headers });
-      if (res.ok) {
-        const archivos = await res.json();
-        const archivo = Array.isArray(archivos) ? archivos[0] : archivos;
-        if (archivo?.nombreEncriptado) {
-          const downloadUrl = `${apiUrl}/api/archivos/descargar/${archivo.nombreEncriptado}`;
-          const resBlob = await fetch(downloadUrl, { headers });
-          if (resBlob.ok) {
-            const blob = await resBlob.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = archivo.nombreOriginal || `designacion-${successModalData.designacionId}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(blobUrl);
-            return;
-          }
-        }
-      }
-      setFeedback({
-        type: 'info',
-        message: 'El documento se encuentra registrado en el sistema bajo el ID ' + (successModalData.documentoId || ''),
-      });
-    } catch (err) {
-      console.error('Error al descargar archivo:', err);
-      setFeedback({
-        type: 'error',
-        message: 'No se pudo descargar el archivo automáticamente.',
-      });
-    }
-  };
-
-  // Print PDF document
-  const handleImprimirDocumento = async () => {
-    if (!successModalData) return;
-    try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
-      const res = await fetch(`${apiUrl}/api/archivos/tramite/DESIGNACION/${successModalData.designacionId}`, { headers });
-      if (res.ok) {
-        const archivos = await res.json();
-        const archivo = Array.isArray(archivos) ? archivos[0] : archivos;
-        if (archivo?.nombreEncriptado) {
-          const downloadUrl = `${apiUrl}/api/archivos/descargar/${archivo.nombreEncriptado}`;
-          const resBlob = await fetch(downloadUrl, { headers });
-          if (resBlob.ok) {
-            const blob = await resBlob.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const printWindow = window.open(blobUrl);
-            if (printWindow) {
-              printWindow.focus();
-              printWindow.print();
-            }
-            return;
-          }
-        }
-      }
-      window.print();
-    } catch {
-      window.print();
-    }
-  };
-
-  const handleCloseSuccessModal = () => {
-    setSuccessModalData(null);
-    handleLimpiar();
+  // Print / Save PDF document (uses the exact A4 preview sheet and sets document.title to the system filename)
+  const handleImprimirDocumento = () => {
+    const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+    const cargoNum = selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId ?? 'SN';
+    const pdfTitle = `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}`;
+    const originalTitle = document.title;
+    document.title = pdfTitle;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 500);
   };
 
   return (
@@ -1110,7 +1126,12 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
             </div>
 
             {/* Main Card */}
-            <div className="designacion-card">
+            <div className={`designacion-card ${step === 'documento-generado' ? 'designacion-card-generada' : ''}`}>
+              {step === 'documento-generado' && (
+                <div className="designacion-generada-banner">
+                  <h1 className="designacion-generada-banner-title">Designación Generada</h1>
+                </div>
+              )}
               <div className="designacion-card-scrollable">
 
                 {/* =========================================================================
@@ -1456,7 +1477,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                       </div>
                     )}
                   </>
-                ) : (
+                ) : step === 'asignacion-funciones' ? (
                   /* =========================================================================
                      PASO 2: ASIGNACIÓN DE ACTIVIDADES / FUNCIONES (MOCKUP EXACT MATCH)
                      ========================================================================= */
@@ -1695,9 +1716,8 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                           </strong>
                         </span>
                         <span
-                          className={`designacion-horas-badge ${
-                            totalHorasAsignadas > maxHorasPermitidas ? 'exceeded' : 'valid'
-                          }`}
+                          className={`designacion-horas-badge ${totalHorasAsignadas > maxHorasPermitidas ? 'exceeded' : 'valid'
+                            }`}
                         >
                           {totalHorasAsignadas > maxHorasPermitidas
                             ? `Excede por ${totalHorasAsignadas - maxHorasPermitidas} hs`
@@ -1705,6 +1725,229 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                         </span>
                       </div>
                     </div>
+                  </div>
+                ) : (
+                  /* =========================================================================
+                     PASO 3: DESIGNACIÓN GENERADA - VISTA PREVIA DE DOCUMENTO
+                     ========================================================================= */
+                  <div className="designacion-documento-view">
+                    {/* Left Column: Document Preview */}
+                    <div className="designacion-preview-main">
+                      <div className="designacion-preview-header">
+                        <h2 className="designacion-preview-title">Vista previa de documento</h2>
+                        <div className="designacion-zoom-controls">
+                          <button
+                            type="button"
+                            className="designacion-zoom-btn"
+                            onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
+                            title="Acercar documento"
+                            aria-label="Acercar documento"
+                          >
+                            <FiZoomIn size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            className="designacion-zoom-btn"
+                            onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
+                            title="Alejar documento"
+                            aria-label="Alejar documento"
+                          >
+                            <FiZoomOut size={18} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="designacion-preview-viewport">
+                        <div
+                          ref={a4SheetRef}
+                          className="designacion-a4-sheet"
+                          style={{ zoom: `${zoomLevel}%` }}
+                        >
+                          {/* A4 Top Header: Emblem + Stamp Date */}
+                          <div className="designacion-a4-header">
+                            <div className="designacion-a4-institution">
+                              <div className="designacion-a4-emblem" aria-hidden="true">
+                                <svg width="58" height="58" viewBox="0 0 64 64" fill="none">
+                                  <circle cx="32" cy="32" r="30" stroke="#111111" strokeWidth="2.5" />
+                                  <circle cx="32" cy="32" r="24" stroke="#111111" strokeWidth="1.2" />
+                                  <circle cx="32" cy="24" r="5" stroke="#111111" strokeWidth="1.8" />
+                                  <path d="M18 40h28M22 45h20M20 35h24" stroke="#111111" strokeWidth="1.6" />
+                                </svg>
+                              </div>
+                              <div className="designacion-a4-uni-script">Universidad Nacional de San Juan</div>
+                              <div className="designacion-a4-facultad">
+                                FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES
+                              </div>
+                            </div>
+
+                            <div className="designacion-a4-date-line">
+                              <span>SAN JUAN, </span>
+                              <span className="designacion-a4-stamp-date">
+                                {new Date()
+                                  .toLocaleDateString('es-AR', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                  .toUpperCase()
+                                  .replace('.', '')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* A4 Body Content */}
+                          <div className="designacion-a4-body">
+                            <p className="designacion-a4-section-heading">VISTO:</p>
+                            <p className="designacion-a4-paragraph">
+                              Las actuaciones administrativas relativas a la designación dispuesta por Resolución N°{' '}
+                              <strong>{formData.nroResolucion || 'S/N'}</strong>, para proveer UN (1) cargo de categoría{' '}
+                              <strong>{selectedCargo?.categoria || 'Docente'}</strong>, dedicación{' '}
+                              <strong>
+                                {selectedCargo?.dedicacion || 'Simple'} ({maxHorasPermitidas} hs)
+                              </strong>
+                              , carácter <strong>{selectedCargo?.caracter || 'Ordinario'}</strong>, Código N°{' '}
+                              <strong>{selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId}</strong>, para
+                              cumplir funciones en{' '}
+                              {funciones.map((f, i) => (
+                                <span key={f.id}>
+                                  {i > 0 ? (i === funciones.length - 1 ? ' y ' : ', ') : ''}
+                                  “{f.materiaNombre}” ({f.nombre})
+                                </span>
+                              ))}
+                              , en el ámbito de la Unidad Académica{' '}
+                              <strong>{selectedCargo?.unidad || selectedCargo?.unidadNombre || 'General'}</strong>, y
+                            </p>
+
+                            <p className="designacion-a4-section-heading">CONSIDERANDO:</p>
+                            <p className="designacion-a4-paragraph">
+                              Que se han cumplido los procedimientos reglamentarios vigentes en la Universidad Nacional de
+                              San Juan para la cobertura del cargo docente mencionado;
+                            </p>
+                            <p className="designacion-a4-paragraph">
+                              Que corresponde designar al/a la docente{' '}
+                              <strong>
+                                {formData.apellido.toUpperCase()}, {formData.nombre}
+                              </strong>{' '}
+                              (Legajo N° <strong>{formData.legajo || 'S/N'}</strong>), a partir del{' '}
+                              <strong>
+                                {formData.fechaComienzo
+                                  ? formData.fechaComienzo.toLocaleDateString('es-AR')
+                                  : '--/--/----'}
+                              </strong>
+                              {formData.fechaFinalizacion
+                                ? ` y hasta el ${formData.fechaFinalizacion.toLocaleDateString('es-AR')}`
+                                : ', con carácter indeterminado'}
+                              , asignándole una carga horaria total de{' '}
+                              <strong>
+                                {totalHorasAsignadas} horas semanales
+                              </strong>
+                              ;
+                            </p>
+
+                            <p className="designacion-a4-por-ello">POR ELLO,</p>
+                            <p className="designacion-a4-authority">
+                              LA DECANA DE LA FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES
+                            </p>
+                            <p className="designacion-a4-resuelve">RESUELVE:</p>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 1°.-</strong> Designar a{' '}
+                              <strong>
+                                {formData.apellido.toUpperCase()}, {formData.nombre}
+                              </strong>{' '}
+                              (Legajo N° <strong>{formData.legajo || 'S/N'}</strong>) en el Cargo N°{' '}
+                              <strong>{selectedCargo?.numero ?? selectedCargo?.codigo ?? selectedCargoId}</strong>,
+                              Categoría <strong>{selectedCargo?.categoria || 'Sin especificar'}</strong>, Carácter{' '}
+                              <strong>{selectedCargo?.caracter || 'Sin especificar'}</strong>, Dedicación{' '}
+                              <strong>
+                                {selectedCargo?.dedicacion || 'Simple'} ({maxHorasPermitidas} hs)
+                              </strong>
+                              , dependiente de la Unidad{' '}
+                              <strong>{selectedCargo?.unidad || selectedCargo?.unidadNombre || 'Sin especificar'}</strong>
+                              , bajo Resolución N° <strong>{formData.nroResolucion}</strong>, pasando a revestir en
+                              estado <strong>ACTIVO</strong>.
+                            </p>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 2°.-</strong> Asignar al cargo mencionado las siguientes funciones
+                              académicas:
+                            </p>
+
+                            <ul className="designacion-a4-funciones-list">
+                              {funciones.map((f, idx) => (
+                                <li key={f.id}>
+                                  <strong>Función N°{idx + 1}:</strong> {f.nombre} — <em>Tipo:</em> {f.tipo} —{' '}
+                                  <em>Carga horaria:</em> {f.horas} hs semanales — <em>Materia:</em> {f.materiaNombre}.
+                                </li>
+                              ))}
+                            </ul>
+
+                            <p className="designacion-a4-paragraph">
+                              <strong>ARTÍCULO 3°.-</strong> Regístrese, comuníquese, notifíquese al/a la interesado/a y
+                              archívese.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Sidebar Actions & Delete */}
+                    <aside className="designacion-preview-sidebar">
+                      <div className="designacion-acciones-card">
+                        <h3 className="designacion-acciones-title">Acciones</h3>
+                        <div className="designacion-acciones-list">
+                          <button
+                            type="button"
+                            className="designacion-accion-btn confirmar"
+                            onClick={handleConfirmarDesignacion}
+                            disabled={isSubmitting || !!confirmedData}
+                          >
+                            <FiCheckSquare size={18} />
+                            <span>
+                              {isSubmitting
+                                ? 'Confirmando...'
+                                : confirmedData
+                                  ? 'Confirmado'
+                                  : 'Confirmar'}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="designacion-accion-btn modificar"
+                            onClick={() => {
+                              setFeedback(null);
+                              setStep('asignacion-funciones');
+                            }}
+                            disabled={isSubmitting}
+                          >
+                            <FiEdit size={18} />
+                            <span>Modificar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="designacion-accion-btn imprimir"
+                            onClick={handleImprimirDocumento}
+                          >
+                            <FiPrinter size={18} />
+                            <span>Imprimir</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="designacion-eliminar-card">
+                        <button
+                          type="button"
+                          className="designacion-accion-btn eliminar"
+                          onClick={handleLimpiar}
+                          disabled={isSubmitting}
+                        >
+                          <FiTrash2 size={18} />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    </aside>
                   </div>
                 )}
               </div>
@@ -1724,137 +1967,71 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
               )}
             </div>
 
-            {/* Bottom Actions Row */}
-            <div className="designacion-actions-row">
-              {step === 'seleccion-cargo' ? (
-                <>
-                  <button
-                    type="button"
-                    className="designacion-btn-limpiar"
-                    onClick={handleLimpiar}
-                  >
-                    <FiTrash2 size={18} />
-                    <span>Limpiar</span>
-                  </button>
-
-                  {selectedCargoId ? (
+            {/* Bottom Actions Row (Only in Step 1 and Step 2) */}
+            {step !== 'documento-generado' && (
+              <div className="designacion-actions-row">
+                {step === 'seleccion-cargo' ? (
+                  <>
                     <button
                       type="button"
-                      className="designacion-btn-asignar-actividades"
-                      onClick={handleAsignarCargoClick}
-                      disabled={isSubmitting}
+                      className="designacion-btn-limpiar"
+                      onClick={handleLimpiar}
                     >
-                      <LuClipboardPlus size={18} />
-                      <span>{isSubmitting ? 'Asignando...' : 'Asignar actividades'}</span>
+                      <FiTrash2 size={18} />
+                      <span>Limpiar</span>
                     </button>
-                  ) : (
+
+                    {selectedCargoId ? (
+                      <button
+                        type="button"
+                        className="designacion-btn-asignar-actividades"
+                        onClick={handleAsignarCargoClick}
+                        disabled={isSubmitting}
+                      >
+                        <LuClipboardPlus size={18} />
+                        <span>{isSubmitting ? 'Asignando...' : 'Asignar funciones'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="designacion-btn-asignar"
+                        onClick={handleAsignarCargoClick}
+                        disabled={isSubmitting}
+                      >
+                        <FiEdit size={18} />
+                        <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Step 2 Actions: Borrar (Red) on left, Generar Documento on right */}
                     <button
                       type="button"
-                      className="designacion-btn-asignar"
-                      onClick={handleAsignarCargoClick}
+                      className="designacion-btn-borrar"
+                      onClick={handleLimpiar}
                       disabled={isSubmitting}
                     >
-                      <FiEdit size={18} />
-                      <span>{isSubmitting ? 'Asignando...' : 'Asignar cargo'}</span>
+                      <FiTrash2 size={18} />
+                      <span>Borrar</span>
                     </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Step 2 Actions: Borrar (Red) on left, Generar Documento on right */}
-                  <button
-                    type="button"
-                    className="designacion-btn-borrar"
-                    onClick={handleLimpiar}
-                    disabled={isSubmitting}
-                  >
-                    <FiTrash2 size={18} />
-                    <span>Borrar</span>
-                  </button>
 
-                  <button
-                    type="button"
-                    className="designacion-btn-generar-documento"
-                    onClick={handleGenerarDocumento}
-                    disabled={isSubmitting || totalHorasAsignadas > maxHorasPermitidas}
-                  >
-                    <FiFileText size={18} />
-                    <span>{isSubmitting ? 'Generando...' : 'Generar Documento'}</span>
-                  </button>
-                </>
-              )}
-            </div>
+                    <button
+                      type="button"
+                      className="designacion-btn-generar-documento"
+                      onClick={handleGenerarDocumento}
+                      disabled={isSubmitting || totalHorasAsignadas > maxHorasPermitidas}
+                    >
+                      <FiFileText size={18} />
+                      <span>{isSubmitting ? 'Generando...' : 'Generar Documento'}</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
-
-      {/* Success Modal with Download / Print */}
-      {successModalData && (
-        <div className="designacion-success-modal-overlay">
-          <div className="designacion-success-modal-card">
-            <div className="designacion-success-modal-header">
-              <div className="designacion-success-modal-icon">
-                <FiCheck size={22} />
-              </div>
-              <h2 className="designacion-success-modal-title">Designación Completada</h2>
-            </div>
-
-            <div className="designacion-success-modal-body">
-              <p>
-                Se ha asignado satisfactoriamente el cargo y sus funciones para el docente{' '}
-                <strong>{successModalData.docenteNombre}</strong>. Su estado ha pasado automáticamente a{' '}
-                <strong>Activo</strong>.
-              </p>
-
-              <div className="designacion-success-details">
-                <div className="designacion-success-details-row">
-                  <strong>N° Cargo:</strong> {successModalData.cargoNumero}
-                </div>
-                <div className="designacion-success-details-row">
-                  <strong>Resolución:</strong> {successModalData.nroResolucion}
-                </div>
-                <div className="designacion-success-details-row">
-                  <strong>Horas Ocupadas:</strong> {successModalData.horasOcupadas} / {successModalData.horasDedicacion} hs
-                </div>
-                <div className="designacion-success-details-row">
-                  <strong>Notificación por Correo:</strong>{' '}
-                  {successModalData.notificacionEnviada ? 'Despachada al docente' : 'No requerida / pendiente'}
-                </div>
-              </div>
-
-              <p style={{ fontSize: '13px', color: '#4A5568' }}>
-                Puede descargar o imprimir la constancia de designación en PDF generada oficialmente.
-              </p>
-            </div>
-
-            <div className="designacion-success-modal-footer">
-              <button
-                type="button"
-                className="designacion-modal-btn-download"
-                onClick={handleDescargarDocumento}
-              >
-                <FiDownload size={16} />
-                <span>Descargar PDF</span>
-              </button>
-              <button
-                type="button"
-                className="designacion-modal-btn-print"
-                onClick={handleImprimirDocumento}
-              >
-                <FiPrinter size={16} />
-                <span>Imprimir</span>
-              </button>
-              <button
-                type="button"
-                className="designacion-modal-btn-close"
-                onClick={handleCloseSuccessModal}
-              >
-                <span>Finalizar</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

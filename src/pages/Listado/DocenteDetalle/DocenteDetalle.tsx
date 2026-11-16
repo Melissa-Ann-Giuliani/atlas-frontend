@@ -73,6 +73,7 @@ interface DocenteDetalleProps {
 
 export default function DocenteDetalle({ docente, onLogout, onNavigate }: DocenteDetalleProps) {
   const [detalle, setDetalle] = useState<DocenteDetailsDTO | null>(null);
+  const [cargoDocs, setCargoDocs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +152,23 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
         if (response.ok) {
           const data = await response.json();
           setDetalle(data);
+          const firstCargoId = data?.designacionesYCargos?.[0]?.cargoId;
+          if (firstCargoId) {
+            try {
+              const cargoRes = await fetch(
+                `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cargos/${firstCargoId}`,
+                { headers }
+              );
+              if (cargoRes.ok) {
+                const cargoData = await cargoRes.json();
+                if (Array.isArray(cargoData?.documentacionAdjunta)) {
+                  setCargoDocs(cargoData.documentacionAdjunta);
+                }
+              }
+            } catch {
+              // ignore cargo docs fetch error
+            }
+          }
         } else {
           setError(`No se pudieron cargar los detalles del docente. Estado: ${response.status}`);
           if (response.status === 401 && onLogout) onLogout();
@@ -198,7 +216,182 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
   const designacion = detalle?.designacionesYCargos?.[0];
   const actividades = detalle?.actividadesActuales || [];
   const licencias = detalle?.licenciasActuales || [];
-  const documentosAdjuntos: any[] = [];
+
+  const normalizedCargoDocs = cargoDocs.map((item: any) => {
+    if (typeof item === 'string') {
+      return {
+        name: item.endsWith('.pdf') ? item : `${item}.pdf`,
+        type: 'application/pdf',
+        size: 'PDF Oficial',
+        date: formatDate(designacion?.fechaInicio),
+      };
+    }
+    return {
+      ...item,
+      name: item.name || item.nombreOriginal || item.documentoNombre || 'Acta_Designacion.pdf',
+      type: item.type || item.tipoContenido || 'application/pdf',
+      size: item.size || 'PDF Oficial',
+      date: item.date || formatDate(item.fechaSubida || designacion?.fechaInicio),
+    };
+  });
+
+  let localStoredDocs: any[] = [];
+  try {
+    const rawLocal = localStorage.getItem('atlas_confirmed_designaciones_docs');
+    if (rawLocal) {
+      const parsed: any[] = JSON.parse(rawLocal);
+      const resolvedLegajo = datosPersonales?.legajo || detalle?.legajo || designacion?.legajo || docente.legajo;
+      localStoredDocs = parsed.filter(
+        (d) =>
+          (docente.usuarioId && Number(d.docenteId) === Number(docente.usuarioId)) ||
+          (resolvedLegajo && String(d.legajo) === String(resolvedLegajo)) ||
+          (designacion?.cargoId && Number(d.cargoId) === Number(designacion.cargoId)) ||
+          (designacion?.nroCargo && Number(d.cargoNumero) === Number(designacion.nroCargo))
+      );
+    }
+  } catch {
+    // ignore
+  }
+
+  const documentosAdjuntos: any[] =
+    normalizedCargoDocs.length > 0
+      ? normalizedCargoDocs.map((bDoc) => ({
+          ...(localStoredDocs[0] || {}),
+          ...bDoc,
+        }))
+      : localStoredDocs;
+
+  const handleDownloadOrOpenDoc = (doc: any) => {
+    const resolucion = doc.nroResolucion || designacion?.nroResolucion || 'S/N';
+    const docenteName = datosPersonales
+      ? `${datosPersonales.apellido.toUpperCase()}, ${datosPersonales.nombre}`
+      : docente.apellido
+        ? `${docente.apellido.toUpperCase()}, ${docente.nombre}`
+        : docente.nombre;
+    const targetCargoNum = doc.cargoNumero || designacion?.nroCargo || 'S/N';
+    const legajoStr = doc.legajo || datosPersonales?.legajo || detalle?.legajo || designacion?.legajo || docente.legajo || 'S/N';
+    const dedicacionStr = doc.dedicacion || designacion?.dedicacion || docente.dedicacion || 'Simple';
+    const horasDedicacion = doc.horasDedicacion || (String(dedicacionStr).toLowerCase().includes('exclusiva') && !String(dedicacionStr).toLowerCase().includes('semi') ? 40 : String(dedicacionStr).toLowerCase().includes('semi') ? 20 : 10);
+    const funcionesList: any[] =
+      doc.funciones ||
+      actividades.map((a) => ({
+        nombre: a.funcionNombre,
+        tipo: designacion?.origen || 'Planta',
+        horas: a.funcionHoras,
+        materiaNombre: a.materiaNombre,
+      }));
+    const totalHoras = doc.horasTotales || funcionesList.reduce((acc, f) => acc + (Number(f.horas) || 0), 0) || horasDedicacion;
+    const fechaInicioStr = doc.fechaComienzo || formatDate(designacion?.fechaInicio);
+    const fechaFinStr = doc.fechaFinalizacion || (designacion?.fechaFin ? formatDate(designacion.fechaFin) : null);
+    const stampDate = new Date()
+      .toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+      .toUpperCase()
+      .replace('.', '');
+
+    const fallbackBodyHtml = `
+      <div class="designacion-a4-header">
+        <div class="designacion-a4-institution">
+          <div class="designacion-a4-emblem" aria-hidden="true">
+            <svg width="58" height="58" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" stroke="#111111" stroke-width="2.5" />
+              <circle cx="32" cy="32" r="24" stroke="#111111" stroke-width="1.2" />
+              <circle cx="32" cy="24" r="5" stroke="#111111" stroke-width="1.8" />
+              <path d="M18 40h28M22 45h20M20 35h24" stroke="#111111" stroke-width="1.6" />
+            </svg>
+          </div>
+          <div class="designacion-a4-uni-script">Universidad Nacional de San Juan</div>
+          <div class="designacion-a4-facultad">FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES</div>
+        </div>
+        <div class="designacion-a4-date-line">
+          <span>SAN JUAN, </span>
+          <span class="designacion-a4-stamp-date">${stampDate}</span>
+        </div>
+      </div>
+      <div class="designacion-a4-body">
+        <p class="designacion-a4-section-heading">VISTO:</p>
+        <p class="designacion-a4-paragraph">
+          Las actuaciones administrativas relativas a la designación dispuesta por Resolución N° <strong>${resolucion}</strong>, para proveer UN (1) cargo de categoría <strong>${designacion?.categoria || docente.categoria || 'Docente'}</strong>, dedicación <strong>${dedicacionStr} (${horasDedicacion} hs)</strong>, carácter <strong>${designacion?.caracter || docente.caracter || 'Ordinario'}</strong>, Código N° <strong>${targetCargoNum}</strong>, para cumplir funciones en ${funcionesList.map((f, i) => `${i > 0 ? (i === funcionesList.length - 1 ? ' y ' : ', ') : ''}“${f.materiaNombre || f.nombre}” (${f.nombre})`).join('')}, en el ámbito de la Unidad Académica <strong>${datosPersonales?.unidadNombre || docente.unidad || 'General'}</strong>, y
+        </p>
+        <p class="designacion-a4-section-heading">CONSIDERANDO:</p>
+        <p class="designacion-a4-paragraph">
+          Que se han cumplido los procedimientos reglamentarios vigentes en la Universidad Nacional de San Juan para la cobertura del cargo docente mencionado;
+        </p>
+        <p class="designacion-a4-paragraph">
+          Que corresponde designar al/a la docente <strong>${docenteName}</strong> (Legajo N° <strong>${legajoStr}</strong>), a partir del <strong>${fechaInicioStr}</strong>${fechaFinStr ? ` y hasta el ${fechaFinStr}` : ', con carácter indeterminado'}, asignándole una carga horaria total de <strong>${totalHoras} horas semanales</strong>;
+        </p>
+        <p class="designacion-a4-por-ello">POR ELLO,</p>
+        <p class="designacion-a4-authority">LA DECANA DE LA FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES</p>
+        <p class="designacion-a4-resuelve">RESUELVE:</p>
+        <p class="designacion-a4-paragraph">
+          <strong>ARTÍCULO 1°.-</strong> Designar a <strong>${docenteName}</strong> (Legajo N° <strong>${legajoStr}</strong>) en el Cargo N° <strong>${targetCargoNum}</strong>, Categoría <strong>${designacion?.categoria || docente.categoria || 'Sin especificar'}</strong>, Carácter <strong>${designacion?.caracter || docente.caracter || 'Sin especificar'}</strong>, Dedicación <strong>${dedicacionStr} (${horasDedicacion} hs)</strong>, dependiente de la Unidad <strong>${datosPersonales?.unidadNombre || docente.unidad || 'Sin especificar'}</strong>, bajo Resolución N° <strong>${resolucion}</strong>, pasando a revestir en estado <strong>ACTIVO</strong>.
+        </p>
+        <p class="designacion-a4-paragraph">
+          <strong>ARTÍCULO 2°.-</strong> Asignar al cargo mencionado las siguientes funciones académicas:
+        </p>
+        <ul class="designacion-a4-funciones-list">
+          ${funcionesList.map((f, idx) => `<li><strong>Función N°${idx + 1}:</strong> ${f.nombre} — <em>Tipo:</em> ${f.tipo || 'Planta'} — <em>Carga horaria:</em> ${f.horas} hs semanales — <em>Materia:</em> ${f.materiaNombre || f.nombre}.</li>`).join('')}
+        </ul>
+        <p class="designacion-a4-paragraph">
+          <strong>ARTÍCULO 3°.-</strong> Regístrese, comuníquese, notifíquese al/a la interesado/a y archívese.
+        </p>
+      </div>
+    `;
+
+    const cleanDocTitle = String(doc.name || `Acta_Designacion_${String(resolucion).replace(/\s+/g, '_')}_Cargo_${targetCargoNum}`).replace(/\.pdf$/i, '');
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${cleanDocTitle}</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    body { margin: 0; padding: 0; background: #E6DFCE; display: flex; justify-content: center; }
+    .designacion-a4-sheet {
+      background-color: #FFFFFF;
+      width: 100%;
+      max-width: 680px;
+      min-height: 100vh;
+      padding: 48px 56px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+      box-sizing: border-box;
+      color: #1A1A1A;
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      line-height: 1.65;
+      font-size: 14px;
+    }
+    .designacion-a4-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; }
+    .designacion-a4-institution { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 260px; }
+    .designacion-a4-emblem { margin-bottom: 6px; }
+    .designacion-a4-uni-script { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13px; color: #222222; margin-bottom: 2px; }
+    .designacion-a4-facultad { font-family: 'Times New Roman', Times, serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.03em; color: #111111; line-height: 1.25; }
+    .designacion-a4-date-line { font-family: 'Times New Roman', Times, serif; font-size: 13px; color: #111111; padding-bottom: 4px; }
+    .designacion-a4-stamp-date { font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.08em; color: #2D3748; margin-left: 6px; }
+    .designacion-a4-body { display: flex; flex-direction: column; gap: 12px; }
+    .designacion-a4-section-heading { margin: 8px 0 0 48px; font-weight: 700; font-size: 13.5px; letter-spacing: 0.04em; }
+    .designacion-a4-paragraph { margin: 0; text-indent: 48px; text-align: justify; font-size: 13.5px; }
+    .designacion-a4-por-ello { margin: 8px 0 0 48px; font-weight: 700; font-size: 13.5px; }
+    .designacion-a4-authority { margin: 4px 0 0 0; text-align: center; font-weight: 700; font-size: 13.5px; }
+    .designacion-a4-resuelve { margin: 2px 0 6px 48px; font-weight: 700; font-size: 13.5px; }
+    .designacion-a4-funciones-list { margin: 0 0 6px 48px; padding-left: 20px; font-size: 13.5px; }
+    .designacion-a4-funciones-list li { margin-bottom: 6px; text-align: justify; }
+    @media print {
+      body { background: #FFFFFF; }
+      .designacion-a4-sheet { box-shadow: none; max-width: 100%; padding: 20mm 22mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="designacion-a4-sheet">
+    ${doc.sheetHtml || fallbackBodyHtml}
+  </div>
+</body>
+</html>`);
+      win.document.close();
+      win.focus();
+    }
+  };
 
   const getDocIcon = (type?: string, name?: string) => {
     const lowerType = type?.toLowerCase() || '';
@@ -448,7 +641,13 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
                             documentosAdjuntos.map((doc, index) => {
                               const { icon, className } = getDocIcon(doc.type, doc.name);
                               return (
-                                <div className="doc-card" key={index}>
+                                <div
+                                  className="doc-card"
+                                  key={index}
+                                  onClick={() => handleDownloadOrOpenDoc(doc)}
+                                  style={{ cursor: 'pointer' }}
+                                  title="Abrir o descargar documento"
+                                >
                                   <div className="doc-card-top">
                                     <div className={`doc-icon ${className}`}>
                                       {icon}
