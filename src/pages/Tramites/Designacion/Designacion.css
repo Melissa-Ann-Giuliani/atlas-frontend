@@ -232,6 +232,18 @@
   letter-spacing: -0.2px;
 }
 
+.designacion-redesignacion-badge {
+  display: inline-block;
+  margin-top: 8px;
+  background-color: #1B4332;
+  color: #E8F3ED;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
 /* Search bar card inside header row, styled like Gestion pages */
 .designacion-search-card {
   background-color: var(--users-secondary-200, #D7CAB2);

@@ -123,6 +123,15 @@ function App() {
     return (sessionStorage.getItem('atlas_alta_cargo_return_page') as Page) || null;
   });
 
+  const [redesignacionData, setRedesignacionData] = useState<any>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_redesignacion_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [cargoHistory, setCargoHistory] = useState<any[]>(() => {
     try {
       const saved = sessionStorage.getItem('atlas_cargo_history');
@@ -202,6 +211,7 @@ function App() {
     sessionStorage.removeItem('atlas_new_user_initial_role');
     sessionStorage.removeItem('atlas_new_user_return_page');
     sessionStorage.removeItem('atlas_alta_cargo_return_page');
+    sessionStorage.removeItem('atlas_redesignacion_data');
     setIsAuthenticated(false);
   };
 
@@ -358,6 +368,19 @@ function App() {
       } else {
         sessionStorage.removeItem('atlas_alta_cargo_return_page');
       }
+    }
+
+    if (page === 'tramites' || page === 'designacion') {
+      if (data?.redesignacion) {
+        setRedesignacionData(data);
+        sessionStorage.setItem('atlas_redesignacion_data', JSON.stringify(data));
+      } else if (data === null || (data && !data.redesignacion)) {
+        setRedesignacionData(null);
+        sessionStorage.removeItem('atlas_redesignacion_data');
+      }
+    } else {
+      setRedesignacionData(null);
+      sessionStorage.removeItem('atlas_redesignacion_data');
     }
 
 
@@ -574,7 +597,12 @@ function App() {
             <Designacion
               onLogout={handleLogout}
               onNavigate={handleNavigate}
-              onBack={() => handleNavigate('inicio')}
+              onBack={() => handleNavigate(redesignacionData ? 'vencimientos' : 'inicio')}
+              redesignacionData={redesignacionData}
+              onClearRedesignacion={() => {
+                setRedesignacionData(null);
+                sessionStorage.removeItem('atlas_redesignacion_data');
+              }}
             />
           );
 

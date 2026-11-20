@@ -68,6 +68,7 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
 
   // Filters
   const [incluirVencidas, setIncluirVencidas] = useState<boolean>(false);
+  const [diasUmbral, setDiasUmbral] = useState<string>('30');
   const [selectedUnidadId, setSelectedUnidadId] = useState<string>('');
   const [unidadesList, setUnidadesList] = useState<UnidadSelectOption[]>([]);
 
@@ -129,6 +130,11 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
         if (incluirVencidas) {
           query.append('incluirVencidas', 'true');
         }
+        if (diasUmbral === '0' || diasUmbral === 'sinLimite') {
+          query.append('dias', '0');
+        } else if (diasUmbral) {
+          query.append('dias', diasUmbral);
+        }
         if (userIsGlobalAdmin && selectedUnidadId) {
           query.append('unidadId', selectedUnidadId);
         }
@@ -148,7 +154,11 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
         }
 
         if (!res.ok) {
-          throw new Error(`Error en el servidor al cargar vencimientos (${res.status}).`);
+          const errBody = await res.json().catch(() => null);
+          const detalle = errBody?.message || errBody?.error;
+          throw new Error(
+            `Error en el servidor al cargar vencimientos (${res.status})${detalle ? `: ${detalle}` : '.'}`
+          );
         }
 
         const data = await res.json();
@@ -171,7 +181,7 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
     return () => {
       isMounted = false;
     };
-  }, [incluirVencidas, selectedUnidadId, userIsGlobalAdmin, onLogout]);
+  }, [incluirVencidas, diasUmbral, selectedUnidadId, userIsGlobalAdmin, onLogout]);
 
   const handleBack = () => {
     if (onBack) {
@@ -184,10 +194,13 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
   const handleRenovar = (item: DesignacionVencimientoDTO) => {
     if (onNavigate) {
       onNavigate('designacion', {
+        redesignacion: true,
+        designacionId: item.designacionId,
         docente: item.docente,
         cargo: item.cargos?.[0],
-        nroResolucion: item.numeroResolucion,
-        designacionId: item.designacionId,
+        unidad: item.unidad,
+        fechaFinAnterior: item.fechaFin,
+        nroResolucionAnterior: item.numeroResolucion,
       });
     }
   };
@@ -280,6 +293,21 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
                       </select>
                     </div>
                   )}
+
+                  <div className="vencimientos-horizonte-selector">
+                    <label htmlFor="horizonte-select">Plazo:</label>
+                    <select
+                      id="horizonte-select"
+                      value={diasUmbral}
+                      onChange={(e) => setDiasUmbral(e.target.value)}
+                    >
+                      <option value="30">Próximos 30 días</option>
+                      <option value="60">Próximos 60 días</option>
+                      <option value="90">Próximos 90 días</option>
+                      <option value="180">Próximos 180 días</option>
+                      <option value="0">Todas las activas</option>
+                    </select>
+                  </div>
 
                   <label className="vencimientos-toggle-vencidas">
                     <input

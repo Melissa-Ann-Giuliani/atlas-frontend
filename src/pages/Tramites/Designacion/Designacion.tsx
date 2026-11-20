@@ -32,6 +32,8 @@ interface DesignacionProps {
   onLogout?: () => void;
   onNavigate?: (page: any, data?: any) => void;
   onBack?: () => void;
+  redesignacionData?: any;
+  onClearRedesignacion?: () => void;
 }
 
 interface FormState {
@@ -227,9 +229,17 @@ const createEmptyFuncion = (defaultMateriaName = '', defaultMateriaId: number | 
   materiaId: defaultMateriaId,
 });
 
-export default function Designacion({ onLogout, onNavigate, onBack }: DesignacionProps) {
+export default function Designacion({
+  onLogout,
+  onNavigate,
+  onBack,
+  redesignacionData,
+  onClearRedesignacion,
+}: DesignacionProps) {
   const [activeTab, setActiveTab] = useState<TramiteTab>('designaciones');
   const [formData, setFormData] = useState<FormState>(initialFormState);
+  const [isRedesignacion, setIsRedesignacion] = useState<boolean>(false);
+  const [originalDesignacionId, setOriginalDesignacionId] = useState<number | null>(null);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,6 +247,26 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  // Fetch materias catalog independently
+  const fetchMaterias = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+      const resMaterias = await fetch(`${apiUrl}/api/materias?size=500`, { headers }).catch(() => null);
+      if (resMaterias?.ok) {
+        const matData = await resMaterias.json().catch(() => null);
+        const materiasListRaw: any[] = matData?.content || (Array.isArray(matData) ? matData : []);
+        setMateriasList(materiasListRaw);
+        return materiasListRaw;
+      }
+    } catch (err) {
+      console.error('Error fetching materias:', err);
+    }
+    return [];
+  };
 
   // Cargos section & selection state
   const [showCargosSection, setShowCargosSection] = useState(false);
@@ -276,6 +306,80 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const cargosHeaderRef = useRef<HTMLHeadingElement>(null);
   const a4SheetRef = useRef<HTMLDivElement>(null);
+
+  // Initialize redesignación data if passed
+  useEffect(() => {
+    if (!redesignacionData || !redesignacionData.redesignacion) {
+      setIsRedesignacion(false);
+      setOriginalDesignacionId(null);
+      return;
+    }
+
+    setIsRedesignacion(true);
+    setOriginalDesignacionId(redesignacionData.designacionId || null);
+
+    const doc = redesignacionData.docente;
+    const docId = doc?.docenteId || doc?.usuarioId || doc?.id || null;
+    const cargo = redesignacionData.cargo;
+    const cargoId = cargo?.cargoId || cargo?.id || null;
+
+    // Calcular fecha de inicio sugerida: día siguiente a fechaFinAnterior o hoy si no existe
+    let suggestedFechaInicio: Date = new Date();
+    if (redesignacionData.fechaFinAnterior) {
+      try {
+        const parts = String(redesignacionData.fechaFinAnterior).split('T')[0].split('-');
+        if (parts.length === 3) {
+          const prevEnd = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          prevEnd.setDate(prevEnd.getDate() + 1);
+          suggestedFechaInicio = prevEnd;
+        }
+      } catch {
+        suggestedFechaInicio = new Date();
+      }
+    }
+
+    setFormData({
+      docenteId: docId,
+      legajo: String(doc?.legajo || doc?.documento || ''),
+      nroResolucion: '', // Nuevo número de resolución obligatorio
+      apellido: doc?.apellido || '',
+      nombre: doc?.nombre || '',
+      fechaComienzo: suggestedFechaInicio,
+      fechaFinalizacion: null,
+    });
+
+    if (cargoId) {
+      setSelectedCargoId(cargoId);
+      setShowCargosSection(true);
+      // Pre-cargar el cargo en availableCargos si no está
+      const mockCargo: CargoOption = {
+        id: cargoId,
+        numero: cargo.codigo ?? cargo.numero ?? cargoId,
+        categoria: cargo.categoria || 'Docente',
+        dedicacion: cargo.dedicacion || 'Simple',
+        caracter: cargo.caracter || 'Ordinario',
+        origen: cargo.origen || 'De Planta',
+        unidad: redesignacionData.unidad?.nombre || cargo.unidad || 'General',
+        unidadId: Number(redesignacionData.unidad?.unidadId ?? cargo.unidadId) || undefined,
+        horasOcupadas: '00',
+        materia: cargo.materia || 'Sin asignar',
+        estado: 'Activa',
+      };
+      setAvailableCargos((prev) => {
+        if (prev.some((c) => c.id === cargoId)) return prev;
+        return [mockCargo, ...prev];
+      });
+    }
+
+    // Cargar materias si aún no están cargadas para que el paso de asignación de funciones disponga del catálogo
+    fetchMaterias();
+
+    // Informar al usuario
+    setFeedback({
+      type: 'info',
+      message: `Modo Re-designación activo para ${doc?.apellido ? `${doc.apellido}, ${doc.nombre}` : 'el docente'}. Por favor complete el nuevo N° de Resolución y confirme las fechas.`,
+    });
+  }, [redesignacionData]);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -434,6 +538,11 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     setFunciones([]);
     setConfirmedData(null);
     setZoomLevel(100);
+    if (isRedesignacion && onClearRedesignacion) {
+      onClearRedesignacion();
+    }
+    setIsRedesignacion(false);
+    setOriginalDesignacionId(null);
   };
 
   const handleBack = () => {
@@ -447,10 +556,13 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
       setFeedback(null);
       return;
     }
+    if (isRedesignacion && onClearRedesignacion) {
+      onClearRedesignacion();
+    }
     if (onBack) {
       onBack();
     } else if (onNavigate) {
-      onNavigate('inicio');
+      onNavigate(isRedesignacion ? 'vencimientos' : 'inicio');
     } else {
       window.history.back();
     }
@@ -754,9 +866,14 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
     }
 
     // Transition to Step 2: Asignar Actividades / Funciones
+    let currentMaterias = materiasList;
+    if (currentMaterias.length === 0) {
+      currentMaterias = await fetchMaterias();
+    }
+
     const defaultMateriaName = selectedCargo?.materia && selectedCargo.materia !== 'Sin asignar' ? selectedCargo.materia : '';
     const matchedMateria = defaultMateriaName
-      ? materiasList.find((m: any) => String(m.nombre || '').trim().toLowerCase() === defaultMateriaName.trim().toLowerCase())
+      ? currentMaterias.find((m: any) => String(m.nombre || '').trim().toLowerCase() === defaultMateriaName.trim().toLowerCase())
       : null;
 
     setFunciones([createEmptyFuncion(defaultMateriaName, matchedMateria?.id || null)]);
@@ -939,6 +1056,110 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       };
+
+      if (isRedesignacion && originalDesignacionId) {
+        // Flujo Re-designación: POST /api/designaciones/{id}/redesignar
+        const redesignarPayload = {
+          nroResolucion: formData.nroResolucion.trim(),
+          fechaInicio: formatIso(formData.fechaComienzo),
+          ...(formData.fechaFinalizacion ? { fechaFin: formatIso(formData.fechaFinalizacion) } : {}),
+          cargoId: selectedCargoId,
+          funciones: validation.resolved.map((f) => ({
+            materiaId: f.materiaId,
+            nombre: f.nombre,
+            tipo: f.tipo.toUpperCase(),
+            horas: f.horas,
+          })),
+        };
+
+        const resRed = await fetch(`${apiUrl}/api/designaciones/${originalDesignacionId}/redesignar`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(redesignarPayload),
+        });
+
+        const redData = await resRed.json().catch(() => null);
+
+        if (!resRed.ok && resRed.status !== 201) {
+          const errorMsg =
+            redData?.message ||
+            (resRed.status === 400
+              ? 'Datos inválidos. Verifique que el número de resolución no esté duplicado y que la fecha de fin sea mayor o igual a la fecha de inicio.'
+              : resRed.status === 403
+              ? 'No tienes permisos para re-designar cargos de esta unidad académica.'
+              : 'Error al procesar la re-designación.');
+          setFeedback({ type: 'error', message: errorMsg });
+          setIsSubmitting(false);
+          return;
+        }
+
+        const docName = `${formData.apellido}, ${formData.nombre}`;
+        const cargoNum = selectedCargo.numero ?? selectedCargo.codigo ?? selectedCargoId ?? '';
+
+        const resultObj = {
+          designacionId: redData?.designacionId ?? redData?.id ?? originalDesignacionId,
+          documentoId: redData?.documentoId,
+          docenteNombre: docName,
+          cargoNumero: cargoNum,
+          nroResolucion: formData.nroResolucion,
+          horasOcupadas: totalHorasAsignadas,
+          horasDedicacion: maxHorasPermitidas,
+          notificacionEnviada: true,
+        };
+
+        setConfirmedData(resultObj);
+
+        // Persist rich document metadata so CargoDetalle and DocenteDetalle in Listado can display and open/download it
+        try {
+          const storedRaw = localStorage.getItem('atlas_confirmed_designaciones_docs');
+          const storedList: any[] = storedRaw ? JSON.parse(storedRaw) : [];
+          const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+          const docEntry = {
+            documentoId: resultObj.documentoId,
+            designacionId: resultObj.designacionId,
+            cargoId: selectedCargoId,
+            cargoNumero: cargoNum,
+            docenteId: formData.docenteId,
+            legajo: formData.legajo,
+            docenteApellido: formData.apellido,
+            docenteNombre: formData.nombre,
+            nroResolucion: formData.nroResolucion,
+            fechaComienzo: formData.fechaComienzo ? formData.fechaComienzo.toLocaleDateString('es-AR') : '--/--/----',
+            fechaFinalizacion: formData.fechaFinalizacion ? formData.fechaFinalizacion.toLocaleDateString('es-AR') : null,
+            categoria: selectedCargo.categoria || 'Docente',
+            dedicacion: selectedCargo.dedicacion || 'Simple',
+            caracter: selectedCargo.caracter || 'Ordinario',
+            unidad: selectedCargo.unidad || selectedCargo.unidadNombre || 'General',
+            horasTotales: totalHorasAsignadas,
+            horasDedicacion: maxHorasPermitidas,
+            funciones: validation.updatedItems,
+            sheetHtml: a4SheetRef.current?.innerHTML || '',
+            name: `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}.pdf`,
+            type: 'application/pdf',
+            size: 'PDF Oficial',
+            date: new Date().toLocaleDateString('es-AR'),
+          };
+          const filtered = storedList.filter(
+            (item) => Number(item.cargoId) !== Number(selectedCargoId) && Number(item.cargoNumero) !== Number(cargoNum)
+          );
+          filtered.unshift(docEntry);
+          localStorage.setItem('atlas_confirmed_designaciones_docs', JSON.stringify(filtered));
+        } catch {
+          // ignore storage error
+        }
+
+        // Limpiar sessionStorage de redesignacion para no quedar en loop
+        if (onClearRedesignacion) {
+          onClearRedesignacion();
+        }
+
+        setFeedback({
+          type: 'success',
+          message: `¡Re-designación confirmada con éxito para ${docName}! La designación previa ha sido renovada.`,
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
       // 1. Vincular cargo y crear/verificar designación
       const desPayload = {
@@ -1141,77 +1362,88 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                   <>
                     {/* Header Row: Title & Search Card */}
                     <div className="designacion-card-header">
-                      <h1 className="designacion-title">Datos de Designación</h1>
+                      <div>
+                        <h1 className="designacion-title">
+                          {isRedesignacion ? 'Re-designación de Cargo' : 'Datos de Designación'}
+                        </h1>
+                        {isRedesignacion && (
+                          <div className="designacion-redesignacion-badge">
+                            Renovación de designación activa (RF-37)
+                          </div>
+                        )}
+                      </div>
 
                       {/* Search Bar matching Gestion style */}
-                      <div className="designacion-search-card">
-                        <label htmlFor="searchDocenteInput" className="designacion-search-label">
-                          Buscar Docente por Nombre, Apellido o Legajo
-                        </label>
-                        <div className="designacion-search-row">
-                          <div className="designacion-search-input-wrap" ref={searchContainerRef}>
-                            <input
-                              id="searchDocenteInput"
-                              name="busqueda_docente_query"
-                              type="search"
-                              className="designacion-search-input"
-                              placeholder="Ingrese valor"
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              onFocus={() => {
-                                if (suggestions.length > 0) setShowSuggestions(true);
-                              }}
-                              onKeyDown={handleKeyDown}
-                              autoComplete="off"
-                              spellCheck={false}
-                            />
-                            <FiSearch className="designacion-search-icon" />
+                      {!isRedesignacion && (
+                        <div className="designacion-search-card">
+                          <label htmlFor="searchDocenteInput" className="designacion-search-label">
+                            Buscar Docente por Nombre, Apellido o Legajo
+                          </label>
+                          <div className="designacion-search-row">
+                            <div className="designacion-search-input-wrap" ref={searchContainerRef}>
+                              <input
+                                id="searchDocenteInput"
+                                name="busqueda_docente_query"
+                                type="search"
+                                className="designacion-search-input"
+                                placeholder="Ingrese valor"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => {
+                                  if (suggestions.length > 0) setShowSuggestions(true);
+                                }}
+                                onKeyDown={handleKeyDown}
+                                autoComplete="off"
+                                spellCheck={false}
+                              />
+                              <FiSearch className="designacion-search-icon" />
 
-                            {/* Suggestions Dropdown */}
-                            {showSuggestions && suggestions.length > 0 && (
-                              <ul className="designacion-suggestions-list" role="listbox">
-                                {suggestions.map((item, idx) => (
-                                  <li
-                                    key={item.usuarioId || item.id || idx}
-                                    className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      handleSelectDocente(item);
-                                    }}
-                                    onMouseEnter={() => setActiveSuggestionIndex(idx)}
-                                    role="option"
-                                    aria-selected={idx === activeSuggestionIndex}
-                                  >
-                                    <span className="designacion-suggestion-name">
-                                      {item.apellido || item.apellidos}, {item.nombre || item.nombres}
-                                    </span>
-                                    <span className="designacion-suggestion-sub">
-                                      {[
-                                        item.categoria,
-                                        item.unidad,
-                                        item.legajo ? `Legajo: ${item.legajo}` : '',
-                                        item.estado ? `Estado: ${item.estado}` : '',
-                                      ]
-                                        .filter(Boolean)
-                                        .join(' • ')}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                              {/* Suggestions Dropdown */}
+                              {showSuggestions && suggestions.length > 0 && (
+                                <ul className="designacion-suggestions-list" role="listbox">
+                                  {suggestions.map((item, idx) => (
+                                    <li
+                                      key={item.usuarioId || item.id || idx}
+                                      className={`designacion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        handleSelectDocente(item);
+                                      }}
+                                      onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                                      role="option"
+                                      aria-selected={idx === activeSuggestionIndex}
+                                    >
+                                      <span className="designacion-suggestion-name">
+                                        {item.apellido || item.apellidos}, {item.nombre || item.nombres}
+                                      </span>
+                                      <span className="designacion-suggestion-sub">
+                                        {[
+                                          item.categoria,
+                                          item.unidad,
+                                          item.legajo ? `Legajo: ${item.legajo}` : '',
+                                          item.estado ? `Estado: ${item.estado}` : '',
+                                        ]
+                                          .filter(Boolean)
+                                          .join(' • ')}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              className="designacion-search-btn"
+                              onClick={() => handleSearch()}
+                              disabled={isSearching}
+                            >
+                              <FiSearch />
+                              <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
+                            </button>
                           </div>
-
-                          <button
-                            type="button"
-                            className="designacion-search-btn"
-                            onClick={() => handleSearch()}
-                            disabled={isSearching}
-                          >
-                            <FiSearch />
-                            <span>{isSearching ? 'Buscando...' : 'Buscar Docente'}</span>
-                          </button>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Divider between Card Header and Form */}
@@ -1228,15 +1460,19 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                       {/* Section 1: Datos del Docente */}
                       <div className="designacion-form-section">
                         <div className="designacion-section-header">
-                          <h3 className="designacion-section-title">Datos del Docente</h3>
-                          <button
-                            type="button"
-                            className="designacion-btn-nuevo-docente"
-                            onClick={handleIngresarDocenteNuevo}
-                          >
-                            <FiUserPlus size={18} />
-                            <span>Ingresar docente nuevo</span>
-                          </button>
+                          <h3 className="designacion-section-title">
+                            {isRedesignacion ? 'Datos del Docente (A Re-designar)' : 'Datos del Docente'}
+                          </h3>
+                          {!isRedesignacion && (
+                            <button
+                              type="button"
+                              className="designacion-btn-nuevo-docente"
+                              onClick={handleIngresarDocenteNuevo}
+                            >
+                              <FiUserPlus size={18} />
+                              <span>Ingresar docente nuevo</span>
+                            </button>
+                          )}
                         </div>
 
                         <div className="designacion-form-row">
@@ -1251,6 +1487,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                               placeholder="Ingrese valor"
                               value={formData.legajo}
                               onChange={(e) => handleFieldChange('legajo', e.target.value)}
+                              disabled={isRedesignacion}
                             />
                           </div>
 
@@ -1265,6 +1502,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                               placeholder="Castelli"
                               value={formData.apellido}
                               onChange={(e) => handleFieldChange('apellido', e.target.value)}
+                              disabled={isRedesignacion}
                             />
                           </div>
 
@@ -1279,6 +1517,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                               placeholder="Sandra"
                               value={formData.nombre}
                               onChange={(e) => handleFieldChange('nombre', e.target.value)}
+                              disabled={isRedesignacion}
                             />
                           </div>
                         </div>
@@ -1287,19 +1526,21 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
                       {/* Section 2: Período y Resolución */}
                       <div className="designacion-form-section">
                         <div className="designacion-section-header">
-                          <h3 className="designacion-section-title">Período y Resolución</h3>
+                          <h3 className="designacion-section-title">
+                            {isRedesignacion ? 'Nuevo Período y Resolución' : 'Período y Resolución'}
+                          </h3>
                         </div>
 
                         <div className="designacion-form-row">
                           <div className="designacion-field-group small">
                             <label htmlFor="nroResolucionInput" className="designacion-label">
-                              N° Resolución
+                              {isRedesignacion ? 'Nueva N° Resolución *' : 'N° Resolución'}
                             </label>
                             <input
                               id="nroResolucionInput"
                               type="text"
                               className="designacion-input"
-                              placeholder="Ingrese valor"
+                              placeholder={isRedesignacion ? "Ej: RES-2026-890" : "Ingrese valor"}
                               value={formData.nroResolucion}
                               onChange={(e) => handleFieldChange('nroResolucion', e.target.value)}
                             />
@@ -1307,7 +1548,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
                           <div className="designacion-field-group date">
                             <label htmlFor="fechaComienzoInput" className="designacion-label">
-                              Fecha de Comienzo
+                              {isRedesignacion ? 'Nueva Fecha Inicio *' : 'Fecha de Comienzo'}
                             </label>
                             <div className="designacion-date-wrapper">
                               <DatePicker
@@ -1325,7 +1566,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
                           <div className="designacion-field-group date">
                             <label htmlFor="fechaFinalizacionInput" className="designacion-label">
-                              Fecha Finalización
+                              {isRedesignacion ? 'Nueva Fecha Fin (Opcional)' : 'Fecha Finalización'}
                             </label>
                             <div className="designacion-date-wrapper">
                               <DatePicker
@@ -1351,7 +1592,7 @@ export default function Designacion({ onLogout, onNavigate, onBack }: Designacio
 
                         <div className="designacion-cargos-header">
                           <h2 className="designacion-cargos-title" ref={cargosHeaderRef}>
-                            Cargos para Designación
+                            {isRedesignacion ? 'Cargo Actual Asignado' : 'Cargos para Designación'}
                           </h2>
 
                           <div className="designacion-cargos-actions">
