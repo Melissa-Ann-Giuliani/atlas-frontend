@@ -5,6 +5,12 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './Designacion.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
+import { generateAndUploadDesignacionPdf } from '../../../utils/designacionPdf';
+import logoUnsjImg from '../../../assets/membrete/logo-unsj.png';
+import logo50AniosImg from '../../../assets/membrete/logo-50-anios.png';
+import logoFfhaImg from '../../../assets/membrete/logo-ffha.png';
+import certUnsjImg from '../../../assets/membrete/cert-unsj.png';
+import certFfhaImg from '../../../assets/membrete/cert-ffha.png';
 import {
   FiChevronLeft,
   FiSearch,
@@ -284,6 +290,7 @@ export default function Designacion({
   const [activeMateriaDropdownIndex, setActiveMateriaDropdownIndex] = useState<number | null>(null);
   const [materiaFilterQueries, setMateriaFilterQueries] = useState<{ [index: number]: string }>({});
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [membreteType, setMembreteType] = useState<'ffha' | 'certificados'>('ffha');
 
   // Confirmed designation state (set when user presses "Confirmar" on Step 3)
   const [confirmedData, setConfirmedData] = useState<{
@@ -1107,15 +1114,28 @@ export default function Designacion({
           notificacionEnviada: true,
         };
 
+        const cleanResRed = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+        const pdfFilenameRed = `Acta_Designacion_${cleanResRed}_Cargo_${cargoNum}.pdf`;
+        const uploadedRedDoc = await generateAndUploadDesignacionPdf({
+          element: a4SheetRef.current,
+          filename: pdfFilenameRed,
+          designacionId: resultObj.designacionId,
+          apiUrl,
+          token,
+        });
+        if (uploadedRedDoc?.archivoId) {
+          resultObj.documentoId = uploadedRedDoc.archivoId;
+        }
+
         setConfirmedData(resultObj);
 
         // Persist rich document metadata so CargoDetalle and DocenteDetalle in Listado can display and open/download it
         try {
           const storedRaw = localStorage.getItem('atlas_confirmed_designaciones_docs');
           const storedList: any[] = storedRaw ? JSON.parse(storedRaw) : [];
-          const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
           const docEntry = {
             documentoId: resultObj.documentoId,
+            nombreEncriptado: uploadedRedDoc?.nombreEncriptado,
             designacionId: resultObj.designacionId,
             cargoId: selectedCargoId,
             cargoNumero: cargoNum,
@@ -1134,7 +1154,7 @@ export default function Designacion({
             horasDedicacion: maxHorasPermitidas,
             funciones: validation.updatedItems,
             sheetHtml: a4SheetRef.current?.innerHTML || '',
-            name: `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}.pdf`,
+            name: pdfFilenameRed,
             type: 'application/pdf',
             size: 'PDF Oficial',
             date: new Date().toLocaleDateString('es-AR'),
@@ -1215,15 +1235,28 @@ export default function Designacion({
           notificacionEnviada: !!funcData?.notificacionEnviada,
         };
 
+        const cleanResRed = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
+        const pdfFilenameRed = `Acta_Designacion_${cleanResRed}_Cargo_${cargoNum}.pdf`;
+        const uploadedRedDoc = await generateAndUploadDesignacionPdf({
+          element: a4SheetRef.current,
+          filename: pdfFilenameRed,
+          designacionId: resultObj.designacionId,
+          apiUrl,
+          token,
+        });
+        if (uploadedRedDoc?.archivoId) {
+          resultObj.documentoId = uploadedRedDoc.archivoId;
+        }
+
         setConfirmedData(resultObj);
 
         // Persist rich document metadata so CargoDetalle and DocenteDetalle in Listado can display and open/download it
         try {
           const storedRaw = localStorage.getItem('atlas_confirmed_designaciones_docs');
           const storedList: any[] = storedRaw ? JSON.parse(storedRaw) : [];
-          const cleanRes = String(formData.nroResolucion || 'SN').replace(/\s+/g, '_');
           const docEntry = {
             documentoId: resultObj.documentoId,
+            nombreEncriptado: uploadedRedDoc?.nombreEncriptado,
             designacionId: resultObj.designacionId,
             cargoId: selectedCargoId,
             cargoNumero: cargoNum,
@@ -1242,7 +1275,7 @@ export default function Designacion({
             horasDedicacion: maxHorasPermitidas,
             funciones: validation.updatedItems,
             sheetHtml: a4SheetRef.current?.innerHTML || '',
-            name: `Acta_Designacion_${cleanRes}_Cargo_${cargoNum}.pdf`,
+            name: pdfFilenameRed,
             type: 'application/pdf',
             size: 'PDF Oficial',
             date: new Date().toLocaleDateString('es-AR'),
@@ -1366,11 +1399,6 @@ export default function Designacion({
                         <h1 className="designacion-title">
                           {isRedesignacion ? 'Re-designación de Cargo' : 'Datos de Designación'}
                         </h1>
-                        {isRedesignacion && (
-                          <div className="designacion-redesignacion-badge">
-                            Renovación de designación activa (RF-37)
-                          </div>
-                        )}
                       </div>
 
                       {/* Search Bar matching Gestion style */}
@@ -1976,7 +2004,18 @@ export default function Designacion({
                     <div className="designacion-preview-main">
                       <div className="designacion-preview-header">
                         <h2 className="designacion-preview-title">Vista previa de documento</h2>
-                        <div className="designacion-zoom-controls">
+                        <div className="designacion-preview-controls">
+                          <select
+                            className="designacion-membrete-select"
+                            value={membreteType}
+                            onChange={(e) => setMembreteType(e.target.value as 'ffha' | 'certificados')}
+                            aria-label="Seleccionar tipo de membrete"
+                            title="Seleccionar tipo de membrete"
+                          >
+                            <option value="ffha">Membrete Oficial (FFHA)</option>
+                            <option value="certificados">Membrete Certificados (SEU)</option>
+                          </select>
+                          <div className="designacion-zoom-controls">
                           <button
                             type="button"
                             className="designacion-zoom-btn"
@@ -1995,6 +2034,7 @@ export default function Designacion({
                           >
                             <FiZoomOut size={18} />
                           </button>
+                          </div>
                         </div>
                       </div>
 
@@ -2004,35 +2044,59 @@ export default function Designacion({
                           className="designacion-a4-sheet"
                           style={{ zoom: `${zoomLevel}%` }}
                         >
-                          {/* A4 Top Header: Emblem + Stamp Date */}
+                          {/* A4 Top Header: Official UNSJ / FFHA Membrete */}
                           <div className="designacion-a4-header">
-                            <div className="designacion-a4-institution">
-                              <div className="designacion-a4-emblem" aria-hidden="true">
-                                <svg width="58" height="58" viewBox="0 0 64 64" fill="none">
-                                  <circle cx="32" cy="32" r="30" stroke="#111111" strokeWidth="2.5" />
-                                  <circle cx="32" cy="32" r="24" stroke="#111111" strokeWidth="1.2" />
-                                  <circle cx="32" cy="24" r="5" stroke="#111111" strokeWidth="1.8" />
-                                  <path d="M18 40h28M22 45h20M20 35h24" stroke="#111111" strokeWidth="1.6" />
-                                </svg>
+                            {membreteType === 'ffha' ? (
+                              <div className="designacion-a4-membrete-row">
+                                <img
+                                  src={logoUnsjImg}
+                                  alt="Universidad Nacional de San Juan"
+                                  className="designacion-a4-logo-unsj"
+                                />
+                                <img
+                                  src={logo50AniosImg}
+                                  alt="1976-2026 50 Años Por la memoria, la verdad y la justicia. Nunca Más"
+                                  className="designacion-a4-logo-50"
+                                />
+                                <img
+                                  src={logoFfhaImg}
+                                  alt="Facultad de Filosofía, Humanidades y Artes"
+                                  className="designacion-a4-logo-ffha"
+                                />
                               </div>
-                              <div className="designacion-a4-uni-script">Universidad Nacional de San Juan</div>
-                              <div className="designacion-a4-facultad">
-                                FACULTAD DE FILOSOFÍA, HUMANIDADES Y ARTES
+                            ) : (
+                              <div className="designacion-a4-membrete-cert">
+                                <img
+                                  src={certUnsjImg}
+                                  alt="Universidad Nacional de San Juan"
+                                  className="designacion-a4-cert-logo"
+                                />
+                                <div className="designacion-a4-cert-text">
+                                  <div className="designacion-a4-cert-uni">Universidad Nacional de San Juan</div>
+                                  <div className="designacion-a4-cert-fac">Facultad de Filosofía, Humanidades y Artes</div>
+                                  <div className="designacion-a4-cert-sec">Secretaría de Extensión Universitaria</div>
+                                </div>
+                                <img
+                                  src={certFfhaImg}
+                                  alt="FFHA"
+                                  className="designacion-a4-cert-logo"
+                                />
                               </div>
-                            </div>
-
-                            <div className="designacion-a4-date-line">
-                              <span>SAN JUAN, </span>
-                              <span className="designacion-a4-stamp-date">
-                                {new Date()
-                                  .toLocaleDateString('es-AR', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })
-                                  .toUpperCase()
-                                  .replace('.', '')}
-                              </span>
+                            )}
+                            <div className="designacion-a4-date-row">
+                              <div className="designacion-a4-date-line">
+                                <span>SAN JUAN, </span>
+                                <span className="designacion-a4-stamp-date">
+                                  {new Date()
+                                    .toLocaleDateString('es-AR', {
+                                      day: '2-digit',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })
+                                    .toUpperCase()
+                                    .replace('.', '')}
+                                </span>
+                              </div>
                             </div>
                           </div>
 

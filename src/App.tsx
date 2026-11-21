@@ -374,7 +374,7 @@ function App() {
       if (data?.redesignacion) {
         setRedesignacionData(data);
         sessionStorage.setItem('atlas_redesignacion_data', JSON.stringify(data));
-      } else if (data === null || (data && !data.redesignacion)) {
+      } else {
         setRedesignacionData(null);
         sessionStorage.removeItem('atlas_redesignacion_data');
       }
