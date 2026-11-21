@@ -15,15 +15,23 @@ export async function generatePdfBlobFromElement(
   element: HTMLElement,
   filename: string
 ): Promise<Blob> {
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.style.width = '794px';
+  clone.style.maxWidth = '794px';
+  clone.style.minHeight = '1122px';
+  clone.style.margin = '0';
+  clone.style.boxShadow = 'none';
+  clone.style.zoom = '100%';
+
   const options = {
     margin: 0,
     filename,
     image: { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
+    html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, windowWidth: 794 },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
   };
 
-  const blob: Blob = await html2pdf().set(options).from(element).outputPdf('blob');
+  const blob: Blob = await html2pdf().set(options).from(clone).outputPdf('blob');
   return blob;
 }
 
