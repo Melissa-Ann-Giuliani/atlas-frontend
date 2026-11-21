@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './DocenteDetalle.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
+import { tryDownloadBackendPdf } from '../../../utils/designacionPdf';
 import { FiChevronLeft, FiCheckCircle, FiEdit3 } from 'react-icons/fi';
 import { FaFilePdf, FaImage, FaCalendarAlt, FaPaperclip, FaFileWord, FaFileAlt } from 'react-icons/fa';
 import { HiOutlineDownload } from 'react-icons/hi';
@@ -217,18 +218,25 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
   const actividades = detalle?.actividadesActuales || [];
   const licencias = detalle?.licenciasActuales || [];
 
+  const cleanResDocente = String(designacion?.nroResolucion || 'SN').replace(/\s+/g, '_');
+  const targetCargoNumDocente = designacion?.nroCargo ?? 'SN';
+  const defaultActaName = `Acta_Designacion_${cleanResDocente}_Cargo_${targetCargoNumDocente}.pdf`;
   const normalizedCargoDocs = cargoDocs.map((item: any) => {
     if (typeof item === 'string') {
+      const isApiPath = item.startsWith('/api/') || item.startsWith('http');
       return {
-        name: item.endsWith('.pdf') ? item : `${item}.pdf`,
+        name: isApiPath ? defaultActaName : (item.endsWith('.pdf') ? item : `${item}.pdf`),
+        url: isApiPath ? item : undefined,
         type: 'application/pdf',
         size: 'PDF Oficial',
         date: formatDate(designacion?.fechaInicio),
       };
     }
+    const rawName = item.name || item.nombreOriginal || item.documentoNombre || defaultActaName;
+    const isApiPath = typeof rawName === 'string' && (rawName.startsWith('/api/') || rawName.startsWith('http'));
     return {
       ...item,
-      name: item.name || item.nombreOriginal || item.documentoNombre || 'Acta_Designacion.pdf',
+      name: isApiPath ? defaultActaName : rawName,
       type: item.type || item.tipoContenido || 'application/pdf',
       size: item.size || 'PDF Oficial',
       date: item.date || formatDate(item.fechaSubida || designacion?.fechaInicio),
@@ -258,10 +266,16 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
       ? normalizedCargoDocs.map((bDoc) => ({
           ...(localStoredDocs[0] || {}),
           ...bDoc,
+          name: bDoc.url ? (localStoredDocs[0]?.name || bDoc.name) : bDoc.name,
         }))
       : localStoredDocs;
 
-  const handleDownloadOrOpenDoc = (doc: any) => {
+  const handleDownloadOrOpenDoc = async (doc: any) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const token = localStorage.getItem('token');
+    const downloaded = await tryDownloadBackendPdf({ apiUrl, token, doc });
+    if (downloaded) return;
+
     const resolucion = doc.nroResolucion || designacion?.nroResolucion || 'S/N';
     const docenteName = datosPersonales
       ? `${datosPersonales.apellido.toUpperCase()}, ${datosPersonales.nombre}`
@@ -361,7 +375,18 @@ export default function DocenteDetalle({ docente, onLogout, onNavigate }: Docent
       line-height: 1.65;
       font-size: 14px;
     }
-    .designacion-a4-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; }
+    .designacion-a4-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .designacion-a4-membrete-row { display: flex; align-items: center; justify-content: center; gap: 24px; width: 100%; }
+    .designacion-a4-logo-unsj { height: 76px; width: auto; display: block; object-fit: contain; }
+    .designacion-a4-logo-50 { height: 46px; width: auto; display: block; object-fit: contain; }
+    .designacion-a4-logo-ffha { height: 52px; width: auto; display: block; object-fit: contain; }
+    .designacion-a4-membrete-cert { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+    .designacion-a4-cert-logo { height: 68px; width: auto; display: block; object-fit: contain; }
+    .designacion-a4-cert-text { flex: 1; text-align: center; font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: #111111; line-height: 1.45; }
+    .designacion-a4-cert-uni { font-size: 15px; font-weight: 400; margin-bottom: 2px; }
+    .designacion-a4-cert-fac { font-size: 13px; font-weight: 700; }
+    .designacion-a4-cert-sec { font-size: 12.5px; font-weight: 700; }
+    .designacion-a4-date-row { display: flex; justify-content: flex-end; width: 100%; }
     .designacion-a4-institution { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 260px; }
     .designacion-a4-emblem { margin-bottom: 6px; }
     .designacion-a4-uni-script { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13px; color: #222222; margin-bottom: 2px; }
