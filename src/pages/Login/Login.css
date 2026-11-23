@@ -44,11 +44,11 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-bottom: 38px;
+  margin-bottom: 36px;
 }
 
 .login-header h1 {
-  line-height: 88px;
+  line-height: 72px;
 }
 
 .welcome-text {
@@ -64,44 +64,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.logo-icon {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 2px;
-  background-color: #1a1a1a;
-  padding: 2px;
-  width: 48px;
-  height: 48px;
+.login-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background-color: #ffffff;
+  border: 1px solid var(--admin-primary-800);
+  display: block;
 }
 
-.logo-quadrant {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 18px;
-  background-color: white;
-}
-
-.yellow {
-  color: #f5c518;
-}
-
-.green {
-  color: #2a4b3c;
-}
-
-.green-dark {
-  color: #1e362b;
-}
-
-.logo-text {
+.login-card .logo-text {
   font-family: 'DM Serif Display', serif;
-  color: var(--admin-primary-50);
+  color: var(--admin-primary-800);
   font-size: 64px;
   margin: 0;
   font-weight: normal;
@@ -140,62 +117,6 @@
 
 .form-input:focus {
   border-color: #3a3a3a;
-}
-
-.form-checkbox {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  align-self: center;
-  height: 36px;
-}
-
-.form-checkbox label {
-  font-size: 16px;
-  color: #1a1a1a;
-}
-
-.form-checkbox input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 40px;
-  height: 40px;
-  background-color: transparent;
-  cursor: pointer;
-  display: grid;
-  place-content: center;
-  position: relative;
-  border: none;
-  margin: 0;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.form-checkbox input[type="checkbox"]:hover {
-  background-color: rgba(73, 69, 79, 0.08);
-  /* Material hover effect on the hit area */
-}
-
-.form-checkbox input[type="checkbox"]::before {
-  content: "";
-  width: 18px;
-  height: 18px;
-  border: 2px solid #49454f;
-  border-radius: 2px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.form-checkbox input[type="checkbox"]:checked::before {
-  background-color: #49454f;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
-  background-size: 14px;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .login-button {

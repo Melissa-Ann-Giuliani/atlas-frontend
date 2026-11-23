@@ -1,106 +1,187 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
+import { getTokenExpirationMs, isTokenExpired } from '../utils/auth';
 import './IdleTimeoutModal.css';
 
 interface IdleTimeoutModalProps {
   onLogout: () => void;
-  timeoutSeconds?: number;
   warningSeconds?: number;
 }
 
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 const IdleTimeoutModal: React.FC<IdleTimeoutModalProps> = ({
   onLogout,
-  timeoutSeconds = 3600, // 1 hour default
-  warningSeconds = 60, // 1 minute warning
+  warningSeconds = 60, // 1 minute warning before JWT expiration
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const showModalRef = useRef(false);
   const [countdown, setCountdown] = useState(warningSeconds);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const warningIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isRenewing, setIsRenewing] = useState(false);
+  const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const modalIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logoutTriggeredRef = useRef(false);
 
-  const resetTimer = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (warningIntervalRef.current) clearInterval(warningIntervalRef.current);
+  const clearTimers = useCallback(() => {
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+      checkTimeoutRef.current = null;
+    }
+    if (modalIntervalRef.current) {
+      clearInterval(modalIntervalRef.current);
+      modalIntervalRef.current = null;
+    }
+  }, []);
 
+  const triggerLogout = useCallback(() => {
+    if (logoutTriggeredRef.current) return;
+    logoutTriggeredRef.current = true;
+    clearTimers();
     setShowModal(false);
-    showModalRef.current = false;
-    setCountdown(warningSeconds);
+    onLogout();
+  }, [clearTimers, onLogout]);
 
-    timeoutRef.current = setTimeout(() => {
+  const evaluateExpiration = useCallback(() => {
+    const expMs = getTokenExpirationMs();
+    const now = Date.now();
+
+    if (expMs === null || now >= expMs) {
+      triggerLogout();
+      return;
+    }
+
+    const remainingMs = expMs - now;
+    const warningMs = warningSeconds * 1000;
+
+    if (remainingMs <= warningMs) {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+        checkTimeoutRef.current = null;
+      }
       setShowModal(true);
-      showModalRef.current = true;
-    }, (timeoutSeconds - warningSeconds) * 1000);
-  }, [timeoutSeconds, warningSeconds]);
+      setCountdown(Math.max(0, Math.ceil(remainingMs / 1000)));
+    } else {
+      if (modalIntervalRef.current) {
+        clearInterval(modalIntervalRef.current);
+        modalIntervalRef.current = null;
+      }
+      setShowModal(false);
+      setCountdown(warningSeconds);
+
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+
+      const delayToWarning = Math.min(remainingMs - warningMs, MAX_TIMEOUT_MS);
+      checkTimeoutRef.current = setTimeout(() => {
+        evaluateExpiration();
+      }, delayToWarning);
+    }
+  }, [triggerLogout, warningSeconds]);
 
   useEffect(() => {
-    // Event listeners for user activity
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    logoutTriggeredRef.current = false;
+    evaluateExpiration();
 
-    const handleActivity = () => {
-      if (!showModalRef.current) {
-        resetTimer();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        evaluateExpiration();
       }
     };
 
-    events.forEach((event) => window.addEventListener(event, handleActivity));
+    const handleFocus = () => {
+      evaluateExpiration();
+    };
 
-    resetTimer();
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'token') {
+        evaluateExpiration();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorage);
 
     return () => {
-      events.forEach((event) => window.removeEventListener(event, handleActivity));
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (warningIntervalRef.current) clearInterval(warningIntervalRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorage);
+      clearTimers();
     };
-  }, [resetTimer]);
+  }, [evaluateExpiration, clearTimers]);
 
   useEffect(() => {
-    if (showModal) {
-      warningIntervalRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(warningIntervalRef.current!);
-            onLogout();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (!showModal) {
+      if (modalIntervalRef.current) {
+        clearInterval(modalIntervalRef.current);
+        modalIntervalRef.current = null;
+      }
+      return;
     }
 
-    return () => {
-      if (warningIntervalRef.current) clearInterval(warningIntervalRef.current);
+    const updateRemaining = () => {
+      const expMs = getTokenExpirationMs();
+      const now = Date.now();
+
+      if (expMs === null || now >= expMs) {
+        triggerLogout();
+        return;
+      }
+
+      const remainingMs = expMs - now;
+      setCountdown(Math.max(0, Math.ceil(remainingMs / 1000)));
     };
-  }, [showModal, onLogout]);
+
+    updateRemaining();
+    modalIntervalRef.current = setInterval(updateRemaining, 500);
+
+    return () => {
+      if (modalIntervalRef.current) {
+        clearInterval(modalIntervalRef.current);
+        modalIntervalRef.current = null;
+      }
+    };
+  }, [showModal, triggerLogout]);
 
   const handleStayLoggedIn = async () => {
+    if (isRenewing) return;
+    setIsRenewing(true);
+
     try {
       const currentToken = localStorage.getItem('token');
+      if (!currentToken || isTokenExpired(currentToken)) {
+        triggerLogout();
+        return;
+      }
 
-      // Request a fresh 1-hour token from the backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/renew`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentToken}`
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/renew`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
-        // Overwrite the old token with the new 1-hour token!
-        localStorage.setItem('token', data.token);
-        resetTimer();
+        if (data?.token && !isTokenExpired(data.token)) {
+          localStorage.setItem('token', data.token);
+          evaluateExpiration();
+        } else {
+          triggerLogout();
+        }
       } else {
-        // If the server rejects the renewal, force logout
-        onLogout();
+        triggerLogout();
       }
     } catch (error) {
-      console.error("Error renewing token", error);
-      onLogout();
+      console.error('Error renewing token', error);
+      triggerLogout();
+    } finally {
+      setIsRenewing(false);
     }
   };
-
-
 
   if (!showModal) return null;
 
@@ -109,15 +190,23 @@ const IdleTimeoutModal: React.FC<IdleTimeoutModalProps> = ({
       <div className="idle-modal">
         <div className="idle-modal-header">
           <FiAlertTriangle className="idle-warning-icon" />
-          <h2>Inactividad detectada</h2>
+          <h2>Sesión por expirar</h2>
           <FiAlertTriangle className="idle-warning-icon" />
         </div>
         <div className="idle-modal-content">
-          <p>Tu sesión expirará en <strong>{countdown}</strong> segundos debido a inactividad.</p>
+          <p>Tu sesión expirará en <strong>{countdown}</strong> segundos.</p>
           <p>¿Deseas mantener tu sesión activa?</p>
           <div className="idle-modal-actions">
-            <button className="idle-btn-stay" onClick={handleStayLoggedIn}>Mantener Sesión</button>
-            <button className="idle-btn-logout" onClick={onLogout}>Cerrar Sesión</button>
+            <button
+              className="idle-btn-stay"
+              onClick={handleStayLoggedIn}
+              disabled={isRenewing}
+            >
+              {isRenewing ? 'Renovando...' : 'Mantener Sesión'}
+            </button>
+            <button className="idle-btn-logout" onClick={triggerLogout}>
+              Cerrar Sesión
+            </button>
           </div>
         </div>
       </div>
