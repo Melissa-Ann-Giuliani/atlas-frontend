@@ -20,6 +20,7 @@ import ModificarCatedra from './pages/Gestion/ModificarCatedra/ModificarCatedra'
 import BajaCatedra from './pages/Gestion/BajaCatedra/BajaCatedra'
 import Vencimientos from './pages/Gestion/Vencimientos/Vencimientos'
 import Designacion from './pages/Tramites/Designacion/Designacion'
+import Historial from './pages/Historial/Historial'
 
 type Page = 'inicio' | 'listado' | 'tramites' | 'designacion' | 'gestion' | 'vencimientos' | 'historial' | 'docente_detalle' | 'cargo_detalle' | 'licencia_detalle' | 'modificar_docente' | 'modificar_usuario' | 'baja_usuario' | 'nuevo_usuario' | 'alta_cargo' | 'modificar_cargo' | 'baja_cargo' | 'alta_materia' | 'modificar_materia' | 'baja_materia' | 'alta_catedra' | 'modificar_catedra' | 'baja_catedra';
 
@@ -605,6 +606,9 @@ function App() {
               }}
             />
           );
+
+        case 'historial':
+          return <Historial onLogout={handleLogout} onNavigate={handleNavigate} />;
 
         case 'inicio':
         default:
