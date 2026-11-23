@@ -130,11 +130,6 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                 />
               </div>
 
-              <div className="form-checkbox">
-                <input type="checkbox" id="remember" />
-                <label htmlFor="remember">Recordar mi dispositivo</label>
-              </div>
-
               <button type="submit" className="login-button">
                 Iniciar Sesión
               </button>
