@@ -3,7 +3,7 @@ import './Historial.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import FilterBar, { type FilterCategory, type FilterOption } from '../../components/FilterBar';
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { getUserRole, isGlobalAdmin } from '../../utils/auth';
 
 interface UsuarioResumen {
@@ -28,6 +28,23 @@ interface CambioRecord {
 }
 
 type HistorialTab = 'usuarios' | 'cambios' | 'tramites';
+
+type SortColumn =
+  | 'fechaHora'
+  | 'responsable'
+  | 'usuarioAfectado'
+  | 'categoria'
+  | 'campoAfectado'
+  | 'valorAnterior'
+  | 'valorNuevo'
+  | 'tipoOperacion';
+
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  column: SortColumn;
+  direction: SortDirection;
+}
 
 interface HistorialProps {
   onLogout?: () => void;
@@ -86,6 +103,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [cambiosData, setCambiosData] = useState<CambioRecord[]>([]);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -393,6 +411,89 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
     return { label: op, className: '' };
   };
 
+  const handleSort = (column: SortColumn) => {
+    setSortConfig((prev) => {
+      if (!prev || prev.column !== column) {
+        return { column, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { column, direction: 'desc' };
+      }
+      return null;
+    });
+  };
+
+  const sortedCambiosData = useMemo(() => {
+    if (!sortConfig) return cambiosData;
+
+    const { column, direction } = sortConfig;
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...cambiosData].sort((a, b) => {
+      if (column === 'fechaHora') {
+        const timeA = a.fechaHora ? new Date(a.fechaHora).getTime() : NaN;
+        const timeB = b.fechaHora ? new Date(b.fechaHora).getTime() : NaN;
+        const validA = !Number.isNaN(timeA);
+        const validB = !Number.isNaN(timeB);
+        if (validA && validB) return (timeA - timeB) * multiplier;
+        if (validA) return -1 * multiplier;
+        if (validB) return 1 * multiplier;
+        return 0;
+      }
+
+      const getTextValue = (record: CambioRecord): string => {
+        switch (column) {
+          case 'responsable':
+            return formatResponsable(record.usuarioResponsable);
+          case 'usuarioAfectado':
+            return record.usuarioAfectadoNombreCompleto || '';
+          case 'categoria':
+            return record.categoria || '';
+          case 'campoAfectado':
+            return record.campoAfectado || '';
+          case 'valorAnterior':
+            return record.valorAnterior ?? '';
+          case 'valorNuevo':
+            return record.valorNuevo ?? '';
+          case 'tipoOperacion':
+            return formatOperacion(record.tipoOperacion).label;
+        }
+      };
+
+      const valA = getTextValue(a);
+      const valB = getTextValue(b);
+      return valA.localeCompare(valB, 'es', { numeric: true, sensitivity: 'base' }) * multiplier;
+    });
+  }, [cambiosData, sortConfig]);
+
+  const getAriaSort = (column: SortColumn): 'ascending' | 'descending' | 'none' => {
+    if (!sortConfig || sortConfig.column !== column) return 'none';
+    return sortConfig.direction === 'asc' ? 'ascending' : 'descending';
+  };
+
+  const renderSortHeader = (column: SortColumn, label: string) => {
+    const isActive = sortConfig?.column === column;
+    return (
+      <th aria-sort={getAriaSort(column)} className="historial-sortable-th">
+        <button
+          type="button"
+          className={`historial-sort-btn ${isActive ? 'active' : ''}`}
+          onClick={() => handleSort(column)}
+        >
+          <span>{label}</span>
+          <span className="historial-sort-icons" aria-hidden="true">
+            <FiChevronUp
+              className={`historial-sort-icon ${isActive && sortConfig.direction === 'asc' ? 'active' : ''}`}
+            />
+            <FiChevronDown
+              className={`historial-sort-icon ${isActive && sortConfig.direction === 'desc' ? 'active' : ''}`}
+            />
+          </span>
+        </button>
+      </th>
+    );
+  };
+
   const getTitle = () => {
     if (activeTab === 'usuarios') return 'Historial de Usuarios';
     if (activeTab === 'tramites') return 'Historial de Trámites';
@@ -498,14 +599,14 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
                   <table className="historial-table">
                     <thead>
                       <tr>
-                        <th>Fecha y Hora</th>
-                        <th>Responsable</th>
-                        <th>Usuario Afectado</th>
-                        <th>Categoría</th>
-                        <th>Campo</th>
-                        <th>Valor Anterior</th>
-                        <th>Valor Nuevo</th>
-                        <th>Operación</th>
+                        {renderSortHeader('fechaHora', 'Fecha y Hora')}
+                        {renderSortHeader('responsable', 'Responsable')}
+                        {renderSortHeader('usuarioAfectado', 'Usuario Afectado')}
+                        {renderSortHeader('categoria', 'Categoría')}
+                        {renderSortHeader('campoAfectado', 'Campo')}
+                        {renderSortHeader('valorAnterior', 'Valor Anterior')}
+                        {renderSortHeader('valorNuevo', 'Valor Nuevo')}
+                        {renderSortHeader('tipoOperacion', 'Operación')}
                       </tr>
                     </thead>
                     <tbody>
@@ -515,14 +616,14 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
                             Cargando historial de cambios...
                           </td>
                         </tr>
-                      ) : cambiosData.length === 0 ? (
+                      ) : sortedCambiosData.length === 0 ? (
                         <tr>
                           <td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>
                             No se encontraron cambios
                           </td>
                         </tr>
                       ) : (
-                        cambiosData.map((cambio) => {
+                        sortedCambiosData.map((cambio) => {
                           const opInfo = formatOperacion(cambio.tipoOperacion);
                           return (
                             <tr key={cambio.id}>
