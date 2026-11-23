@@ -52,6 +52,42 @@ interface FormState {
   fechaFinalizacion: Date | null;
 }
 
+interface DocenteDesignacionCargoDTO {
+  cargoId?: number;
+  legajo?: number;
+  nroResolucion?: number | string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  fechaCreacion?: string;
+  horasOcupadas?: number;
+  nroCargo?: number;
+  categoria?: string;
+  dedicacion?: string;
+  caracter?: string;
+  origen?: string;
+  estado?: string;
+}
+
+interface DocenteActividadActualDTO {
+  funcionId?: number;
+  funcionNombre?: string;
+  funcionHoras?: number;
+  cargoId?: number;
+  materiaId?: number;
+  materiaNombre?: string;
+  plan?: number;
+}
+
+interface DocenteDetailsDTO {
+  legajo?: number;
+  datosPersonales?: {
+    legajo?: number;
+    estado?: string;
+  };
+  designacionesYCargos?: DocenteDesignacionCargoDTO[];
+  actividadesActuales?: DocenteActividadActualDTO[];
+}
+
 interface CargoOption {
   id: number;
   codigo?: number;
@@ -116,6 +152,12 @@ const formatCargoDate = (dateStr?: string): string => {
     return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
   }
   return clean;
+};
+
+const formatHorasOcupadas = (horas?: number | string | null): string => {
+  if (horas === undefined || horas === null || horas === '') return '00';
+  const num = Number(horas);
+  return Number.isNaN(num) ? String(horas) : String(num).padStart(2, '0');
 };
 
 export const isDocenteInactivo = (docente: any): boolean => {
@@ -362,20 +404,64 @@ export default function Designacion({
       const mockCargo: CargoOption = {
         id: cargoId,
         numero: cargo.codigo ?? cargo.numero ?? cargoId,
+        fechaCreacion: cargo.fechaCreacion,
         categoria: cargo.categoria || 'Docente',
         dedicacion: cargo.dedicacion || 'Simple',
         caracter: cargo.caracter || 'Ordinario',
         origen: cargo.origen || 'De Planta',
         unidad: redesignacionData.unidad?.nombre || cargo.unidad || 'General',
         unidadId: Number(redesignacionData.unidad?.unidadId ?? cargo.unidadId) || undefined,
-        horasOcupadas: '00',
+        horasOcupadas: cargo.horasOcupadas !== undefined && cargo.horasOcupadas !== null
+          ? formatHorasOcupadas(cargo.horasOcupadas)
+          : '00',
         materia: cargo.materia || 'Sin asignar',
+        plan: cargo.plan ?? cargo.planEstudio,
         estado: 'Activa',
       };
       setAvailableCargos((prev) => {
         if (prev.some((c) => c.id === cargoId)) return prev;
         return [mockCargo, ...prev];
       });
+
+      // Enriquecer con GET /api/docentes/{id} (fechaCreacion, horasOcupadas, plan)
+      if (docId) {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+        fetch(`${apiUrl}/api/docentes/${docId}`, { headers })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((detail: DocenteDetailsDTO | null) => {
+            if (!detail) return;
+            const matchedCargo = detail.designacionesYCargos?.find(
+              (c) => c.cargoId === cargoId || (cargo.codigo !== undefined && c.nroCargo === cargo.codigo)
+            );
+            const matchedAct = detail.actividadesActuales?.find(
+              (a) => a.cargoId === cargoId || (matchedCargo?.cargoId !== undefined && a.cargoId === matchedCargo.cargoId)
+            );
+
+            if (!matchedCargo && !matchedAct) return;
+
+            setAvailableCargos((prev) =>
+              prev.map((item) => {
+                if (item.id !== cargoId) return item;
+                return {
+                  ...item,
+                  fechaCreacion: matchedCargo?.fechaCreacion ?? item.fechaCreacion,
+                  horasOcupadas:
+                    matchedCargo?.horasOcupadas !== undefined && matchedCargo?.horasOcupadas !== null
+                      ? formatHorasOcupadas(matchedCargo.horasOcupadas)
+                      : item.horasOcupadas,
+                  materia: matchedAct?.materiaNombre || item.materia,
+                  plan: matchedAct?.plan !== undefined && matchedAct?.plan !== null ? matchedAct.plan : item.plan,
+                };
+              })
+            );
+          })
+          .catch(() => {
+            // Keep preloaded cargo data if enrichment fails
+          });
+      }
     }
 
     // Cargar materias si aún no están cargadas para que el paso de asignación de funciones disponga del catálogo
@@ -1705,7 +1791,7 @@ export default function Designacion({
                                       <strong>Fecha Creación:</strong> {formatCargoDate(cargo.fechaCreacion)}
                                     </span>
                                     <span className="designacion-cargo-field">
-                                      <strong>Horas Ocupadas:</strong> {cargo.horasOcupadas ?? '00'}
+                                      <strong>Horas Ocupadas:</strong> {formatHorasOcupadas(cargo.horasOcupadas)}
                                     </span>
                                     <span className="designacion-cargo-field">
                                       <strong>Origen:</strong> {cargo.origen || 'Sin especificar'}
@@ -1735,7 +1821,7 @@ export default function Designacion({
                                       <strong>Materia:</strong> {cargo.materia || 'Sin asignar'}
                                     </span>
                                     <span className="designacion-cargo-field">
-                                      <strong>Plan:</strong> {cargo.plan || 'Sin asignar'}
+                                      <strong>Plan:</strong> {cargo.plan !== undefined && cargo.plan !== null && cargo.plan !== '' ? cargo.plan : 'Sin asignar'}
                                     </span>
                                   </div>
                                 </div>
@@ -1793,7 +1879,7 @@ export default function Designacion({
                             <strong>Fecha Creación:</strong> {formatCargoDate(selectedCargo?.fechaCreacion)}
                           </span>
                           <span className="designacion-cargo-box-item">
-                            <strong>Horas Ocupadas:</strong> {selectedCargo?.horasOcupadas ?? '00'}
+                            <strong>Horas Ocupadas:</strong> {formatHorasOcupadas(selectedCargo?.horasOcupadas)}
                           </span>
                           <span className="designacion-cargo-box-item">
                             <strong>Origen:</strong> {selectedCargo?.origen || 'Sin especificar'}
@@ -1823,7 +1909,7 @@ export default function Designacion({
                             <strong>Materia:</strong> {selectedCargo?.materia || 'Sin asignar'}
                           </span>
                           <span className="designacion-cargo-box-item">
-                            <strong>Plan:</strong> {selectedCargo?.plan || 'Sin asignar'}
+                            <strong>Plan:</strong> {selectedCargo?.plan !== undefined && selectedCargo?.plan !== null && selectedCargo?.plan !== '' ? selectedCargo.plan : 'Sin asignar'}
                           </span>
                         </div>
                       </div>

@@ -319,6 +319,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -368,6 +370,10 @@
   color: #777;
   cursor: pointer;
   font-size: 20px;
+}
+
+.doc-card-bottom {
+  min-width: 0;
 }
 
 .doc-name {

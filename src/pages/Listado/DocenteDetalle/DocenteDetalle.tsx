@@ -42,6 +42,8 @@ interface DocenteDetailsDTO {
     nroResolucion: number;
     fechaInicio: string;
     fechaFin: string;
+    fechaCreacion?: string;
+    horasOcupadas?: number;
     nroCargo: number;
     categoria: string;
     dedicacion: string;
@@ -56,6 +58,7 @@ interface DocenteDetailsDTO {
     cargoId: number;
     materiaId: number;
     materiaNombre: string;
+    plan?: number;
   }[];
   licenciasActuales: {
     nroResolucion: string;
