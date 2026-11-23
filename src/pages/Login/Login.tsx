@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import certFfhaLogo from '../../assets/membrete/cert-ffha.png';
 import './Login.css';
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
@@ -81,12 +82,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
         <div className="login-header">
           <p className="welcome-text">Bienvenido a</p>
           <div className="logo-container">
-            <div className="logo-icon">
-              <div className="logo-quadrant yellow">F</div>
-              <div className="logo-quadrant green">F</div>
-              <div className="logo-quadrant green-dark">H</div>
-              <div className="logo-quadrant green">A</div>
-            </div>
+            <img src={certFfhaLogo} alt="Logo FFHA" className="login-logo-img" />
             <h1 className="logo-text">Atlas</h1>
           </div>
         </div>

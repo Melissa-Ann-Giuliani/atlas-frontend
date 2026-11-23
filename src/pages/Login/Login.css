@@ -44,11 +44,11 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-bottom: 38px;
+  margin-bottom: 36px;
 }
 
 .login-header h1 {
-  line-height: 88px;
+  line-height: 72px;
 }
 
 .welcome-text {
@@ -64,44 +64,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.logo-icon {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 2px;
-  background-color: #1a1a1a;
-  padding: 2px;
-  width: 48px;
-  height: 48px;
+.login-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background-color: #ffffff;
+  border: 1px solid var(--admin-primary-800);
+  display: block;
 }
 
-.logo-quadrant {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 18px;
-  background-color: white;
-}
-
-.yellow {
-  color: #f5c518;
-}
-
-.green {
-  color: #2a4b3c;
-}
-
-.green-dark {
-  color: #1e362b;
-}
-
-.logo-text {
+.login-card .logo-text {
   font-family: 'DM Serif Display', serif;
-  color: var(--admin-primary-50);
+  color: var(--admin-primary-800);
   font-size: 64px;
   margin: 0;
   font-weight: normal;
