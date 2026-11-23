@@ -433,6 +433,8 @@
   border-radius: 8px;
   padding: 16px;
   width: 200px;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -451,10 +453,17 @@
   align-items: center;
 }
 
+.doc-card-bottom {
+  min-width: 0;
+}
+
 .doc-card-bottom h5 {
   margin: 0 0 4px 0;
   font-size: 13px;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .doc-card-bottom p {
