@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Login from './pages/Login/Login'
 import Inicio from './pages/Inicio/Inicio'
 import Listado from './pages/Listado/Listado'
@@ -76,14 +76,23 @@ const getPageFromPath = (path: string): Page => {
 };
 
 import IdleTimeoutModal from './components/IdleTimeoutModal.tsx';
-import { isGlobalAdmin } from './utils/auth';
+import { AUTH_EXPIRED_EVENT, clearSession, isGlobalAdmin, isTokenExpired } from './utils/auth';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    if (!token || isTokenExpired(token)) {
+      clearSession();
+      if (window.location.pathname !== '/') {
+        window.history.replaceState(null, '', '/');
+      }
+      return false;
+    }
+    return true;
   });
 
   const [activePage, setActivePage] = useState<Page>(() => {
+    if (!isAuthenticated) return 'inicio';
     return getPageFromPath(window.location.pathname.substring(1));
   });
   const [selectedCatedra, setSelectedCatedra] = useState<any>(null);
@@ -159,12 +168,13 @@ function App() {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const currentPath = window.location.pathname.substring(1);
     const targetPath = getPathFromPage(activePage);
     if (currentPath !== targetPath) {
       window.history.pushState({ page: activePage, tab: listadoTab, cargo: selectedCargo, docente: selectedDocente, licencia: selectedLicencia, cargoHistory }, '', `/${targetPath}`);
     }
-  }, [activePage, listadoTab]);
+  }, [isAuthenticated, activePage, listadoTab]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -199,58 +209,36 @@ function App() {
   }, []);
 
   const handleLogin = () => {
+    setActivePage('inicio');
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('atlas_selected_docente');
-    sessionStorage.removeItem('atlas_selected_cargo');
-    sessionStorage.removeItem('atlas_selected_licencia');
-    sessionStorage.removeItem('atlas_cargo_history');
-    sessionStorage.removeItem('atlas_listado_tab');
-    sessionStorage.removeItem('atlas_new_user_initial_role');
-    sessionStorage.removeItem('atlas_new_user_return_page');
-    sessionStorage.removeItem('atlas_alta_cargo_return_page');
-    sessionStorage.removeItem('atlas_redesignacion_data');
+  const handleLogout = useCallback(() => {
+    clearSession();
+    setSelectedDocente(null);
+    setSelectedCargo(null);
+    setSelectedLicencia(null);
+    setSelectedCatedra(null);
+    setCargoHistory([]);
+    setListadoTab('docentes');
+    setNewUserInitialRole(null);
+    setNewUserReturnPage(null);
+    setAltaCargoReturnPage(null);
+    setRedesignacionData(null);
+    setActivePage('inicio');
     setIsAuthenticated(false);
-  };
+    if (window.location.pathname !== '/') {
+      window.history.replaceState(null, '', '/');
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const renewToken = async () => {
-      try {
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) {
-          handleLogout();
-          return;
-        }
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/renew`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${currentToken}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem('token', data.token);
-        } else {
-          handleLogout();
-        }
-      } catch (error) {
-        console.error("Error auto-renewing token", error);
-        handleLogout();
-      }
+    const handleUnauthorized = () => {
+      handleLogout();
     };
-
-    // 45 minutes in milliseconds
-    const intervalId = setInterval(renewToken, 45 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
-  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleUnauthorized);
+  }, [handleLogout]);
 
   const handleBackCargo = () => {
     if (cargoHistory.length > 0) {
@@ -619,7 +607,7 @@ function App() {
     return (
       <>
         {renderContent()}
-        <IdleTimeoutModal onLogout={handleLogout} timeoutSeconds={3600} warningSeconds={60} />
+        <IdleTimeoutModal onLogout={handleLogout} warningSeconds={60} />
       </>
     );
   }
