@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './NuevoUsuario.css';
+import './AltaUsuario.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
 
 registerLocale('es', es);
 
-interface NuevoUsuarioProps {
+interface AltaUsuarioProps {
   onLogout?: () => void;
   onNavigate?: (page: any, data?: any) => void;
   onBack?: () => void;
@@ -121,7 +121,7 @@ const generateSecureRandomPassword = (): string => {
   return result;
 };
 
-export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol }: NuevoUsuarioProps) {
+export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }: AltaUsuarioProps) {
   const [formData, setFormData] = useState<FormState>(() => {
     let preselectedRol = '';
     if (initialRol) {
@@ -808,55 +808,55 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
   };
 
   return (
-    <div className="nuevo-usuario-page">
+    <div className="alta-usuario-page">
       <Topbar onLogout={onLogout} />
 
-      <div className="nuevo-usuario-body">
+      <div className="alta-usuario-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="nuevo-usuario-main">
-          <div className="nuevo-usuario-content-area">
-            <div className="nuevo-usuario-top-nav">
+        <main className="alta-usuario-main">
+          <div className="alta-usuario-content-area">
+            <div className="alta-usuario-top-nav">
               <button
                 type="button"
-                className="nuevo-usuario-back-btn"
+                className="alta-usuario-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="nuevo-usuario-back-icon" />
+                <FiChevronLeft className="alta-usuario-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
-            <div className="nuevo-usuario-container-card">
-              <div className="nuevo-usuario-header">
-                <h1 className="nuevo-usuario-title">Gestión</h1>
+            <div className="alta-usuario-container-card">
+              <div className="alta-usuario-header">
+                <h1 className="alta-usuario-title">Gestión</h1>
               </div>
 
-              <div className="nuevo-usuario-form-card">
-                <div className="nuevo-usuario-card-header">
-                  <h2>Nuevo Usuario</h2>
+              <div className="alta-usuario-form-card">
+                <div className="alta-usuario-card-header">
+                  <h2>Alta de Usuario</h2>
                 </div>
 
-                <div className="nuevo-usuario-card-body">
-                  <h3 className="nuevo-usuario-section-title">Datos de Usuario</h3>
+                <div className="alta-usuario-card-body">
+                  <h3 className="alta-usuario-section-title">Datos de Usuario</h3>
 
                   {feedback && (
-                    <div className={`nuevo-usuario-feedback feedback-${feedback.type}`}>
+                    <div className={`alta-usuario-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  <form className="nuevo-usuario-form" onSubmit={handleSubmit} autoComplete="off">
-                    <div className="nuevo-usuario-form-grid">
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="apellido" className="nuevo-usuario-label">
+                  <form className="alta-usuario-form" onSubmit={handleSubmit} autoComplete="off">
+                    <div className="alta-usuario-form-grid">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="apellido" className="alta-usuario-label">
                           Apellido/s
                         </label>
                         <input
                           id="apellido"
                           name="atlas_user_apellido"
                           type="text"
-                          className="nuevo-usuario-input"
+                          className="alta-usuario-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
@@ -864,62 +864,62 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                         />
                       </div>
 
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="nombre" className="nuevo-usuario-label">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="nombre" className="alta-usuario-label">
                           Nombre/s
                         </label>
                         <input
                           id="nombre"
                           type="text"
-                          className="nuevo-usuario-input"
+                          className="alta-usuario-input"
                           placeholder="Ingrese valor"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
                         />
                       </div>
 
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="correo" className="nuevo-usuario-label">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="correo" className="alta-usuario-label">
                           Correo Electrónico
                         </label>
                         <input
                           id="correo"
                           type="email"
-                          className="nuevo-usuario-input"
+                          className="alta-usuario-input"
                           placeholder="ejemplo@correo.com"
                           value={formData.correo}
                           onChange={(e) => handleChange('correo', e.target.value)}
                         />
                       </div>
 
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="username" className="nuevo-usuario-label">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="username" className="alta-usuario-label">
                           Nombre de Usuario
                         </label>
                         <input
                           id="username"
                           type="text"
-                          className="nuevo-usuario-input"
+                          className="alta-usuario-input"
                           placeholder="Nombre Provisorio"
                           value={formData.username}
                           onChange={(e) => handleChange('username', e.target.value)}
                         />
                       </div>
 
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="password" className="nuevo-usuario-label">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="password" className="alta-usuario-label">
                           Contraseña
                         </label>
-                        <div className="nuevo-usuario-password-wrapper">
+                        <div className="alta-usuario-password-wrapper">
                           <input
                             id="password"
                             type={showPassword ? 'text' : 'password'}
-                            className="nuevo-usuario-input nuevo-usuario-password-input"
+                            className="alta-usuario-input alta-usuario-password-input"
                             placeholder={isLoadingPassword ? 'Generando contraseña...' : '••••••••'}
                             value={formData.password}
                             onChange={(e) => handleChange('password', e.target.value)}
                           />
-                          <div className="nuevo-usuario-password-actions">
+                          <div className="alta-usuario-password-actions">
                             <button
                               type="button"
                               className="password-action-btn"
@@ -943,14 +943,14 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                         </div>
                       </div>
 
-                      <div className="nuevo-usuario-field">
-                        <label htmlFor="rol" className="nuevo-usuario-label">
+                      <div className="alta-usuario-field">
+                        <label htmlFor="rol" className="alta-usuario-label">
                           Rol
                         </label>
-                        <div className="nuevo-usuario-select-wrapper">
+                        <div className="alta-usuario-select-wrapper">
                           <select
                             id="rol"
-                            className="nuevo-usuario-select"
+                            className="alta-usuario-select"
                             value={formData.rol}
                             onChange={(e) => handleChange('rol', e.target.value)}
                             disabled={isLoadingRoles && roles.length === 0}
@@ -964,24 +964,24 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="nuevo-usuario-select-caret" />
+                          <FiChevronDown className="alta-usuario-select-caret" />
                         </div>
                       </div>
                     </div>
 
-                    <hr className="nuevo-usuario-divider" />
+                    <hr className="alta-usuario-divider" />
 
                     {isAdminGlobal && (
-                      <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid nuevo-usuario-single-grid">
-                          <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
-                            <label htmlFor="cargo" className="nuevo-usuario-label">
+                      <div className="alta-usuario-extra-section">
+                        <div className="alta-usuario-extra-grid alta-usuario-single-grid">
+                          <div className="alta-usuario-field alta-usuario-field-cargo">
+                            <label htmlFor="cargo" className="alta-usuario-label">
                               Cargo
                             </label>
-                            <div className="nuevo-usuario-select-wrapper">
+                            <div className="alta-usuario-select-wrapper">
                               <select
                                 id="cargo"
-                                className="nuevo-usuario-select"
+                                className="alta-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargos && cargosAdminGlobal.length === 0}
@@ -997,7 +997,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                              <FiChevronDown className="alta-usuario-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1005,16 +1005,16 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                     )}
 
                     {isAuditor && (
-                      <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid nuevo-usuario-single-grid">
-                          <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
-                            <label htmlFor="cargo" className="nuevo-usuario-label">
+                      <div className="alta-usuario-extra-section">
+                        <div className="alta-usuario-extra-grid alta-usuario-single-grid">
+                          <div className="alta-usuario-field alta-usuario-field-cargo">
+                            <label htmlFor="cargo" className="alta-usuario-label">
                               Cargo
                             </label>
-                            <div className="nuevo-usuario-select-wrapper">
+                            <div className="alta-usuario-select-wrapper">
                               <select
                                 id="cargo"
-                                className="nuevo-usuario-select"
+                                className="alta-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargosAuditor && cargosAuditor.length === 0}
@@ -1030,7 +1030,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                              <FiChevronDown className="alta-usuario-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1038,16 +1038,16 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                     )}
 
                     {isAdminUnidad && (
-                      <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-extra-grid nuevo-usuario-admin-unidad-grid">
-                          <div className="nuevo-usuario-field nuevo-usuario-field-cargo">
-                            <label htmlFor="cargo" className="nuevo-usuario-label">
+                      <div className="alta-usuario-extra-section">
+                        <div className="alta-usuario-extra-grid alta-usuario-admin-unidad-grid">
+                          <div className="alta-usuario-field alta-usuario-field-cargo">
+                            <label htmlFor="cargo" className="alta-usuario-label">
                               Cargo
                             </label>
-                            <div className="nuevo-usuario-select-wrapper">
+                            <div className="alta-usuario-select-wrapper">
                               <select
                                 id="cargo"
-                                className="nuevo-usuario-select"
+                                className="alta-usuario-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargosUnidad && cargosAdminUnidad.length === 0}
@@ -1063,18 +1063,18 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                              <FiChevronDown className="alta-usuario-select-caret" />
                             </div>
                           </div>
 
-                          <div className="nuevo-usuario-field nuevo-usuario-field-dependencia">
-                            <label htmlFor="dependencia" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field alta-usuario-field-dependencia">
+                            <label htmlFor="dependencia" className="alta-usuario-label">
                               Dependencia
                             </label>
-                            <div className="nuevo-usuario-select-wrapper">
+                            <div className="alta-usuario-select-wrapper">
                               <select
                                 id="dependencia"
-                                className="nuevo-usuario-select"
+                                className="alta-usuario-select"
                                 value={formData.dependencia}
                                 onChange={(e) => handleChange('dependencia', e.target.value)}
                                 disabled={isLoadingDependencias && dependencias.length === 0}
@@ -1090,19 +1090,19 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                              <FiChevronDown className="alta-usuario-select-caret" />
                             </div>
                           </div>
 
                           {formData.dependencia && (
-                            <div className="nuevo-usuario-field nuevo-usuario-field-unidad">
-                              <label htmlFor="unidad" className="nuevo-usuario-label">
+                            <div className="alta-usuario-field alta-usuario-field-unidad">
+                              <label htmlFor="unidad" className="alta-usuario-label">
                                 {dynamicUnidadLabel}
                               </label>
-                              <div className="nuevo-usuario-select-wrapper">
+                              <div className="alta-usuario-select-wrapper">
                                 <select
                                   id="unidad"
-                                  className="nuevo-usuario-select"
+                                  className="alta-usuario-select"
                                   value={formData.unidad}
                                   onChange={(e) => handleChange('unidad', e.target.value)}
                                   disabled={isLoadingUnidades}
@@ -1116,7 +1116,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                     </option>
                                   ))}
                                 </select>
-                                <FiChevronDown className="nuevo-usuario-select-caret" />
+                                <FiChevronDown className="alta-usuario-select-caret" />
                               </div>
                             </div>
                           )}
@@ -1125,17 +1125,17 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                     )}
 
                     {isDocente && (
-                      <div className="nuevo-usuario-extra-section">
-                        <div className="nuevo-usuario-docente-grid">
+                      <div className="alta-usuario-extra-section">
+                        <div className="alta-usuario-docente-grid">
                           {/* Fila 1 */}
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="tipoDni" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="tipoDni" className="alta-usuario-label">
                               Tipo DNI
                             </label>
-                            <div className="nuevo-usuario-select-wrapper">
+                            <div className="alta-usuario-select-wrapper">
                               <select
                                 id="tipoDni"
-                                className="nuevo-usuario-select"
+                                className="alta-usuario-select"
                                 value={formData.tipoDni}
                                 onChange={(e) => handleChange('tipoDni', e.target.value)}
                                 disabled={isLoadingTiposDni && tiposDni.length === 0}
@@ -1149,19 +1149,19 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="nuevo-usuario-select-caret" />
+                              <FiChevronDown className="alta-usuario-select-caret" />
                             </div>
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="numeroDni" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="numeroDni" className="alta-usuario-label">
                               Número
                             </label>
                             <input
                               id="numeroDni"
                               name="docente_numero_documento"
                               type="text"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.numeroDni}
                               onChange={(e) => handleChange('numeroDni', e.target.value)}
@@ -1169,15 +1169,15 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                             />
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="cuil" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="cuil" className="alta-usuario-label">
                               CUIL
                             </label>
                             <input
                               id="cuil"
                               name="docente_cuil"
                               type="text"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.cuil}
                               onChange={(e) => handleChange('cuil', e.target.value)}
@@ -1185,15 +1185,15 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                             />
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="domicilio" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="domicilio" className="alta-usuario-label">
                               Domicilio
                             </label>
                             <input
                               id="domicilio"
                               name="docente_domicilio"
                               type="text"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.domicilio}
                               onChange={(e) => handleChange('domicilio', e.target.value)}
@@ -1202,8 +1202,8 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                           </div>
 
                           {/* Fila 2 */}
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="legajo" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="legajo" className="alta-usuario-label">
                               N° Legajo
                             </label>
                             <input
@@ -1211,7 +1211,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                               name="docente_legajo"
                               type="number"
                               min="1"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.legajo}
                               onChange={(e) => handleChange('legajo', e.target.value)}
@@ -1219,15 +1219,15 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                             />
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="emailInstitucional" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="emailInstitucional" className="alta-usuario-label">
                               Email Institucional
                             </label>
                             <input
                               id="emailInstitucional"
                               name="docente_email_institucional"
                               type="email"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
@@ -1236,11 +1236,11 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                             />
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="fechaIngreso" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="fechaIngreso" className="alta-usuario-label">
                               Fecha de Ingreso a la Universidad
                             </label>
-                            <div className="nuevo-usuario-datepicker-container">
+                            <div className="alta-usuario-datepicker-container">
                               <DatePicker
                                 id="fechaIngreso"
                                 name="docente_fecha_ingreso"
@@ -1249,18 +1249,18 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="DD/MM/AAAA"
                                 locale="es"
-                                className="nuevo-usuario-input nuevo-usuario-datepicker-input"
+                                className="alta-usuario-input alta-usuario-datepicker-input"
                                 autoComplete="off"
                                 showYearDropdown
                                 showMonthDropdown
                                 dropdownMode="select"
                               />
-                              <FiCalendar className="nuevo-usuario-datepicker-icon" />
+                              <FiCalendar className="alta-usuario-datepicker-icon" />
                             </div>
                           </div>
 
-                          <div className="nuevo-usuario-field">
-                            <label htmlFor="antigPrevia" className="nuevo-usuario-label">
+                          <div className="alta-usuario-field">
+                            <label htmlFor="antigPrevia" className="alta-usuario-label">
                               Antigüedad Previa
                             </label>
                             <input
@@ -1268,7 +1268,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
                               name="docente_antiguedad_previa"
                               type="number"
                               min="0"
-                              className="nuevo-usuario-input"
+                              className="alta-usuario-input"
                               placeholder="Ingrese valor"
                               value={formData.antigPrevia}
                               onChange={(e) => handleChange('antigPrevia', e.target.value)}
@@ -1283,10 +1283,10 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
               </div>
             </div>
 
-            <div className="nuevo-usuario-actions">
+            <div className="alta-usuario-actions">
               <button
                 type="button"
-                className="btn-nuevo-usuario btn-borrar"
+                className="btn-alta-usuario btn-borrar"
                 onClick={handleClear}
               >
                 <FiTrash2 className="btn-icon" />
@@ -1295,7 +1295,7 @@ export default function NuevoUsuario({ onLogout, onNavigate, onBack, initialRol 
 
               <button
                 type="button"
-                className="btn-nuevo-usuario btn-confirmar"
+                className="btn-alta-usuario btn-confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
               >

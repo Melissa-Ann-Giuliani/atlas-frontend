@@ -25,6 +25,7 @@
 
 .back-button:hover {
   text-decoration: underline;
+  transform: translateX(-1px);
 }
 
 .cargo-detalle-card-container {
@@ -64,18 +65,16 @@
 .cargo-title {
   margin: 0;
   font-size: 40px;
-  font-family: 'Playfair Display', serif;
+  font-family: 'DM Display', serif;
   color: #1a231f;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
+  letter-spacing: -0.2px;
 }
 
 .cargo-subtitle {
   margin: 2px 0 0 0;
-  font-size: 18px;
+  font-size: 20px;
   color: #555;
-  font-weight: normal;
+  font-weight: 500;
 }
 
 .cargo-header-actions {
@@ -491,7 +490,6 @@
   background: #2b5b3a;
 }
 
-/* Responsive adjustments for smaller screens/heights */
 @media (max-width: 1400px),
 (max-height: 900px) {
   .cargo-detalle-area {
@@ -507,7 +505,7 @@
   }
 
   .cargo-title {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .cargo-subtitle {

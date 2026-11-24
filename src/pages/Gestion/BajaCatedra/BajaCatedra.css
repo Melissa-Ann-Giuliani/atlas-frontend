@@ -61,7 +61,7 @@
 
 .baja-catedra-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
+  transform: translateX(-1px);
 }
 
 .baja-catedra-back-icon {
@@ -121,9 +121,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 /* Search bar card inside header row, styled like Modificar Cátedra / Baja de Materia */
@@ -450,9 +447,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0 0 16px 0;
   text-align: left;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
 }
 
 /* Form Grids: Identical to Modificar Cátedra & Alta de Cátedra */

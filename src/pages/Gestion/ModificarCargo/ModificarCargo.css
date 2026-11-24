@@ -61,7 +61,7 @@
 
 .modificar-cargo-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
+  transform: translateX(-1px);
 }
 
 .modificar-cargo-back-icon {
@@ -119,9 +119,6 @@
   font-size: 44px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
   display: inline-block;
 }
 
@@ -294,7 +291,6 @@
   cursor: not-allowed;
 }
 
-/* Blue framed Form Card */
 .modificar-cargo-form-card {
   border: 1.5px solid var(--docente-primary-600, #1953B8);
   border-radius: 8px;
@@ -307,7 +303,6 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
-/* Blue Card Header for Modificación */
 .modificar-cargo-card-header {
   background-color: var(--docente-primary-600, #1953B8);
   padding: 12px 20px;
@@ -323,7 +318,6 @@
   letter-spacing: 0.2px;
 }
 
-/* Scrollable Form Body */
 .modificar-cargo-card-body {
   padding: 20px 28px;
   flex: 1;
@@ -352,8 +346,6 @@
   background: #2b5b3a;
 }
 
-
-/* Feedback banners */
 .modificar-cargo-feedback {
   padding: 12px 16px;
   border-radius: 6px;
@@ -401,9 +393,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0 0 16px 0;
   text-align: left;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
 }
 
 .modificar-cargo-divider {
@@ -965,7 +954,7 @@
   }
 
   .modificar-cargo-section-title {
-    font-size: 15px;
+    font-size: 18px;
   }
 
   .modificar-cargo-grid-3,
@@ -1012,7 +1001,7 @@
   }
 
   .modificar-cargo-section-title {
-    font-size: 20px;
+    font-size: 22px;
     margin: 0 0 12px 0;
   }
 

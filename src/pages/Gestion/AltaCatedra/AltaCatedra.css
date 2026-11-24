@@ -60,7 +60,7 @@
 
 .alta-catedra-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
+  transform: translateX(-1px);
 }
 
 .alta-catedra-back-icon {
@@ -109,9 +109,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 /* Green framed inner form card */
@@ -180,9 +177,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0 0 16px 0;
   text-align: left;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
 }
 
 /* Feedback banner */

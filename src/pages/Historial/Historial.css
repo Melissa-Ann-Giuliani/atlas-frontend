@@ -35,12 +35,10 @@
 
 .historial-title {
   font-family: 'DM Serif Display', serif;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 500;
   color: #1A2E1C;
   margin: 0;
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 
 .historial-filter-wrapper {
@@ -370,7 +368,7 @@
   }
 
   .historial-title {
-    font-size: 40px;
+    font-size: 32px;
   }
 
   .historial-tab-btn {

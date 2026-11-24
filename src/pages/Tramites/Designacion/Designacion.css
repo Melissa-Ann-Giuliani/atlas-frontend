@@ -137,7 +137,6 @@
 
 .designacion-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
 }
 
 .designacion-back-icon {
@@ -222,13 +221,10 @@
 
 .designacion-title {
   font-family: 'DM Serif Display', serif;
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 500;
   color: #1A2E1C;
   margin: 0;
-  text-decoration: underline;
-  text-underline-offset: 8px;
-  text-decoration-thickness: 2px;
   letter-spacing: -0.2px;
 }
 
@@ -444,9 +440,6 @@
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   margin: 0;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
 }
 
 .designacion-form-row {
@@ -704,9 +697,6 @@
   font-weight: 500;
   color: #1A2E1C;
   margin: 0;
-  text-decoration: underline;
-  text-underline-offset: 8px;
-  text-decoration-thickness: 2px;
   letter-spacing: -0.2px;
 }
 
@@ -1515,9 +1505,6 @@
   font-weight: 400;
   color: #111111;
   margin: 0;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1.5px;
 }
 
 .designacion-zoom-controls {
@@ -1891,6 +1878,7 @@
 }
 
 @media print {
+
   html,
   body {
     margin: 0 !important;

@@ -26,6 +26,7 @@
 
 .back-button:hover {
   text-decoration: underline;
+  transform: translateX(-1px);
 }
 
 .detalle-card-container {
@@ -53,12 +54,9 @@
 .docente-name {
   margin: 0;
   font-size: 40px;
-  font-family: 'Playfair Display', serif;
-  /* Assuming serif for titles based on image */
+  font-family: 'DM Display', serif;
   color: #1a231f;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
+  letter-spacing: -0.2px;
 }
 
 .docente-department {
@@ -444,7 +442,6 @@
 .detalle-col-left::-webkit-scrollbar-thumb:hover,
 .detalle-col-right-scrollable::-webkit-scrollbar-thumb:hover {
   background: #2b5b3a;
-  /* Darker green on hover matching the section titles */
 }
 
 /* Responsive adjustments for smaller screens/heights to avoid scrolling on left column */
@@ -463,7 +460,7 @@
   }
 
   .docente-name {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .docente-department {

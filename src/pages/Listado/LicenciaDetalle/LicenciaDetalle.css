@@ -25,6 +25,7 @@
 
 .back-button:hover {
   text-decoration: underline;
+  transform: translateX(-1px);
 }
 
 .licencia-detalle-card-container {
@@ -82,25 +83,22 @@
 .licencia-header-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .licencia-title {
   margin: 0;
-  font-size: 38px;
-  font-family: 'Playfair Display', serif;
+  font-size: 40px;
+  font-family: 'DM Display', serif;
   color: #1a231f;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
   font-weight: 700;
+  letter-spacing: -0.2px;
 }
 
 .licencia-subtitle {
-  margin: 4px 0 0 0;
+  margin: 2px 0 0 0;
   font-size: 20px;
-  color: #1a231f;
-  font-weight: 700;
+  color: #555;
+  font-weight: 500;
 }
 
 .licencia-header-actions {
@@ -528,5 +526,30 @@
 @media (max-width: 1024px) {
   .licencia-two-cols {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1400px),
+(max-height: 900px) {
+  .licencia-title {
+    font-size: 30px;
+  }
+
+  .licencia-subtitle {
+    font-size: 14px;
+  }
+
+  .licencia-detalle-header {
+    padding: 12px 24px;
+  }
+
+  .licencia-status-badge {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .licencia-edit-btn {
+    padding: 8px 16px;
+    font-size: 14px;
   }
 }

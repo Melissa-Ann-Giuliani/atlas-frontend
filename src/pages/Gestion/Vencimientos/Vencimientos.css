@@ -64,7 +64,7 @@
 
 .vencimientos-page-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
+  transform: translateX(-1px);
 }
 
 .vencimientos-page-back-icon {
@@ -113,9 +113,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 /* Filter Controls Toolbar */
