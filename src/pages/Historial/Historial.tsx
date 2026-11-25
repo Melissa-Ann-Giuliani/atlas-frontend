@@ -257,6 +257,10 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
     setExportError(null);
   };
 
+  const isSorting = sortConfig !== null;
+  const fetchPage = isSorting ? 0 : currentPage - 1;
+  const fetchSize = isSorting ? 1000 : rowsPerPage;
+
   useEffect(() => {
     if (activeTab !== 'cambios') {
       setErrorMessage(null);
@@ -277,46 +281,70 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const params = new URLSearchParams({
-          page: (currentPage - 1).toString(),
-          size: rowsPerPage.toString()
-        });
+        const buildParams = (pageNum: number, sizeNum: number) => {
+          const params = new URLSearchParams({
+            page: pageNum.toString(),
+            size: sizeNum.toString()
+          });
 
-        if (debouncedSearchTerm.trim()) {
-          params.append('usuarioAfectado', debouncedSearchTerm.trim());
-        }
-        if (fechaDesde) {
-          params.append('fechaDesde', fechaDesde);
-        }
-        if (fechaHasta) {
-          params.append('fechaHasta', fechaHasta);
-        }
+          if (debouncedSearchTerm.trim()) {
+            params.append('usuarioAfectado', debouncedSearchTerm.trim());
+          }
+          if (fechaDesde) {
+            params.append('fechaDesde', fechaDesde);
+          }
+          if (fechaHasta) {
+            params.append('fechaHasta', fechaHasta);
+          }
 
-        appliedFilters.forEach((filter) => {
-          const separatorIdx = filter.indexOf(': ');
-          if (separatorIdx === -1) return;
-          const categoryName = filter.slice(0, separatorIdx);
-          const optionLabel = filter.slice(separatorIdx + 2);
-          const category = availableFilters.find((c) => c.name === categoryName);
-          if (!category) return;
-          const option = category.options.find((o) => o.label === optionLabel);
-          if (!option) return;
-          params.append(category.id, option.id);
-        });
+          appliedFilters.forEach((filter) => {
+            const separatorIdx = filter.indexOf(': ');
+            if (separatorIdx === -1) return;
+            const categoryName = filter.slice(0, separatorIdx);
+            const optionLabel = filter.slice(separatorIdx + 2);
+            const category = availableFilters.find((c) => c.name === categoryName);
+            if (!category) return;
+            const option = category.options.find((o) => o.label === optionLabel);
+            if (!option) return;
+            params.append(category.id, option.id);
+          });
+
+          return params;
+        };
 
         const token = localStorage.getItem('token');
         const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/cambios?${params.toString()}`,
+          `${apiUrl}/api/cambios?${buildParams(fetchPage, fetchSize).toString()}`,
           { headers, signal: controller.signal }
         );
 
         if (response.ok) {
           const data = await response.json();
-          setCambiosData(data.content || []);
-          setTotalElements(data.totalElements || 0);
-          setTotalPages(Math.max(1, data.totalPages || 1));
+          let items: CambioRecord[] = data.content || [];
+
+          if (isSorting && (data.totalPages || 1) > 1) {
+            const remainingPages = Array.from({ length: data.totalPages - 1 }, (_, i) => i + 1);
+            const remainingResponses = await Promise.all(
+              remainingPages.map((p) =>
+                fetch(`${apiUrl}/api/cambios?${buildParams(p, fetchSize).toString()}`, {
+                  headers,
+                  signal: controller.signal
+                }).then((res) => (res.ok ? res.json() : { content: [] }))
+              )
+            );
+            for (const pageData of remainingResponses) {
+              if (Array.isArray(pageData.content)) {
+                items = items.concat(pageData.content);
+              }
+            }
+          }
+
+          setCambiosData(items);
+          setTotalElements(isSorting ? items.length : (data.totalElements || 0));
+          setTotalPages(isSorting ? Math.max(1, Math.ceil(items.length / rowsPerPage)) : Math.max(1, data.totalPages || 1));
         } else if (response.status === 401) {
           if (onLogout) onLogout();
         } else if (response.status === 403) {
@@ -348,7 +376,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
 
     fetchCambios();
     return () => controller.abort();
-  }, [activeTab, currentPage, rowsPerPage, debouncedSearchTerm, fechaDesde, fechaHasta, appliedFilters, availableFilters, onLogout]);
+  }, [activeTab, fetchPage, fetchSize, isSorting, debouncedSearchTerm, fechaDesde, fechaHasta, appliedFilters, availableFilters, onLogout]);
 
   const exportConfig = useMemo(() => {
     const params = new URLSearchParams();
@@ -412,11 +440,12 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
     };
   }, [activeTab, searchTerm, fechaDesde, fechaHasta, appliedFilters, availableFilters]);
 
+  const effectiveTotalPages = isSorting ? Math.max(1, Math.ceil(totalElements / rowsPerPage)) : totalPages;
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1 && page <= effectiveTotalPages) {
       setCurrentPage(page);
     }
   };
@@ -425,7 +454,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
     const buttons = [];
     const maxVisibleButtons = 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+    let endPage = Math.min(effectiveTotalPages, startPage + maxVisibleButtons - 1);
 
     if (endPage - startPage + 1 < maxVisibleButtons) {
       startPage = Math.max(1, endPage - maxVisibleButtons + 1);
@@ -486,6 +515,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
       }
       return null;
     });
+    setCurrentPage(1);
   };
 
   const sortedCambiosData = useMemo(() => {
@@ -530,6 +560,11 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
       return valA.localeCompare(valB, 'es', { numeric: true, sensitivity: 'base' }) * multiplier;
     });
   }, [cambiosData, sortConfig]);
+
+  const displayedCambiosData = useMemo(
+    () => (isSorting ? sortedCambiosData.slice(startIndex, startIndex + rowsPerPage) : sortedCambiosData),
+    [isSorting, sortedCambiosData, startIndex, rowsPerPage]
+  );
 
   const getAriaSort = (column: SortColumn): 'ascending' | 'descending' | 'none' => {
     if (!sortConfig || sortConfig.column !== column) return 'none';
@@ -705,14 +740,14 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
                             Cargando historial de cambios...
                           </td>
                         </tr>
-                      ) : sortedCambiosData.length === 0 ? (
+                      ) : displayedCambiosData.length === 0 ? (
                         <tr>
                           <td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>
                             No se encontraron cambios
                           </td>
                         </tr>
                       ) : (
-                        sortedCambiosData.map((cambio) => {
+                        displayedCambiosData.map((cambio) => {
                           const opInfo = formatOperacion(cambio.tipoOperacion);
                           return (
                             <tr key={cambio.id}>
@@ -806,7 +841,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
 
                   {renderPageButtons()}
 
-                  {totalPages > 3 && currentPage < totalPages - 1 && (
+                  {effectiveTotalPages > 3 && currentPage < effectiveTotalPages - 1 && (
                     <button className="historial-page-btn dots" disabled>
                       ...
                     </button>
@@ -815,14 +850,14 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
                   <button
                     className="historial-page-btn"
                     onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === effectiveTotalPages}
                   >
                     <FiChevronRight />
                   </button>
                   <button
                     className="historial-page-btn"
-                    onClick={() => goToPage(totalPages)}
-                    disabled={currentPage === totalPages}
+                    onClick={() => goToPage(effectiveTotalPages)}
+                    disabled={currentPage === effectiveTotalPages}
                   >
                     <FiChevronsRight />
                   </button>
