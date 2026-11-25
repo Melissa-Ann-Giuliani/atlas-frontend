@@ -207,6 +207,13 @@
   cursor: pointer;
 }
 
+.vencimientos-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .vencimientos-summary-pills {
   display: flex;
   align-items: center;
@@ -501,6 +508,23 @@
   border-radius: 6px;
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+.vencimientos-export-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vencimientos-error-close {
+  background: none;
+  border: none;
+  color: #991B1B;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
 }
 
 @media (max-width: 768px) {

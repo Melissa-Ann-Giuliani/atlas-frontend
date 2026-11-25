@@ -3,6 +3,7 @@ import './Historial.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import FilterBar, { type FilterCategory, type FilterOption } from '../../components/FilterBar';
+import ExportButton from '../../components/ExportButton';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { getUserRole, isGlobalAdmin } from '../../utils/auth';
 
@@ -91,6 +92,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
   const [responsablesOptions, setResponsablesOptions] = useState<FilterOption[]>([]);
   const [unidadesOptions, setUnidadesOptions] = useState<FilterOption[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const canFilterByUnidad = useMemo(() => {
     if (isGlobalAdmin()) return true;
@@ -252,6 +254,7 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
   const handleTabChange = (tab: HistorialTab) => {
     setActiveTab(tab);
     setCurrentPage(1);
+    setExportError(null);
   };
 
   useEffect(() => {
@@ -346,6 +349,68 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
     fetchCambios();
     return () => controller.abort();
   }, [activeTab, currentPage, rowsPerPage, debouncedSearchTerm, fechaDesde, fechaHasta, appliedFilters, availableFilters, onLogout]);
+
+  const exportConfig = useMemo(() => {
+    const params = new URLSearchParams();
+    const trimmedSearch = searchTerm.trim();
+
+    if (activeTab === 'usuarios') {
+      if (trimmedSearch) {
+        params.append('search', trimmedSearch);
+        params.append('filtros', `Búsqueda: ${trimmedSearch}`);
+      }
+      return {
+        endpoint: '/api/usuarios/exportar',
+        fallbackBaseName: 'listado_usuarios',
+        params,
+        disabled: false,
+      };
+    }
+
+    if (activeTab === 'tramites') {
+      return {
+        endpoint: '/api/designaciones/vencimientos/exportar',
+        fallbackBaseName: 'vencimientos_designaciones',
+        params,
+        disabled: false,
+      };
+    }
+
+    if (trimmedSearch) {
+      params.append('usuarioAfectado', trimmedSearch);
+      params.append('filtros', `Búsqueda: ${trimmedSearch}`);
+    }
+    if (fechaDesde) {
+      params.append('fechaDesde', fechaDesde);
+      params.append('filtros', `Desde: ${fechaDesde}`);
+    }
+    if (fechaHasta) {
+      params.append('fechaHasta', fechaHasta);
+      params.append('filtros', `Hasta: ${fechaHasta}`);
+    }
+
+    appliedFilters.forEach((filter) => {
+      const separatorIdx = filter.indexOf(': ');
+      if (separatorIdx === -1) return;
+      const categoryName = filter.slice(0, separatorIdx);
+      const optionLabel = filter.slice(separatorIdx + 2);
+      const category = availableFilters.find((c) => c.name === categoryName);
+      if (!category) return;
+      const option = category.options.find((o) => o.label === optionLabel);
+      if (!option) return;
+      params.append(category.id, option.id);
+      params.append('filtros', filter);
+    });
+
+    const hasInvalidDateRange = Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
+
+    return {
+      endpoint: '/api/cambios/exportar',
+      fallbackBaseName: 'historial_cambios',
+      params,
+      disabled: hasInvalidDateRange,
+    };
+  }, [activeTab, searchTerm, fechaDesde, fechaHasta, appliedFilters, availableFilters]);
 
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
@@ -513,25 +578,35 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
               <div className="historial-header-row">
                 <div className="historial-header-left">
                   <h1 className="historial-title">{getTitle()}</h1>
-                  <div className="historial-tabs">
-                    <button
-                      className={`historial-tab-btn ${activeTab === 'usuarios' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('usuarios')}
-                    >
-                      Usuarios
-                    </button>
-                    <button
-                      className={`historial-tab-btn ${activeTab === 'cambios' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('cambios')}
-                    >
-                      Cambios
-                    </button>
-                    <button
-                      className={`historial-tab-btn ${activeTab === 'tramites' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('tramites')}
-                    >
-                      Trámites
-                    </button>
+                  <div className="historial-tabs-row">
+                    <div className="historial-tabs">
+                      <button
+                        className={`historial-tab-btn ${activeTab === 'usuarios' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('usuarios')}
+                      >
+                        Usuarios
+                      </button>
+                      <button
+                        className={`historial-tab-btn ${activeTab === 'cambios' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('cambios')}
+                      >
+                        Cambios
+                      </button>
+                      <button
+                        className={`historial-tab-btn ${activeTab === 'tramites' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('tramites')}
+                      >
+                        Trámites
+                      </button>
+                    </div>
+                    <ExportButton
+                      endpoint={exportConfig.endpoint}
+                      params={exportConfig.params}
+                      fallbackBaseName={exportConfig.fallbackBaseName}
+                      disabled={exportConfig.disabled}
+                      onUnauthorized={onLogout}
+                      onError={setExportError}
+                    />
                   </div>
                 </div>
 
@@ -591,6 +666,20 @@ export default function Historial({ onLogout, onNavigate }: HistorialProps) {
               {activeTab === 'cambios' && errorMessage && (
                 <div className="historial-error-banner" role="alert">
                   {errorMessage}
+                </div>
+              )}
+
+              {exportError && (
+                <div className="historial-error-banner historial-export-error" role="alert">
+                  <span>{exportError}</span>
+                  <button
+                    type="button"
+                    className="historial-error-close"
+                    onClick={() => setExportError(null)}
+                    aria-label="Cerrar mensaje de error"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
 

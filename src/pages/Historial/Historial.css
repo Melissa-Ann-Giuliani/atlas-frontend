@@ -115,6 +115,30 @@
   font-weight: 500;
 }
 
+.historial-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.historial-export-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historial-error-close {
+  background: none;
+  border: none;
+  color: #991b1b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
 .historial-tabs {
   display: flex;
   border: 1px solid var(--admin-primary-800);

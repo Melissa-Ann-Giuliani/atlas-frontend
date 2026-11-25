@@ -3,6 +3,7 @@ import './Listado.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import FilterBar, { type FilterCategory, type FilterOption } from '../../components/FilterBar';
+import ExportButton from '../../components/ExportButton';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 
 interface Licencia {
@@ -92,6 +93,7 @@ export default function Listado({
   const handleTabChange = (tab: 'docentes' | 'cargos' | 'licencias') => {
     setActiveTab(tab);
     setCurrentPage(1);
+    setExportError(null);
     if (onTabChange) {
       onTabChange(tab);
     }
@@ -137,6 +139,7 @@ export default function Listado({
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [docentesData, setDocentesData] = useState<Docente[]>([]);
   const [cargosData, setCargosData] = useState<Cargo[]>([]);
   const [licenciasData, setLicenciasData] = useState<Licencia[]>([]);
@@ -351,6 +354,66 @@ export default function Listado({
     fetchData();
   }, [currentPage, rowsPerPage, searchTerm, appliedFilters, activeTab]);
 
+  const exportConfig = useMemo(() => {
+    const params = new URLSearchParams();
+    const trimmedSearch = searchTerm.trim();
+    if (trimmedSearch) {
+      params.append('search', trimmedSearch);
+      params.append('filtros', `Búsqueda: ${trimmedSearch}`);
+    }
+
+    appliedFilters.forEach((filter) => {
+      const separatorIdx = filter.indexOf(': ');
+      if (separatorIdx === -1) return;
+      const categoryName = filter.slice(0, separatorIdx);
+      const optionLabel = filter.slice(separatorIdx + 2);
+      const category = dynamicAvailableFilters.find((c) => c.name === categoryName);
+      if (!category) return;
+      const option = category.options.find((o) => o.label === optionLabel);
+      if (!option) return;
+
+      if (activeTab === 'docentes') {
+        if (['origen', 'dedicacion', 'categoria', 'caracter', 'tipoUnidad', 'estado'].includes(category.id)) {
+          params.append(category.id, option.label);
+          params.append('filtros', filter);
+        }
+      } else if (activeTab === 'cargos') {
+        if (category.id === 'estado') {
+          params.append('estado', option.label);
+          params.append('filtros', filter);
+        } else if (['categoria', 'dedicacion', 'caracter'].includes(category.id)) {
+          params.append(`${category.id}Id`, option.id);
+          params.append('filtros', filter);
+        }
+      } else if (activeTab === 'licencias') {
+        if (category.id === 'motivo') {
+          params.append('motivoId', option.id);
+          params.append('filtros', filter);
+        }
+      }
+    });
+
+    if (activeTab === 'cargos') {
+      return {
+        endpoint: '/api/cargos/exportar',
+        fallbackBaseName: 'listado_cargos',
+        params,
+      };
+    }
+    if (activeTab === 'licencias') {
+      return {
+        endpoint: '/api/licencias/exportar',
+        fallbackBaseName: 'listado_licencias',
+        params,
+      };
+    }
+    return {
+      endpoint: '/api/docentes/exportar',
+      fallbackBaseName: 'listado_docentes',
+      params,
+    };
+  }, [activeTab, searchTerm, appliedFilters, dynamicAvailableFilters]);
+
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
 
@@ -414,25 +477,34 @@ export default function Listado({
                       ? 'Listado de Licencias'
                       : 'Listado de Docentes'}
                   </h1>
-                  <div className="listado-tabs">
-                    <button
-                      className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('docentes')}
-                    >
-                      Docentes
-                    </button>
-                    <button
-                      className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('cargos')}
-                    >
-                      Cargos
-                    </button>
-                    <button
-                      className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('licencias')}
-                    >
-                      Licencias
-                    </button>
+                  <div className="listado-tabs-row">
+                    <div className="listado-tabs">
+                      <button
+                        className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('docentes')}
+                      >
+                        Docentes
+                      </button>
+                      <button
+                        className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('cargos')}
+                      >
+                        Cargos
+                      </button>
+                      <button
+                        className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('licencias')}
+                      >
+                        Licencias
+                      </button>
+                    </div>
+                    <ExportButton
+                      endpoint={exportConfig.endpoint}
+                      params={exportConfig.params}
+                      fallbackBaseName={exportConfig.fallbackBaseName}
+                      onUnauthorized={onLogout}
+                      onError={setExportError}
+                    />
                   </div>
                 </div>
 
@@ -449,6 +521,20 @@ export default function Listado({
                   />
                 </div>
               </div>
+
+              {exportError && (
+                <div className="listado-error-banner" role="alert">
+                  <span>{exportError}</span>
+                  <button
+                    type="button"
+                    className="listado-error-close"
+                    onClick={() => setExportError(null)}
+                    aria-label="Cerrar mensaje de error"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
 
               <div className="listado-table-container">
                 <table className="listado-table">
