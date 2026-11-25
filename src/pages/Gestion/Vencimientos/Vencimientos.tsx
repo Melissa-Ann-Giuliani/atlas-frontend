@@ -96,10 +96,14 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
           const data = await res.json();
           if (Array.isArray(data)) {
             setUnidadesList(
-              data.map((u: any) => ({
-                unidadId: Number(u.unidadId ?? u.id),
-                nombre: u.unidadNombre ?? u.nombre ?? `Unidad ${u.unidadId ?? u.id}`,
-              }))
+              data
+                .map((u: any) => ({
+                  unidadId: Number(u.unidadId ?? u.id),
+                  nombre: u.unidadNombre ?? u.nombre ?? `Unidad ${u.unidadId ?? u.id}`,
+                }))
+                .sort((a: UnidadSelectOption, b: UnidadSelectOption) =>
+                  a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+                )
             );
           }
         }
