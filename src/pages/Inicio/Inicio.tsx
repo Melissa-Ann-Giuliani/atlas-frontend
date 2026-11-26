@@ -42,6 +42,10 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
   const total = data.reduce((sum, item) => sum + item.value, 0);
   let currentOffset = 0;
 
+  const isSmall = size <= 120;
+  const mainFontSize = size * (isSmall ? 0.18 : 0.15);
+  const subFontSize = size * (isSmall ? 0.09 : 0.075);
+
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>
       <circle cx={center} cy={center} r={radius - thickness / 2 + 1} fill="#FFFFFF" />
@@ -71,10 +75,10 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
           />
         );
       })}
-      <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.18} fontWeight="bold" fill="#1f2937" pointerEvents="none">
+      <text x="50%" y={isSmall ? '43%' : '44%'} textAnchor="middle" dominantBaseline="middle" fontSize={mainFontSize} fontWeight="700" fill="#1f2937" pointerEvents="none">
         {centerText}
       </text>
-      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.1} fill="#6b7280" pointerEvents="none">
+      <text x="50%" y={isSmall ? '61%' : '59%'} textAnchor="middle" dominantBaseline="middle" fontSize={subFontSize} fontWeight="500" fill="#6b7280" pointerEvents="none">
         {centerSubtext}
       </text>
     </svg>

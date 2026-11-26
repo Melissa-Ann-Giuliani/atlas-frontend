@@ -9,8 +9,8 @@
 }
 
 .historial-inner-container {
-  background-color: var(--users-secondary-50, #fcfaf6);
-  border: 1px solid var(--users-secondary-400, #c8b796);
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -34,10 +34,11 @@
 }
 
 .historial-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 36px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 44px;
   font-weight: 500;
   color: #1A2E1C;
+  letter-spacing: -0.5px;
   margin: 0;
 }
 
@@ -395,10 +396,6 @@
     gap: 16px;
   }
 
-  .historial-title {
-    font-size: 32px;
-  }
-
   .historial-tab-btn {
     font-size: 14px;
     padding: 8px 20px;
@@ -429,10 +426,6 @@
 }
 
 @media (min-width: 1540px) {
-  .historial-title {
-    font-size: 48px;
-  }
-
   .historial-tab-btn {
     font-size: 15px;
     padding: 8px 24px;
@@ -450,5 +443,17 @@
 
   .historial-sort-btn {
     padding: 12px 16px;
+  }
+}
+
+@media (max-width: 900px), (max-height: 900px) {
+  .historial-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .historial-title {
+    font-size: 32px;
   }
 }

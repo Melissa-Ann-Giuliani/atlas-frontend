@@ -527,6 +527,18 @@
   padding: 0 4px;
 }
 
+@media (max-width: 900px), (max-height: 900px) {
+  .vencimientos-page-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .vencimientos-page-title {
+    font-size: 32px;
+  }
+}
+
 @media (max-width: 768px) {
   .vencimiento-card-item {
     flex-direction: column;

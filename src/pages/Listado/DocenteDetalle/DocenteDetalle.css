@@ -1,5 +1,5 @@
 .docente-detalle-area {
-  padding: 32px;
+  padding: 24px 32px;
   background-color: var(--users-secondary-100);
   /* background color from images */
   flex: 1;
@@ -8,7 +8,7 @@
 }
 
 .detalle-top-nav {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .back-button {
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 0;
+  padding: 4px 8px;
 }
 
 .back-button:hover {
@@ -32,7 +32,7 @@
 .detalle-card-container {
   background-color: #e9e3d3;
   border-radius: 12px;
-  border: 1px solid var(--users-secondary-500);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
   padding: 0;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -448,11 +448,7 @@
 @media (max-width: 1400px),
 (max-height: 900px) {
   .docente-detalle-area {
-    padding: 16px;
-  }
-
-  .detalle-top-nav {
-    margin-bottom: 12px;
+    padding: 20px 28px;
   }
 
   .detalle-header {

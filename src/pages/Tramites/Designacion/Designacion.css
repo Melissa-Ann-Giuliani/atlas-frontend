@@ -146,8 +146,8 @@
 
 /* Big Cream Container Card */
 .designacion-card {
-  background-color: var(--users-secondary-50, #FCFAF6);
-  border: 1.5px solid #C8B796;
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
   border-radius: 10px;
   padding: 24px 28px 28px 28px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);

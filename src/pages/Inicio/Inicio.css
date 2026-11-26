@@ -281,12 +281,6 @@
   white-space: nowrap;
 }
 
-@media (max-height: 900px) {
-  .content-area {
-    padding: 28px;
-  }
-}
-
 @media (min-width: 1024px) {
   .legend-label {
     font-size: 18px;
@@ -381,6 +375,20 @@
   .details-btn {
     font-size: 18px;
     padding: 10px 20px;
+  }
+}
+
+@media (max-height: 900px) {
+  .content-area {
+    padding: 20px 28px;
+  }
+
+  .main-card-header h2 {
+    font-size: 32px;
+  }
+
+  .sub-card-header h3 {
+    font-size: 26px;
   }
 }
 
