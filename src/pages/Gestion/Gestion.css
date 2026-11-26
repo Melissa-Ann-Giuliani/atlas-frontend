@@ -74,14 +74,11 @@
 .gestion-title {
   margin: 0;
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 48px;
+  font-size: 40px;
   font-weight: 500;
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 .gestion-divider {
@@ -184,9 +181,6 @@
   font-weight: 500;
   color: #FFFFFF;
   letter-spacing: 0.4px;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
 }
 
 /* Header Color Variants */

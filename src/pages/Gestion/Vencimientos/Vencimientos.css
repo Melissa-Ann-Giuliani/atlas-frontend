@@ -64,7 +64,7 @@
 
 .vencimientos-page-back-btn:hover {
   text-decoration: underline;
-  transform: translateX(-2px);
+  transform: translateX(-1px);
 }
 
 .vencimientos-page-back-icon {
@@ -113,9 +113,6 @@
   color: var(--admin-primary-900, #1A2E1C);
   letter-spacing: -0.5px;
   display: inline-block;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 /* Filter Controls Toolbar */
@@ -208,6 +205,13 @@
   height: 17px;
   accent-color: #EF476F;
   cursor: pointer;
+}
+
+.vencimientos-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .vencimientos-summary-pills {
@@ -504,6 +508,35 @@
   border-radius: 6px;
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+.vencimientos-export-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vencimientos-error-close {
+  background: none;
+  border: none;
+  color: #991B1B;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+@media (max-width: 900px), (max-height: 900px) {
+  .vencimientos-page-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .vencimientos-page-title {
+    font-size: 32px;
+  }
 }
 
 @media (max-width: 768px) {

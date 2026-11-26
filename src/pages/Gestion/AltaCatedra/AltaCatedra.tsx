@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import './AltaCatedra.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare } from 'react-icons/fi';
@@ -585,53 +585,53 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
   };
 
   return (
-    <div className="alta-catedra-page">
+    <div className="gestion-page gestion-page--alta">
       <Topbar onLogout={onLogout} />
 
-      <div className="alta-catedra-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="alta-catedra-main">
-          <div className="alta-catedra-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="alta-catedra-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="alta-catedra-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="alta-catedra-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="alta-catedra-container-card">
-              <div className="alta-catedra-header">
-                <h1 className="alta-catedra-title">Gestión</h1>
+            <div className="gestion-container-card">
+              <div className="gestion-header">
+                <h1 className="gestion-title">Gestión</h1>
               </div>
 
               {/* Form Card */}
-              <div className="alta-catedra-form-card">
-                <div className="alta-catedra-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Alta de Cátedra</h2>
                 </div>
 
-                <div className="alta-catedra-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`alta-catedra-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  <div className="alta-catedra-form">
+                  <div className="gestion-form">
                     {/* SECTION: DATOS DE CÁTEDRA */}
-                    <h3 className="alta-catedra-section-title">Datos de Cátedra</h3>
+                    <h3 className="gestion-section-title">Datos de Cátedra</h3>
 
                     {/* Row 1: Nombre de Cátedra, Tipología, Dependencia */}
-                    <div className="alta-catedra-grid-row-1">
-                      <div className="alta-catedra-field">
-                        <label htmlFor="nombreCatedra" className="alta-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="nombreCatedra" className="gestion-label">
                           Nombre de Cátedra *
                         </label>
                         <input
@@ -639,7 +639,7 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                           name="nombreCatedra"
                           type="text"
                           maxLength={50}
-                          className="alta-catedra-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de cátedra"
                           value={formData.nombreCatedra}
                           onChange={(e) => handleChange('nombreCatedra', e.target.value)}
@@ -651,15 +651,15 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                         />
                       </div>
 
-                      <div className="alta-catedra-field">
-                        <label htmlFor="tipologia" className="alta-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="tipologia" className="gestion-label">
                           Tipología *
                         </label>
-                        <div className="alta-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="tipologia"
                             name="tipologia"
-                            className="alta-catedra-select"
+                            className="gestion-select"
                             value={formData.tipologia}
                             onChange={(e) => handleChange('tipologia', e.target.value)}
                           >
@@ -670,18 +670,18 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="alta-catedra-field">
-                        <label htmlFor="dependencia" className="alta-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="dependencia" className="gestion-label">
                           Dependencia *
                         </label>
-                        <div className="alta-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="dependencia"
-                            className="alta-catedra-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             onChange={(e) => handleChange('dependencia', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || (isLoadingCatalogs && dependencias.length === 0)}
@@ -695,21 +695,21 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 2: Unidad Académica, Materia, Director de Cátedra */}
-                    <div className="alta-catedra-grid-row-1">
-                      <div className="alta-catedra-field">
-                        <label htmlFor="unidad" className="alta-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="unidad" className="gestion-label">
                           Unidad Académica *
                         </label>
-                        <div className="alta-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="unidad"
-                            className="alta-catedra-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             onChange={(e) => handleChange('unidad', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || isLoadingUnidades || (!formData.dependencia && unidades.length === 0)}
@@ -727,18 +727,18 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="alta-catedra-field">
-                        <label htmlFor="materia" className="alta-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="materia" className="gestion-label">
                           Materia *
                         </label>
-                        <div className="alta-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="materia"
-                            className="alta-catedra-select"
+                            className="gestion-select"
                             value={formData.materiaId}
                             onChange={(e) => handleChange('materiaId', e.target.value)}
                             disabled={isLoadingMaterias || (!formData.unidad && !userUnitId)}
@@ -758,20 +758,20 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="alta-catedra-field">
-                        <label htmlFor="directorCatedra" className="alta-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="directorCatedra" className="gestion-label">
                           Director de Cátedra *
                         </label>
-                        <div className="alta-catedra-search-wrapper" ref={directorWrapperRef}>
+                        <div className="gestion-autocomplete-wrapper" ref={directorWrapperRef}>
                           <input
                             id="directorCatedra"
                             name="directorCatedra"
                             type="text"
-                            className="alta-catedra-input"
+                            className="gestion-input"
                             placeholder={
                               isGlobal && !formData.unidad
                                 ? 'Primero seleccione una unidad académica'
@@ -792,31 +792,31 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
                           />
 
                           {showDirectorSuggestions && (
-                            <ul className="alta-catedra-suggestions-list" role="listbox">
+                            <ul className="gestion-suggestions-list" role="listbox">
                               {isSearchingDirector ? (
-                                <li className="alta-catedra-suggestion-item disabled">
-                                  <span className="alta-catedra-suggestion-name">Buscando docentes...</span>
+                                <li className="gestion-suggestion-item disabled">
+                                  <span className="gestion-suggestion-title">Buscando docentes...</span>
                                 </li>
                               ) : directorSuggestions.length === 0 ? (
-                                <li className="alta-catedra-suggestion-item disabled">
-                                  <span className="alta-catedra-suggestion-name">No se encontraron docentes activos</span>
+                                <li className="gestion-suggestion-item disabled">
+                                  <span className="gestion-suggestion-title">No se encontraron docentes activos</span>
                                 </li>
                               ) : (
                                 directorSuggestions.map((doc, idx) => (
                                   <li
                                     key={doc.id}
-                                    className={`alta-catedra-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                                    className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
                                       }`}
                                     onClick={() => handleSelectDirector(doc)}
                                   >
-                                    <div className="alta-catedra-suggestion-header">
-                                      <span className="alta-catedra-suggestion-name">{doc.nombreCompleto}</span>
+                                    <div className="gestion-suggestion-header">
+                                      <span className="gestion-suggestion-title">{doc.nombreCompleto}</span>
                                       {doc.dni && (
-                                        <span className="alta-catedra-suggestion-badge">DNI: {doc.dni}</span>
+                                        <span className="gestion-suggestion-badge">DNI: {doc.dni}</span>
                                       )}
                                     </div>
                                     {doc.unidad && (
-                                      <span className="alta-catedra-suggestion-subtitle">{doc.unidad}</span>
+                                      <span className="gestion-suggestion-sub">{doc.unidad}</span>
                                     )}
                                   </li>
                                 ))
@@ -834,10 +834,10 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="alta-catedra-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-alta-catedra btn-alta-catedra-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
               >
                 <FiTrash2 className="btn-icon" />
@@ -846,7 +846,7 @@ export default function AltaCatedra({ onLogout, onNavigate, onBack }: AltaCatedr
 
               <button
                 type="button"
-                className="btn-alta-catedra btn-alta-catedra-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >

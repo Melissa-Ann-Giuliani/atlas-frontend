@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './BajaUsuario.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
@@ -1269,48 +1269,48 @@ export default function BajaUsuario({
   const isAlreadyBaja = isUsuarioDadoDeBaja(formData.estado, formData.activo);
 
   return (
-    <div className="baja-usuario-page">
+    <div className="gestion-page gestion-page--baja">
       <Topbar onLogout={onLogout} />
 
-      <div className="baja-usuario-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="baja-usuario-main">
-          <div className="baja-usuario-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Navigation: Retroceder */}
-            <div className="baja-usuario-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="baja-usuario-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="baja-usuario-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="baja-usuario-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="baja-usuario-header-row">
-                <div className="baja-usuario-header-left">
-                  <h1 className="baja-usuario-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar & Role Filter Row */}
-                <div className="baja-usuario-search-card">
+                <div className="gestion-search-card">
                   <label
                     htmlFor="searchUsuarioInput"
-                    className="baja-usuario-search-label"
+                    className="gestion-search-label"
                   >
                     Buscar Usuario a Dar de Baja por Nombre o DNI
                   </label>
-                  <div className="baja-usuario-search-row">
+                  <div className="gestion-search-row">
                     {/* Role Filter Selector */}
-                    <div className="baja-usuario-role-filter-wrap">
+                    <div className="gestion-search-filter-wrap">
                       <select
                         id="filterRol"
-                        className="baja-usuario-role-filter-select"
+                        className="gestion-search-filter-select"
                         value={selectedFilterRole}
                         onChange={(e) => handleFilterRoleChange(e.target.value)}
                       >
@@ -1319,18 +1319,18 @@ export default function BajaUsuario({
                         <option value="ADMIN_UNIDAD">Admin de Unidad</option>
                         <option value="AUDITOR">Auditor</option>
                       </select>
-                      <FiChevronDown className="baja-usuario-role-filter-caret" />
+                      <FiChevronDown className="gestion-search-filter-caret" />
                     </div>
 
                     <div
-                      className="baja-usuario-search-input-wrap"
+                      className="gestion-search-input-wrap"
                       ref={searchContainerRef}
                     >
                       <input
                         id="searchUsuarioInput"
                         name="busqueda_usuario_baja_query"
                         type="search"
-                        className="baja-usuario-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese nombre, apellido o DNI"
                         value={searchQuery}
                         onChange={(e) => {
@@ -1347,15 +1347,15 @@ export default function BajaUsuario({
                         autoComplete="off"
                         spellCheck={false}
                       />
-                      <FiSearch className="baja-usuario-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="baja-usuario-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-usuario-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
                                 }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
@@ -1365,18 +1365,18 @@ export default function BajaUsuario({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="baja-usuario-suggestion-header">
-                                <span className="baja-usuario-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombreCompleto}
                                 </span>
                                 {item.dni ? (
-                                  <span className="baja-usuario-suggestion-badge">
+                                  <span className="gestion-suggestion-badge">
                                     DNI {item.dni}
                                   </span>
                                 ) : null}
                               </div>
                               {item.unidad && (
-                                <span className="baja-usuario-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {item.unidad}
                                 </span>
                               )}
@@ -1388,7 +1388,7 @@ export default function BajaUsuario({
 
                     <button
                       type="button"
-                      className="baja-usuario-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1400,21 +1400,21 @@ export default function BajaUsuario({
               </div>
 
               {/* Form Card (Red framed like Baja de Materia / Cargo) */}
-              <div className="baja-usuario-form-card">
-                <div className="baja-usuario-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Baja de Usuario</h2>
                 </div>
 
-                <div className="baja-usuario-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`baja-usuario-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
                   {isAlreadyBaja && feedback?.type !== 'success' && (
-                    <div className="baja-usuario-warning-box">
-                      <FiAlertTriangle className="baja-usuario-warning-icon" />
+                    <div className="gestion-warning-box">
+                      <FiAlertTriangle className="gestion-warning-icon" />
                       <span>
                         Este usuario ya se encuentra en estado <strong>"Dado de baja"</strong> en el sistema.
                       </span>
@@ -1422,7 +1422,7 @@ export default function BajaUsuario({
                   )}
 
                   <form
-                    className="baja-usuario-form"
+                    className="gestion-form"
                     onSubmit={(e) => {
                       e.preventDefault();
                       handleOpenConfirmModal();
@@ -1435,19 +1435,19 @@ export default function BajaUsuario({
                     }}
                   >
                     {/* SECTION: DATOS DE USUARIO */}
-                    <h3 className="baja-usuario-section-title">Datos de Usuario</h3>
+                    <h3 className="gestion-section-title">Datos de Usuario</h3>
 
-                    <div className="baja-usuario-form-grid">
+                    <div className="gestion-grid-3">
                       {/* Apellido */}
-                      <div className="baja-usuario-field">
-                        <label htmlFor="apellido" className="baja-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="apellido" className="gestion-label">
                           Apellido *
                         </label>
                         <input
                           id="apellido"
                           name="apellido"
                           type="text"
-                          className="baja-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
@@ -1457,15 +1457,15 @@ export default function BajaUsuario({
                       </div>
 
                       {/* Nombre */}
-                      <div className="baja-usuario-field">
-                        <label htmlFor="nombre" className="baja-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="nombre" className="gestion-label">
                           Nombre *
                         </label>
                         <input
                           id="nombre"
                           name="nombre"
                           type="text"
-                          className="baja-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
@@ -1475,15 +1475,15 @@ export default function BajaUsuario({
                       </div>
 
                       {/* Correo Electrónico */}
-                      <div className="baja-usuario-field">
-                        <label htmlFor="correo" className="baja-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="correo" className="gestion-label">
                           Correo Electrónico *
                         </label>
                         <input
                           id="correo"
                           name="correo"
                           type="email"
-                          className="baja-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.correo}
                           onChange={(e) => handleChange('correo', e.target.value)}
@@ -1493,15 +1493,15 @@ export default function BajaUsuario({
                       </div>
 
                       {/* Nombre de Usuario */}
-                      <div className="baja-usuario-field">
-                        <label htmlFor="username" className="baja-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="username" className="gestion-label">
                           Nombre de Usuario *
                         </label>
                         <input
                           id="username"
                           name="username"
                           type="text"
-                          className="baja-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.username}
                           onChange={(e) => handleChange('username', e.target.value)}
@@ -1511,20 +1511,20 @@ export default function BajaUsuario({
                       </div>
                     </div>
 
-                    <hr className="baja-usuario-divider" />
+                    <hr className="gestion-divider" />
 
                     {/* SECTION: ADMIN GLOBAL */}
                     {isAdminGlobal && (
-                      <div className="baja-usuario-extra-section">
-                        <div className="baja-usuario-extra-grid baja-usuario-single-grid">
-                          <div className="baja-usuario-field baja-usuario-field-cargo">
-                            <label htmlFor="cargo" className="baja-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
-                            <div className="baja-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="baja-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled
@@ -1545,7 +1545,7 @@ export default function BajaUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="baja-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1554,16 +1554,16 @@ export default function BajaUsuario({
 
                     {/* SECTION: AUDITOR */}
                     {isAuditor && (
-                      <div className="baja-usuario-extra-section">
-                        <div className="baja-usuario-extra-grid baja-usuario-single-grid">
-                          <div className="baja-usuario-field baja-usuario-field-cargo">
-                            <label htmlFor="cargo" className="baja-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
-                            <div className="baja-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="baja-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled
@@ -1584,7 +1584,7 @@ export default function BajaUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="baja-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1593,16 +1593,16 @@ export default function BajaUsuario({
 
                     {/* SECTION: ADMIN DE UNIDAD */}
                     {isAdminUnidad && (
-                      <div className="baja-usuario-extra-section">
-                        <div className="baja-usuario-extra-grid baja-usuario-admin-unidad-grid">
-                          <div className="baja-usuario-field baja-usuario-field-cargo">
-                            <label htmlFor="cargo" className="baja-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-3">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
-                            <div className="baja-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="baja-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled
@@ -1623,18 +1623,18 @@ export default function BajaUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="baja-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="baja-usuario-field baja-usuario-field-dependencia">
-                            <label htmlFor="dependencia" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="dependencia" className="gestion-label">
                               Dependencia *
                             </label>
-                            <div className="baja-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="dependencia"
-                                className="baja-usuario-select"
+                                className="gestion-select"
                                 value={formData.dependencia}
                                 onChange={(e) => handleChange('dependencia', e.target.value)}
                                 disabled
@@ -1650,19 +1650,19 @@ export default function BajaUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="baja-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
                           {formData.dependencia && (
-                            <div className="baja-usuario-field baja-usuario-field-unidad">
-                              <label htmlFor="unidad" className="baja-usuario-label">
+                            <div className="gestion-field">
+                              <label htmlFor="unidad" className="gestion-label">
                                 {dynamicUnidadLabel} *
                               </label>
-                              <div className="baja-usuario-select-wrapper">
+                              <div className="gestion-select-wrapper">
                                 <select
                                   id="unidad"
-                                  className="baja-usuario-select"
+                                  className="gestion-select"
                                   value={formData.unidad}
                                   onChange={(e) => handleChange('unidad', e.target.value)}
                                   disabled
@@ -1678,7 +1678,7 @@ export default function BajaUsuario({
                                     </option>
                                   ))}
                                 </select>
-                                <FiChevronDown className="baja-usuario-select-caret" />
+                                <FiChevronDown className="gestion-select-caret" />
                               </div>
                             </div>
                           )}
@@ -1688,17 +1688,17 @@ export default function BajaUsuario({
 
                     {/* SECTION: DOCENTE */}
                     {isDocente && (
-                      <div className="baja-usuario-extra-section">
-                        <div className="baja-usuario-docente-grid">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-4">
                           {/* Fila 1 */}
-                          <div className="baja-usuario-field">
-                            <label htmlFor="tipoDni" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="tipoDni" className="gestion-label">
                               Tipo DNI *
                             </label>
-                            <div className="baja-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="tipoDni"
-                                className="baja-usuario-select"
+                                className="gestion-select"
                                 value={formData.tipoDni}
                                 onChange={(e) => handleChange('tipoDni', e.target.value)}
                                 disabled
@@ -1714,19 +1714,19 @@ export default function BajaUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="baja-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="baja-usuario-field">
-                            <label htmlFor="numeroDni" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="numeroDni" className="gestion-label">
                               Número *
                             </label>
                             <input
                               id="numeroDni"
                               name="docente_numero_documento"
                               type="text"
-                              className="baja-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.numeroDni}
                               onChange={(e) => handleChange('numeroDni', e.target.value)}
@@ -1735,15 +1735,15 @@ export default function BajaUsuario({
                             />
                           </div>
 
-                          <div className="baja-usuario-field">
-                            <label htmlFor="cuil" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="cuil" className="gestion-label">
                               CUIL *
                             </label>
                             <input
                               id="cuil"
                               name="docente_cuil"
                               type="text"
-                              className="baja-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.cuil}
                               onChange={(e) => handleChange('cuil', e.target.value)}
@@ -1752,15 +1752,15 @@ export default function BajaUsuario({
                             />
                           </div>
 
-                          <div className="baja-usuario-field">
-                            <label htmlFor="domicilio" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="domicilio" className="gestion-label">
                               Domicilio
                             </label>
                             <input
                               id="domicilio"
                               name="docente_domicilio"
                               type="text"
-                              className="baja-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.domicilio}
                               onChange={(e) => handleChange('domicilio', e.target.value)}
@@ -1770,15 +1770,15 @@ export default function BajaUsuario({
                           </div>
 
                           {/* Fila 2 */}
-                          <div className="baja-usuario-field">
-                            <label htmlFor="emailInstitucional" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="emailInstitucional" className="gestion-label">
                               Email Institucional
                             </label>
                             <input
                               id="emailInstitucional"
                               name="docente_email_institucional"
                               type="email"
-                              className="baja-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
@@ -1787,11 +1787,11 @@ export default function BajaUsuario({
                             />
                           </div>
 
-                          <div className="baja-usuario-field">
-                            <label htmlFor="fechaIngreso" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="fechaIngreso" className="gestion-label">
                               Fecha de Ingreso a la Universidad
                             </label>
-                            <div className="baja-usuario-datepicker-container">
+                            <div className="gestion-datepicker-container">
                               <DatePicker
                                 id="fechaIngreso"
                                 name="docente_fecha_ingreso"
@@ -1802,16 +1802,16 @@ export default function BajaUsuario({
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="DD/MM/AAAA"
                                 locale="es"
-                                className="baja-usuario-input baja-usuario-datepicker-input"
+                                className="gestion-input gestion-datepicker-input"
                                 autoComplete="off"
                                 disabled
                               />
-                              <FiCalendar className="baja-usuario-datepicker-icon" />
+                              <FiCalendar className="gestion-datepicker-icon" />
                             </div>
                           </div>
 
-                          <div className="baja-usuario-field">
-                            <label htmlFor="antigPrevia" className="baja-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="antigPrevia" className="gestion-label">
                               Antigüedad Previa
                             </label>
                             <input
@@ -1819,7 +1819,7 @@ export default function BajaUsuario({
                               name="docente_antiguedad_previa"
                               type="number"
                               min="0"
-                              className="baja-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.antigPrevia}
                               onChange={(e) => handleChange('antigPrevia', e.target.value)}
@@ -1836,10 +1836,10 @@ export default function BajaUsuario({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="baja-usuario-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-baja-usuario btn-baja-usuario-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting}
               >
@@ -1849,7 +1849,7 @@ export default function BajaUsuario({
 
               <button
                 type="button"
-                className="btn-baja-usuario btn-baja-usuario-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleOpenConfirmModal}
                 disabled={isSubmitting || !formData.usuarioId || isAlreadyBaja}
               >
@@ -1870,18 +1870,18 @@ export default function BajaUsuario({
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div
-          className="baja-modal-overlay"
+          className="gestion-modal-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="baja-usuario-modal-title"
         >
-          <div className="baja-modal">
-            <div className="baja-modal-header">
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+          <div className="gestion-modal">
+            <div className="gestion-modal-header">
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
               <h2 id="baja-usuario-modal-title">Confirmar Baja de Usuario</h2>
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
             </div>
-            <div className="baja-modal-content">
+            <div className="gestion-modal-content">
               <p>
                 ¿Está seguro de que desea dar de baja al usuario{' '}
                 <strong>
@@ -1891,14 +1891,14 @@ export default function BajaUsuario({
                 </strong>
                 ?
               </p>
-              <p className="baja-modal-subtext">
+              <p className="gestion-modal-subtext">
                 Esta acción dará de baja el usuario en el sistema y cambiará su estado a{' '}
                 <strong>Dado de baja</strong>.
               </p>
-              <div className="baja-modal-actions">
+              <div className="gestion-modal-actions">
                 <button
                   type="button"
-                  className="baja-modal-btn-cancel"
+                  className="gestion-modal-btn-cancel"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={isSubmitting}
                 >
@@ -1906,7 +1906,7 @@ export default function BajaUsuario({
                 </button>
                 <button
                   type="button"
-                  className="baja-modal-btn-confirm"
+                  className="gestion-modal-btn-confirm"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

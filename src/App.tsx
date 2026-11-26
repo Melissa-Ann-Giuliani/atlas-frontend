@@ -6,7 +6,7 @@ import DocenteDetalle from './pages/Listado/DocenteDetalle/DocenteDetalle'
 import CargoDetalle from './pages/Listado/CargoDetalle/CargoDetalle.tsx'
 import LicenciaDetalle from './pages/Listado/LicenciaDetalle/LicenciaDetalle'
 import Gestion from './pages/Gestion/Gestion'
-import NuevoUsuario from './pages/Gestion/NuevoUsuario/NuevoUsuario'
+import AltaUsuario from './pages/Gestion/AltaUsuario/AltaUsuario'
 import AltaCargo from './pages/Gestion/AltaCargo/AltaCargo'
 import ModificarCargo from './pages/Gestion/ModificarCargo/ModificarCargo'
 import BajaCargo from './pages/Gestion/BajaCargo/BajaCargo'
@@ -452,7 +452,7 @@ function App() {
 
         case 'nuevo_usuario':
           return (
-            <NuevoUsuario
+            <AltaUsuario
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onBack={() => handleNavigate(newUserReturnPage || 'gestion')}

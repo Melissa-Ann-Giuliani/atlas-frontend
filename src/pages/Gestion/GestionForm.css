@@ -1,0 +1,1264 @@
+/* ==========================================================================
+   UNIFIED GESTIÓN FORM STYLESHEET
+   Shared base for Alta, Modificación, and Baja pages (modeled on Cargos).
+   Apply one theme modifier on the root container:
+     - .gestion-page--alta      (Green)
+     - .gestion-page--modificar (Blue)
+     - .gestion-page--baja      (Dark Red)
+   ========================================================================== */
+
+.gestion-page {
+  --gestion-accent: var(--admin-primary-800, #2A4B2F);
+  --gestion-card-bg: var(--users-secondary-50, #F6F3EE);
+  --gestion-focus-border: var(--admin-primary-600, #4B8653);
+  --gestion-focus-ring: rgba(75, 134, 83, 0.2);
+  --gestion-select-focus-border: var(--admin-primary-700, #3F6F45);
+  --gestion-select-focus-ring: rgba(63, 111, 69, 0.25);
+  --gestion-badge-bg: #E8F0FE;
+  --gestion-badge-color: #1A73E8;
+
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--users-secondary-100, #E7DFD0);
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  text-align: left;
+}
+
+.gestion-page--alta {
+  --gestion-accent: var(--admin-primary-800, #2A4B2F);
+  --gestion-card-bg: var(--users-secondary-50, #F6F3EE);
+  --gestion-focus-border: var(--admin-primary-600, #4B8653);
+  --gestion-focus-ring: rgba(75, 134, 83, 0.2);
+  --gestion-select-focus-border: var(--admin-primary-700, #3F6F45);
+  --gestion-select-focus-ring: rgba(63, 111, 69, 0.25);
+}
+
+.gestion-page--modificar {
+  --gestion-accent: var(--docente-primary-600, #1953B8);
+  --gestion-card-bg: var(--users-secondary-50, #F6F3EE);
+  --gestion-focus-border: var(--docente-primary-500, #1F66E0);
+  --gestion-focus-ring: rgba(31, 102, 224, 0.15);
+  --gestion-select-focus-border: var(--docente-primary-500, #1F66E0);
+  --gestion-select-focus-ring: rgba(31, 102, 224, 0.15);
+}
+
+.gestion-page--baja {
+  --gestion-accent: #7A0000;
+  --gestion-card-bg: #FFFFFF;
+  --gestion-focus-border: #7A0000;
+  --gestion-focus-ring: rgba(122, 0, 0, 0.2);
+  --gestion-select-focus-border: #7A0000;
+  --gestion-select-focus-ring: rgba(122, 0, 0, 0.25);
+  --gestion-badge-bg: #FDF2F2;
+  --gestion-badge-color: #7A0000;
+}
+
+/* Shell Layout */
+.gestion-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.gestion-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.gestion-content-area {
+  padding: 24px 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Top Navigation: Retroceder */
+.gestion-top-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.gestion-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.gestion-back-btn:hover {
+  text-decoration: underline;
+  transform: translateX(-1px);
+}
+
+.gestion-back-icon {
+  font-size: 14px;
+  stroke-width: 2.5;
+}
+
+/* Big Beige Container Card */
+.gestion-container-card {
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: gestionContainerFadeIn 0.35s ease-out backwards;
+}
+
+@keyframes gestionContainerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page Header (Simple for Alta, Flex Row with Search Bar for Modificar / Baja) */
+.gestion-page--alta .gestion-header,
+.gestion-page--modificar .gestion-header,
+.gestion-page--baja .gestion-header {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.gestion-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.gestion-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.gestion-title {
+  margin: 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 44px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: -0.5px;
+  display: inline-block;
+}
+
+/* Search Bar Card inside Header Row */
+.gestion-search-card {
+  background-color: var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.gestion-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  letter-spacing: 0.01em;
+}
+
+.gestion-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Optional Filter Select inside Search Bar (e.g. Role Filter in Usuarios) */
+.gestion-search-filter-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 170px;
+}
+
+.gestion-search-filter-select {
+  height: 36px;
+  width: 100%;
+  padding: 6px 32px 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--users-secondary-300, #C4B59C);
+  background-color: var(--users-secondary-50, #F6F3EE);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gestion-search-filter-select:focus {
+  border-color: var(--gestion-focus-border);
+  box-shadow: 0 0 0 2px var(--gestion-focus-ring);
+}
+
+.gestion-search-filter-caret {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-size: 15px;
+}
+
+.gestion-search-input-wrap {
+  position: relative;
+  width: 280px;
+  display: flex;
+  align-items: center;
+}
+
+.gestion-search-input {
+  width: 100%;
+  padding: 8px 36px 8px 14px;
+  font-size: 14px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  border: none;
+  border-radius: 24px;
+  background-color: var(--users-secondary-50, #F6F3EE);
+  color: var(--admin-primary-900, #1A2E1C);
+  box-sizing: border-box;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.gestion-search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--admin-tertiary-500, #7BC33C);
+}
+
+.gestion-search-input::-webkit-search-decoration,
+.gestion-search-input::-webkit-search-cancel-button,
+.gestion-search-input::-webkit-search-results-button,
+.gestion-search-input::-webkit-search-results-decoration {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.gestion-search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666666;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.gestion-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--admin-primary-900, #1A2E1C);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.gestion-search-btn:hover:not(:disabled) {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.gestion-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Autocomplete Wrapper & Suggestions Dropdown (Search bar + Form fields) */
+.gestion-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.gestion-suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #FFFFFF;
+  border: 1px solid var(--users-secondary-200, #D7CAB2);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.gestion-suggestion-item {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #F0ECE4;
+}
+
+.gestion-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.gestion-suggestion-item:hover,
+.gestion-suggestion-item.active {
+  background-color: var(--users-secondary-50, #F6F3EE);
+}
+
+.gestion-suggestion-item.disabled {
+  opacity: 0.6;
+  cursor: default;
+  background-color: #FFFFFF;
+}
+
+.gestion-suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.gestion-suggestion-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gestion-suggestion-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background-color: var(--gestion-badge-bg);
+  color: var(--gestion-badge-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gestion-suggestion-sub {
+  font-size: 11px;
+  color: #666666;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Inner Framed Form Card */
+.gestion-form-card {
+  border: 1.5px solid var(--gestion-accent);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--gestion-card-bg);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.gestion-form-card .gestion-card-header {
+  background-color: var(--gestion-accent);
+  padding: 12px 24px;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.gestion-form-card .gestion-card-header h2 {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+  text-align: left;
+}
+
+/* Scrollable Form Body */
+.gestion-form-card .gestion-card-body {
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Feedback & Notice Banners */
+.gestion-feedback {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  animation: gestionFeedbackSlide 0.25s ease-out;
+}
+
+@keyframes gestionFeedbackSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gestion-feedback.feedback-success {
+  background-color: var(--admin-primary-50, #EFF6F0);
+  border: 1px solid var(--admin-primary-300, #97C49D);
+  color: var(--admin-primary-800, #2A4B2F);
+}
+
+.gestion-feedback.feedback-error {
+  background-color: #FDF2F2;
+  border: 1px solid #F8B4B4;
+  color: #9B1C1C;
+}
+
+.gestion-feedback.feedback-info {
+  background-color: var(--docente-primary-50, #E9F0FC);
+  border: 1px solid var(--docente-primary-200, #98B8F1);
+  color: var(--docente-primary-800, #0E2F67);
+}
+
+.gestion-page--baja .gestion-feedback.feedback-info {
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 1px solid var(--users-secondary-300, #C8B593);
+  color: var(--admin-primary-900, #1A2E1C);
+}
+
+.gestion-warning-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: gestionFeedbackSlide 0.25s ease-out;
+}
+
+.gestion-role-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: gestionFeedbackSlide 0.25s ease-out;
+}
+
+.gestion-warning-icon {
+  font-size: 18px;
+  color: #D97706;
+  flex-shrink: 0;
+}
+
+/* Form Container, Section Titles & Dividers */
+.gestion-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.gestion-section-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  margin: 0 0 16px 0;
+  text-align: left;
+}
+
+.gestion-form .gestion-divider {
+  border: none;
+  border-top: 1px solid #757873;
+  opacity: 0.55;
+  margin: 20px 0;
+  margin-inline: 0;
+  width: 100%;
+}
+
+.gestion-page--modificar .gestion-form .gestion-divider {
+  border-top: 1px solid var(--users-secondary-100, #E7DFD0);
+  opacity: 1;
+}
+
+/* Responsive Form Grids */
+.gestion-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-asymmetric {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(180px, 0.8fr);
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-single {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px);
+  gap: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.gestion-extra-section {
+  display: flex;
+  flex-direction: column;
+  padding-top: 6px;
+  animation: gestionFadeInField 0.25s ease-out;
+}
+
+@keyframes gestionFadeInField {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Fields */
+.gestion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.gestion-label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  display: block;
+}
+
+.gestion-page--modificar .gestion-label,
+.gestion-page--baja .gestion-label {
+  font-size: 13px;
+}
+
+/* Text / Number Inputs */
+.gestion-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #757873;
+  background-color: #FFFFFF;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--admin-primary-900, #1A2E1C);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.gestion-input:focus:not(:read-only):not(:disabled) {
+  border-color: var(--gestion-focus-border);
+  box-shadow: 0 0 0 3px var(--gestion-focus-ring);
+}
+
+.gestion-input:read-only,
+.gestion-input:disabled {
+  background-color: #FFFFFF;
+  color: #1A2E1C;
+  cursor: default;
+}
+
+.gestion-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+/* Modificar-mode inputs: softer border and visibly locked disabled state */
+.gestion-page--modificar .gestion-input {
+  padding: 8px 12px;
+  border: 1px solid var(--users-secondary-300, #C8B593);
+  border-radius: 6px;
+}
+
+.gestion-page--modificar .gestion-input:read-only,
+.gestion-page--modificar .gestion-input:disabled {
+  background-color: var(--users-neutral-50, #F2F3F2);
+  color: #515350;
+  cursor: not-allowed;
+  border-color: var(--users-neutral-200, #C4C6C3);
+}
+
+/* Custom Select with Caret */
+.gestion-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gestion-select {
+  height: 40px;
+  width: 100%;
+  padding: 8px 36px 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #C4B59C;
+  background-color: var(--users-secondary-200, #D7CAB2);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--admin-primary-900, #1A2E1C);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.gestion-select:focus:not(:disabled) {
+  border-color: var(--gestion-select-focus-border);
+  box-shadow: 0 0 0 3px var(--gestion-select-focus-ring);
+}
+
+.gestion-select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.gestion-select-caret {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #1A2E1C;
+  font-size: 16px;
+}
+
+/* Modificar-mode disabled selects: keep warm beige select look with reduced opacity */
+.gestion-page--modificar .gestion-select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Baja-mode selects: read-only beige appearance */
+.gestion-page--baja .gestion-select {
+  cursor: default;
+}
+
+.gestion-page--baja .gestion-select:disabled {
+  background-color: var(--users-secondary-200, #D7CAB2);
+  color: #1A2E1C;
+  opacity: 0.95;
+  cursor: default;
+}
+
+/* DatePicker Integration */
+.gestion-datepicker-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gestion-datepicker-container .react-datepicker-wrapper,
+.gestion-datepicker-container .react-datepicker__input-container {
+  width: 100%;
+}
+
+.gestion-datepicker-input {
+  width: 100%;
+  padding-right: 40px !important;
+  box-sizing: border-box;
+}
+
+.gestion-datepicker-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757873;
+  font-size: 17px;
+  pointer-events: none;
+  z-index: 2;
+  transition: color 0.2s ease;
+}
+
+.gestion-datepicker-container:hover .gestion-datepicker-icon,
+.gestion-datepicker-container:focus-within .gestion-datepicker-icon {
+  color: #1A2E1C;
+}
+
+/* Custom theme for react-datepicker popup */
+.react-datepicker {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  border-radius: 8px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.react-datepicker__header {
+  background-color: #F8FAF7 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+  padding-top: 10px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header {
+  font-weight: 600 !important;
+  color: #1A2E1C !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--admin-primary-600, #4B8653) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+}
+
+.react-datepicker__day:hover {
+  border-radius: 6px !important;
+  background-color: rgba(75, 134, 83, 0.15) !important;
+}
+
+.react-datepicker__year-select,
+.react-datepicker__month-select {
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2D3748;
+  margin: 0 4px;
+}
+
+/* Password Input with Action Icons (Show/Hide, Regenerate) */
+.gestion-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gestion-password-input {
+  width: 100%;
+  padding-right: 68px;
+}
+
+.gestion-password-actions {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gestion-password-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.gestion-password-action-btn:hover {
+  color: var(--gestion-accent);
+  background-color: rgba(42, 75, 47, 0.08);
+}
+
+.gestion-password-action-btn.spinning svg {
+  animation: gestionSpin 0.8s linear infinite;
+}
+
+@keyframes gestionSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bottom Actions Toolbar */
+.gestion-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.gestion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.gestion-btn .btn-icon {
+  font-size: 18px;
+}
+
+.gestion-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gestion-btn--borrar {
+  background-color: var(--btn-delete, #890505);
+}
+
+.gestion-btn--borrar:hover:not(:disabled) {
+  background-color: #6E0404;
+  transform: translateY(-2px);
+}
+
+.gestion-btn--borrar:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.gestion-btn--confirmar {
+  background-color: var(--admin-primary-800, #2A4B2F);
+}
+
+.gestion-btn--confirmar:hover:not(:disabled) {
+  background-color: #1F3823;
+  transform: translateY(-2px);
+}
+
+.gestion-btn--confirmar:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.gestion-page--baja .gestion-btn--confirmar {
+  background-color: var(--btn-confirm, #305839);
+}
+
+.gestion-page--baja .gestion-btn--confirmar:hover:not(:disabled) {
+  background-color: #24432B;
+}
+
+/* ==========================================================================
+   CONFIRMATION MODAL (Baja pages)
+   ========================================================================== */
+.gestion-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  animation: gestionFadeInOverlay 0.25s ease-out forwards;
+}
+
+.gestion-modal {
+  background-color: var(--users-secondary-50, #F6F3EE);
+  border: 2px solid var(--btn-delete, #890505);
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 460px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  animation: gestionSlideInModal 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.gestion-modal-header {
+  background-color: var(--btn-delete, #890505);
+  color: #FFFFFF;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.gestion-modal-header h2 {
+  margin: 0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  color: inherit;
+  line-height: 1.1;
+}
+
+.gestion-modal-warning-icon {
+  font-size: 26px;
+  color: #FFC801;
+  flex-shrink: 0;
+}
+
+.gestion-modal-content {
+  padding: 24px 28px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gestion-modal-content p {
+  color: var(--admin-primary-900, #1A2E1C);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+.gestion-modal-content p strong {
+  color: var(--btn-delete, #890505);
+  font-weight: 700;
+}
+
+.gestion-modal-subtext {
+  font-size: 13.5px !important;
+  color: #515350 !important;
+  background-color: #FDF2F2;
+  border: 1px solid #F8B4B4;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 24px !important;
+}
+
+.gestion-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.gestion-modal-btn-cancel,
+.gestion-modal-btn-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.gestion-modal-btn-cancel {
+  background-color: transparent;
+  color: #515350;
+  border: 1.5px solid #ADAFAC;
+}
+
+.gestion-modal-btn-cancel:hover:not(:disabled) {
+  background-color: #E7DFD0;
+  color: #1A2E1C;
+  transform: translateY(-2px);
+}
+
+.gestion-modal-btn-confirm {
+  background-color: var(--btn-delete, #890505);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 2px 8px rgba(137, 5, 5, 0.3);
+}
+
+.gestion-modal-btn-confirm:hover:not(:disabled) {
+  background-color: #6E0404;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(137, 5, 5, 0.4);
+}
+
+.gestion-modal-btn-cancel:disabled,
+.gestion-modal-btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes gestionFadeInOverlay {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gestionSlideInModal {
+  from {
+    transform: translateY(-24px) scale(0.96);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS (Standardized from Cargos)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .gestion-header {
+    margin-bottom: 16px;
+  }
+
+  .gestion-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .gestion-title {
+    font-size: 36px;
+  }
+
+  .gestion-search-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gestion-search-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .gestion-search-label {
+    font-size: 12px;
+  }
+
+  .gestion-search-input-wrap {
+    flex: 1;
+    min-width: 200px;
+    width: auto;
+  }
+
+  .gestion-grid-3,
+  .gestion-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gestion-grid-asymmetric {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .gestion-content-area {
+    padding: 16px;
+  }
+
+  .gestion-container-card {
+    padding: 18px;
+  }
+
+  .gestion-title {
+    font-size: 32px;
+  }
+
+  .gestion-form-card .gestion-card-header h2 {
+    font-size: 20px;
+  }
+
+  .gestion-section-title {
+    font-size: 18px;
+  }
+
+  .gestion-grid-3,
+  .gestion-grid-2,
+  .gestion-grid-4,
+  .gestion-grid-asymmetric,
+  .gestion-grid-single {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .gestion-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gestion-search-filter-wrap,
+  .gestion-search-input-wrap {
+    width: 100%;
+  }
+
+  .gestion-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-height: 900px) {
+  .gestion-content-area {
+    padding: 20px 28px;
+  }
+
+  .gestion-container-card {
+    padding: 18px 24px;
+  }
+
+  .gestion-header,
+  .gestion-header-row {
+    margin-bottom: 12px;
+  }
+
+  .gestion-title {
+    font-size: 36px;
+  }
+
+  .gestion-form-card .gestion-card-header {
+    padding: 10px 20px;
+  }
+
+  .gestion-form-card .gestion-card-body {
+    padding: 16px 24px;
+  }
+
+  .gestion-section-title {
+    font-size: 22px;
+    margin: 0 0 12px 0;
+  }
+
+  .gestion-form .gestion-divider {
+    margin: 16px 0;
+  }
+
+  .gestion-grid-3,
+  .gestion-grid-2,
+  .gestion-grid-4,
+  .gestion-grid-asymmetric {
+    row-gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .gestion-input,
+  .gestion-select {
+    height: 36px;
+  }
+
+  .gestion-actions {
+    margin-top: 12px;
+  }
+}

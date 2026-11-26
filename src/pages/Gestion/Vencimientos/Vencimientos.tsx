@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import './Vencimientos.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
+import ExportButton from '../../../components/ExportButton';
 import { FiChevronLeft, FiCheckCircle, FiCheckSquare, FiAlertTriangle, FiFilter } from 'react-icons/fi';
 import { isGlobalAdmin } from '../../../utils/auth';
 
@@ -65,6 +66,7 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
   const [items, setItems] = useState<DesignacionVencimientoDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Filters
   const [incluirVencidas, setIncluirVencidas] = useState<boolean>(false);
@@ -94,10 +96,14 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
           const data = await res.json();
           if (Array.isArray(data)) {
             setUnidadesList(
-              data.map((u: any) => ({
-                unidadId: Number(u.unidadId ?? u.id),
-                nombre: u.unidadNombre ?? u.nombre ?? `Unidad ${u.unidadId ?? u.id}`,
-              }))
+              data
+                .map((u: any) => ({
+                  unidadId: Number(u.unidadId ?? u.id),
+                  nombre: u.unidadNombre ?? u.nombre ?? `Unidad ${u.unidadId ?? u.id}`,
+                }))
+                .sort((a: UnidadSelectOption, b: UnidadSelectOption) =>
+                  a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+                )
             );
           }
         }
@@ -245,6 +251,27 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
     return items.filter((i) => i.diasRestantes < 0).length;
   }, [items]);
 
+  const exportParams = useMemo(() => {
+    const params = new URLSearchParams();
+    params.append('incluirVencidas', incluirVencidas ? 'true' : 'false');
+    if (incluirVencidas) {
+      params.append('filtros', 'Incluir vencidas: Sí');
+    }
+    if (diasUmbral === '0' || diasUmbral === 'sinLimite') {
+      params.append('dias', '0');
+      params.append('sinLimite', 'true');
+      params.append('filtros', 'Umbral: Sin límite');
+    } else if (diasUmbral) {
+      params.append('dias', diasUmbral);
+      params.append('sinLimite', 'false');
+      params.append('filtros', `Próximos ${diasUmbral} días`);
+    }
+    if (userIsGlobalAdmin && selectedUnidadId) {
+      params.append('unidadId', selectedUnidadId);
+    }
+    return params;
+  }, [incluirVencidas, diasUmbral, selectedUnidadId, userIsGlobalAdmin]);
+
   return (
     <div className="vencimientos-page-layout">
       <Topbar onLogout={onLogout} />
@@ -319,18 +346,28 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
                   </label>
                 </div>
 
-                <div className="vencimientos-summary-pills">
-                  {totalCriticos > 0 && (
-                    <span className="vencimientos-summary-pill critico">
-                      <FiAlertTriangle style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                      {totalCriticos} crítica{totalCriticos > 1 ? 's' : ''} (≤ 7 días)
-                    </span>
-                  )}
-                  {incluirVencidas && totalVencidas > 0 && (
-                    <span className="vencimientos-summary-pill">
-                      {totalVencidas} ya vencida{totalVencidas > 1 ? 's' : ''}
-                    </span>
-                  )}
+                <div className="vencimientos-toolbar-right">
+                  <div className="vencimientos-summary-pills">
+                    {totalCriticos > 0 && (
+                      <span className="vencimientos-summary-pill critico">
+                        <FiAlertTriangle style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                        {totalCriticos} crítica{totalCriticos > 1 ? 's' : ''} (≤ 7 días)
+                      </span>
+                    )}
+                    {incluirVencidas && totalVencidas > 0 && (
+                      <span className="vencimientos-summary-pill">
+                        {totalVencidas} ya vencida{totalVencidas > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <ExportButton
+                    endpoint="/api/designaciones/vencimientos/exportar"
+                    params={exportParams}
+                    fallbackBaseName="vencimientos_designaciones"
+                    align="right"
+                    onUnauthorized={onLogout}
+                    onError={setExportError}
+                  />
                 </div>
               </div>
 
@@ -338,6 +375,23 @@ export default function Vencimientos({ onLogout, onNavigate, onBack }: Vencimien
                 <div className="vencimientos-error-msg">
                   <FiAlertTriangle style={{ marginRight: 6 }} />
                   {errorMessage}
+                </div>
+              )}
+
+              {exportError && (
+                <div className="vencimientos-error-msg vencimientos-export-error" role="alert">
+                  <span>
+                    <FiAlertTriangle style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                    {exportError}
+                  </span>
+                  <button
+                    type="button"
+                    className="vencimientos-error-close"
+                    onClick={() => setExportError(null)}
+                    aria-label="Cerrar mensaje de error"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
 

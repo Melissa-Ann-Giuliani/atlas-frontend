@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './ModificarUsuario.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
@@ -1491,48 +1491,48 @@ export default function ModificarUsuario({
   };
 
   return (
-    <div className="modificar-usuario-page">
+    <div className="gestion-page gestion-page--modificar">
       <Topbar onLogout={onLogout} />
 
-      <div className="modificar-usuario-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="modificar-usuario-main">
-          <div className="modificar-usuario-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Navigation: Retroceder */}
-            <div className="modificar-usuario-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="modificar-usuario-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="modificar-usuario-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="modificar-usuario-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="modificar-usuario-header-row">
-                <div className="modificar-usuario-header-left">
-                  <h1 className="modificar-usuario-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar & Role Filter Row */}
-                <div className="modificar-usuario-search-card">
+                <div className="gestion-search-card">
                   <label
                     htmlFor="searchUsuarioInput"
-                    className="modificar-usuario-search-label"
+                    className="gestion-search-label"
                   >
                     Buscar Usuario a Modificar por Nombre o DNI
                   </label>
-                  <div className="modificar-usuario-search-row">
+                  <div className="gestion-search-row">
                     {/* Role Filter Selector */}
-                    <div className="modificar-usuario-role-filter-wrap">
+                    <div className="gestion-search-filter-wrap">
                       <select
                         id="filterRol"
-                        className="modificar-usuario-role-filter-select"
+                        className="gestion-search-filter-select"
                         value={selectedFilterRole}
                         onChange={(e) => handleFilterRoleChange(e.target.value)}
                       >
@@ -1541,18 +1541,18 @@ export default function ModificarUsuario({
                         <option value="ADMIN_UNIDAD">Admin de Unidad</option>
                         <option value="AUDITOR">Auditor</option>
                       </select>
-                      <FiChevronDown className="modificar-usuario-role-filter-caret" />
+                      <FiChevronDown className="gestion-search-filter-caret" />
                     </div>
 
                     <div
-                      className="modificar-usuario-search-input-wrap"
+                      className="gestion-search-input-wrap"
                       ref={searchContainerRef}
                     >
                       <input
                         id="searchUsuarioInput"
                         name="busqueda_usuario_query"
                         type="search"
-                        className="modificar-usuario-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese nombre, apellido o DNI"
                         value={searchQuery}
                         onChange={(e) => {
@@ -1569,15 +1569,15 @@ export default function ModificarUsuario({
                         autoComplete="off"
                         spellCheck={false}
                       />
-                      <FiSearch className="modificar-usuario-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="modificar-usuario-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-usuario-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
                                 }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
@@ -1587,18 +1587,18 @@ export default function ModificarUsuario({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="modificar-usuario-suggestion-header">
-                                <span className="modificar-usuario-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombreCompleto}
                                 </span>
                                 {item.dni ? (
-                                  <span className="modificar-usuario-suggestion-badge">
+                                  <span className="gestion-suggestion-badge">
                                     DNI {item.dni}
                                   </span>
                                 ) : null}
                               </div>
                               {item.unidad && (
-                                <span className="modificar-usuario-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {item.unidad}
                                 </span>
                               )}
@@ -1610,7 +1610,7 @@ export default function ModificarUsuario({
 
                     <button
                       type="button"
-                      className="modificar-usuario-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1622,20 +1622,20 @@ export default function ModificarUsuario({
               </div>
 
               {/* Form Card */}
-              <div className="modificar-usuario-form-card">
-                <div className="modificar-usuario-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Modificar Usuario</h2>
                 </div>
 
-                <div className="modificar-usuario-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`modificar-usuario-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
                   <form
-                    className="modificar-usuario-form"
+                    className="gestion-form"
                     onSubmit={handleSubmit}
                     onFocusCapture={() => {
                       if (feedback) setFeedback(null);
@@ -1645,19 +1645,19 @@ export default function ModificarUsuario({
                     }}
                   >
                     {/* SECTION: DATOS DE USUARIO */}
-                    <h3 className="modificar-usuario-section-title">Datos de Usuario</h3>
+                    <h3 className="gestion-section-title">Datos de Usuario</h3>
 
-                    <div className="modificar-usuario-form-grid">
+                    <div className="gestion-grid-3">
                       {/* Apellido */}
-                      <div className="modificar-usuario-field">
-                        <label htmlFor="apellido" className="modificar-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="apellido" className="gestion-label">
                           Apellido *
                         </label>
                         <input
                           id="apellido"
                           name="apellido"
                           type="text"
-                          className="modificar-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
@@ -1666,15 +1666,15 @@ export default function ModificarUsuario({
                       </div>
 
                       {/* Nombre */}
-                      <div className="modificar-usuario-field">
-                        <label htmlFor="nombre" className="modificar-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="nombre" className="gestion-label">
                           Nombre *
                         </label>
                         <input
                           id="nombre"
                           name="nombre"
                           type="text"
-                          className="modificar-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
@@ -1683,15 +1683,15 @@ export default function ModificarUsuario({
                       </div>
 
                       {/* Correo Electrónico */}
-                      <div className="modificar-usuario-field">
-                        <label htmlFor="correo" className="modificar-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="correo" className="gestion-label">
                           Correo Electrónico *
                         </label>
                         <input
                           id="correo"
                           name="correo"
                           type="email"
-                          className="modificar-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.correo}
                           onChange={(e) => handleChange('correo', e.target.value)}
@@ -1700,15 +1700,15 @@ export default function ModificarUsuario({
                       </div>
 
                       {/* Nombre de Usuario */}
-                      <div className="modificar-usuario-field">
-                        <label htmlFor="username" className="modificar-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="username" className="gestion-label">
                           Nombre de Usuario *
                         </label>
                         <input
                           id="username"
                           name="username"
                           type="text"
-                          className="modificar-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.username}
                           onChange={(e) => handleChange('username', e.target.value)}
@@ -1717,25 +1717,25 @@ export default function ModificarUsuario({
                       </div>
 
                       {/* Contraseña */}
-                      <div className="modificar-usuario-field">
-                        <label htmlFor="password" className="modificar-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="password" className="gestion-label">
                           Contraseña
                         </label>
-                        <div className="modificar-usuario-password-wrapper">
+                        <div className="gestion-password-wrapper">
                           <input
                             id="password"
                             name="password"
                             type={showPassword ? 'text' : 'password'}
-                            className="modificar-usuario-input modificar-usuario-password-input"
+                            className="gestion-input gestion-password-input"
                             placeholder="Ingrese nueva contraseña"
                             value={formData.password}
                             onChange={(e) => handleChange('password', e.target.value)}
                             autoComplete="new-password"
                           />
-                          <div className="modificar-usuario-password-actions">
+                          <div className="gestion-password-actions">
                             <button
                               type="button"
-                              className="modificar-usuario-password-action-btn"
+                              className="gestion-password-action-btn"
                               onClick={() => setShowPassword(!showPassword)}
                               title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                             >
@@ -1743,7 +1743,7 @@ export default function ModificarUsuario({
                             </button>
                             <button
                               type="button"
-                              className={`modificar-usuario-password-action-btn ${isLoadingPassword ? 'spinning' : ''
+                              className={`gestion-password-action-btn ${isLoadingPassword ? 'spinning' : ''
                                 }`}
                               onClick={fetchRandomPassword}
                               title="Generar nueva contraseña"
@@ -1756,25 +1756,25 @@ export default function ModificarUsuario({
                       </div>
                     </div>
 
-                    <hr className="modificar-usuario-divider" />
+                    <hr className="gestion-divider" />
 
                     {/* SECTION: ADMIN GLOBAL */}
                     {isAdminGlobal && (
-                      <div className="modificar-usuario-extra-section">
-                        <div className="modificar-usuario-extra-grid modificar-usuario-single-grid">
-                          <div className="modificar-usuario-field modificar-usuario-field-cargo">
-                            <label htmlFor="cargo" className="modificar-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
                             <div
-                              className="modificar-usuario-select-wrapper"
+                              className="gestion-select-wrapper"
                               onClick={() => {
                                 if (feedback) setFeedback(null);
                               }}
                             >
                               <select
                                 id="cargo"
-                                className="modificar-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 onFocus={() => {
@@ -1793,7 +1793,7 @@ export default function ModificarUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="modificar-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1802,21 +1802,21 @@ export default function ModificarUsuario({
 
                     {/* SECTION: AUDITOR */}
                     {isAuditor && (
-                      <div className="modificar-usuario-extra-section">
-                        <div className="modificar-usuario-extra-grid modificar-usuario-single-grid">
-                          <div className="modificar-usuario-field modificar-usuario-field-cargo">
-                            <label htmlFor="cargo" className="modificar-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
                             <div
-                              className="modificar-usuario-select-wrapper"
+                              className="gestion-select-wrapper"
                               onClick={() => {
                                 if (feedback) setFeedback(null);
                               }}
                             >
                               <select
                                 id="cargo"
-                                className="modificar-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 onFocus={() => {
@@ -1835,7 +1835,7 @@ export default function ModificarUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="modificar-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1844,21 +1844,21 @@ export default function ModificarUsuario({
 
                     {/* SECTION: ADMIN DE UNIDAD */}
                     {isAdminUnidad && (
-                      <div className="modificar-usuario-extra-section">
-                        <div className="modificar-usuario-extra-grid modificar-usuario-admin-unidad-grid">
-                          <div className="modificar-usuario-field modificar-usuario-field-cargo">
-                            <label htmlFor="cargo" className="modificar-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-3">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo *
                             </label>
                             <div
-                              className="modificar-usuario-select-wrapper"
+                              className="gestion-select-wrapper"
                               onClick={() => {
                                 if (feedback) setFeedback(null);
                               }}
                             >
                               <select
                                 id="cargo"
-                                className="modificar-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 onFocus={() => {
@@ -1877,23 +1877,23 @@ export default function ModificarUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="modificar-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="modificar-usuario-field modificar-usuario-field-dependencia">
-                            <label htmlFor="dependencia" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="dependencia" className="gestion-label">
                               Dependencia *
                             </label>
                             <div
-                              className="modificar-usuario-select-wrapper"
+                              className="gestion-select-wrapper"
                               onClick={() => {
                                 if (feedback) setFeedback(null);
                               }}
                             >
                               <select
                                 id="dependencia"
-                                className="modificar-usuario-select"
+                                className="gestion-select"
                                 value={formData.dependencia}
                                 onChange={(e) => handleChange('dependencia', e.target.value)}
                                 onFocus={() => {
@@ -1912,24 +1912,24 @@ export default function ModificarUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="modificar-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
                           {formData.dependencia && (
-                            <div className="modificar-usuario-field modificar-usuario-field-unidad">
-                              <label htmlFor="unidad" className="modificar-usuario-label">
+                            <div className="gestion-field">
+                              <label htmlFor="unidad" className="gestion-label">
                                 {dynamicUnidadLabel} *
                               </label>
                               <div
-                                className="modificar-usuario-select-wrapper"
+                                className="gestion-select-wrapper"
                                 onClick={() => {
                                   if (feedback) setFeedback(null);
                                 }}
                               >
                                 <select
                                   id="unidad"
-                                  className="modificar-usuario-select"
+                                  className="gestion-select"
                                   value={formData.unidad}
                                   onChange={(e) => handleChange('unidad', e.target.value)}
                                   onFocus={() => {
@@ -1948,7 +1948,7 @@ export default function ModificarUsuario({
                                     </option>
                                   ))}
                                 </select>
-                                <FiChevronDown className="modificar-usuario-select-caret" />
+                                <FiChevronDown className="gestion-select-caret" />
                               </div>
                             </div>
                           )}
@@ -1958,17 +1958,17 @@ export default function ModificarUsuario({
 
                     {/* SECTION: DOCENTE */}
                     {isDocente && (
-                      <div className="modificar-usuario-extra-section">
-                        <div className="modificar-usuario-docente-grid">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-4">
                           {/* Fila 1 */}
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="tipoDni" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="tipoDni" className="gestion-label">
                               Tipo DNI *
                             </label>
-                            <div className="modificar-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="tipoDni"
-                                className="modificar-usuario-select"
+                                className="gestion-select"
                                 value={formData.tipoDni}
                                 onChange={(e) => handleChange('tipoDni', e.target.value)}
                                 disabled={isLoadingTiposDni && tiposDni.length === 0}
@@ -1984,19 +1984,19 @@ export default function ModificarUsuario({
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="modificar-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="numeroDni" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="numeroDni" className="gestion-label">
                               Número *
                             </label>
                             <input
                               id="numeroDni"
                               name="docente_numero_documento"
                               type="text"
-                              className="modificar-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.numeroDni}
                               onChange={(e) => handleChange('numeroDni', e.target.value)}
@@ -2004,15 +2004,15 @@ export default function ModificarUsuario({
                             />
                           </div>
 
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="cuil" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="cuil" className="gestion-label">
                               CUIL *
                             </label>
                             <input
                               id="cuil"
                               name="docente_cuil"
                               type="text"
-                              className="modificar-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.cuil}
                               onChange={(e) => handleChange('cuil', e.target.value)}
@@ -2020,15 +2020,15 @@ export default function ModificarUsuario({
                             />
                           </div>
 
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="domicilio" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="domicilio" className="gestion-label">
                               Domicilio
                             </label>
                             <input
                               id="domicilio"
                               name="docente_domicilio"
                               type="text"
-                              className="modificar-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.domicilio}
                               onChange={(e) => handleChange('domicilio', e.target.value)}
@@ -2037,15 +2037,15 @@ export default function ModificarUsuario({
                           </div>
 
                           {/* Fila 2 */}
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="emailInstitucional" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="emailInstitucional" className="gestion-label">
                               Email Institucional
                             </label>
                             <input
                               id="emailInstitucional"
                               name="docente_email_institucional"
                               type="email"
-                              className="modificar-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
@@ -2053,11 +2053,11 @@ export default function ModificarUsuario({
                             />
                           </div>
 
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="fechaIngreso" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="fechaIngreso" className="gestion-label">
                               Fecha de Ingreso a la Universidad
                             </label>
-                            <div className="modificar-usuario-datepicker-container">
+                            <div className="gestion-datepicker-container">
                               <DatePicker
                                 id="fechaIngreso"
                                 name="docente_fecha_ingreso"
@@ -2068,18 +2068,18 @@ export default function ModificarUsuario({
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="DD/MM/AAAA"
                                 locale="es"
-                                className="modificar-usuario-input modificar-usuario-datepicker-input"
+                                className="gestion-input gestion-datepicker-input"
                                 autoComplete="off"
                                 showYearDropdown
                                 showMonthDropdown
                                 dropdownMode="select"
                               />
-                              <FiCalendar className="modificar-usuario-datepicker-icon" />
+                              <FiCalendar className="gestion-datepicker-icon" />
                             </div>
                           </div>
 
-                          <div className="modificar-usuario-field">
-                            <label htmlFor="antigPrevia" className="modificar-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="antigPrevia" className="gestion-label">
                               Antigüedad Previa
                             </label>
                             <input
@@ -2087,7 +2087,7 @@ export default function ModificarUsuario({
                               name="docente_antiguedad_previa"
                               type="number"
                               min="0"
-                              className="modificar-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.antigPrevia}
                               onChange={(e) => handleChange('antigPrevia', e.target.value)}
@@ -2103,10 +2103,10 @@ export default function ModificarUsuario({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="modificar-usuario-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-modificar-usuario btn-modificar-usuario-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting}
               >
@@ -2116,7 +2116,7 @@ export default function ModificarUsuario({
 
               <button
                 type="button"
-                className="btn-modificar-usuario btn-modificar-usuario-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
               >
