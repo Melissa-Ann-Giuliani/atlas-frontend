@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './BajaCargo.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
@@ -745,49 +745,49 @@ export default function BajaCargo({
   const hasLoadedCargo = Boolean(formData.cargoId);
 
   return (
-    <div className="baja-cargo-page">
+    <div className="gestion-page gestion-page--baja">
       <Topbar onLogout={onLogout} />
 
-      <div className="baja-cargo-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="baja-cargo-main">
-          <div className="baja-cargo-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="baja-cargo-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="baja-cargo-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="baja-cargo-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="baja-cargo-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="baja-cargo-header-row">
-                <div className="baja-cargo-header-left">
-                  <h1 className="baja-cargo-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar matching Modificar Cargo style */}
-                <div className="baja-cargo-search-card">
-                  <label htmlFor="searchCargoInput" className="baja-cargo-search-label">
+                <div className="gestion-search-card">
+                  <label htmlFor="searchCargoInput" className="gestion-search-label">
                     Buscar Cargo a Dar de Baja por Número
                   </label>
-                  <div className="baja-cargo-search-row">
+                  <div className="gestion-search-row">
                     <div
-                      className="baja-cargo-search-input-wrap"
+                      className="gestion-search-input-wrap"
                       ref={searchContainerRef}
                     >
                       <input
                         id="searchCargoInput"
                         name="busqueda_cargo_query"
                         type="search"
-                        className="baja-cargo-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese valor"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -803,15 +803,15 @@ export default function BajaCargo({
                         data-form-type="other"
                         data-1p-ignore="true"
                       />
-                      <FiSearch className="baja-cargo-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="baja-cargo-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
                                 }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
@@ -821,11 +821,11 @@ export default function BajaCargo({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <span className="baja-cargo-suggestion-number">
+                              <span className="gestion-suggestion-title">
                                 Cargo N° {item.numero}
                               </span>
                               {(item.categoria || item.unidad) && (
-                                <span className="baja-cargo-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[item.categoria, item.unidad]
                                     .filter(Boolean)
                                     .join(' • ')}
@@ -839,7 +839,7 @@ export default function BajaCargo({
 
                     <button
                       type="button"
-                      className="baja-cargo-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -851,15 +851,15 @@ export default function BajaCargo({
               </div>
 
               {/* Form Card with Red Border & Red Header */}
-              <div className="baja-cargo-form-card">
-                <div className="baja-cargo-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Baja de Cargo</h2>
                 </div>
 
-                <div className="baja-cargo-card-body">
+                <div className="gestion-card-body">
                   {isNonAdminGlobal && (
-                    <div className="baja-cargo-role-notice">
-                      <FiAlertTriangle className="baja-cargo-warning-icon" />
+                    <div className="gestion-role-notice">
+                      <FiAlertTriangle className="gestion-warning-icon" />
                       <span>
                         Nota de permisos: Se requiere rol de <strong>Administrador Global</strong> para dar de baja un cargo.
                       </span>
@@ -867,7 +867,7 @@ export default function BajaCargo({
                   )}
 
                   {feedback && (
-                    <div className={`baja-cargo-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
@@ -875,8 +875,8 @@ export default function BajaCargo({
                   {hasLoadedCargo &&
                     isCargoDadoDeBaja(formData.estado) &&
                     feedback?.type !== 'success' && (
-                      <div className="baja-cargo-warning-box">
-                        <FiAlertTriangle className="baja-cargo-warning-icon" />
+                      <div className="gestion-warning-box">
+                        <FiAlertTriangle className="gestion-warning-icon" />
                         <span>
                           Este cargo ya ha sido dado de baja. Su estado actual es{' '}
                           <strong>{formData.estado || 'Dado de baja'}</strong>.
@@ -884,20 +884,20 @@ export default function BajaCargo({
                       </div>
                     )}
 
-                  <div className="baja-cargo-form">
+                  <div className="gestion-form">
                     {/* SECTION 1: DATOS DE CARGOS */}
-                    <h3 className="baja-cargo-section-title">Datos de Cargos</h3>
+                    <h3 className="gestion-section-title">Datos de Cargos</h3>
 
                     {/* Row 1: N° de Cargo, Fecha de Creación, Estado */}
-                    <div className="baja-cargo-grid-3">
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_numeroCargo" className="baja-cargo-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_numeroCargo" className="gestion-label">
                           N° de Cargo
                         </label>
                         <input
                           id="baja_numeroCargo"
                           type="text"
-                          className="baja-cargo-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.numeroCargo}
                           readOnly
@@ -905,14 +905,14 @@ export default function BajaCargo({
                         />
                       </div>
 
-                      <div className="baja-cargo-field">
+                      <div className="gestion-field">
                         <label
                           htmlFor="baja_fechaCreacion"
-                          className="baja-cargo-label"
+                          className="gestion-label"
                         >
                           Fecha de Creación
                         </label>
-                        <div className="baja-cargo-datepicker-container">
+                        <div className="gestion-datepicker-container">
                           <DatePicker
                             id="baja_fechaCreacion"
                             selected={parseIsoToDate(formData.fechaCreacion)}
@@ -920,22 +920,22 @@ export default function BajaCargo({
                             dateFormat="dd/MM/yyyy"
                             placeholderText="DD/MM/AAAA"
                             locale="es"
-                            className="baja-cargo-input baja-cargo-datepicker-input"
+                            className="gestion-input gestion-datepicker-input"
                             autoComplete="off"
                             disabled
                           />
-                          <FiCalendar className="baja-cargo-datepicker-icon" />
+                          <FiCalendar className="gestion-datepicker-icon" />
                         </div>
                       </div>
 
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_estado" className="baja-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_estado" className="gestion-label">
                           Estado
                         </label>
                         <input
                           id="baja_estado"
                           type="text"
-                          className="baja-cargo-input"
+                          className="gestion-input"
                           value={formData.estado || (hasLoadedCargo ? 'Libre' : '')}
                           readOnly
                           disabled
@@ -944,18 +944,18 @@ export default function BajaCargo({
                     </div>
 
                     {/* Row 2: Dependencia, Departamento */}
-                    <div className="baja-cargo-grid-2">
-                      <div className="baja-cargo-field">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
                         <label
                           htmlFor="baja_dependencia"
-                          className="baja-cargo-label"
+                          className="gestion-label"
                         >
                           Dependencia
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_dependencia"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             disabled
                           >
@@ -963,21 +963,21 @@ export default function BajaCargo({
                               {formData.dependencia || 'Departamento'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-cargo-field">
+                      <div className="gestion-field">
                         <label
                           htmlFor="baja_departamento"
-                          className="baja-cargo-label"
+                          className="gestion-label"
                         >
                           Departamento
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_departamento"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.departamento}
                             disabled
                           >
@@ -985,26 +985,26 @@ export default function BajaCargo({
                               {formData.departamento || 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
-                    <hr className="baja-cargo-divider" />
+                    <hr className="gestion-divider" />
 
                     {/* SECTION 2: CLASIFICACIÓN */}
-                    <h3 className="baja-cargo-section-title">Clasificación</h3>
+                    <h3 className="gestion-section-title">Clasificación</h3>
 
                     {/* Row 1: Origen, Carácter, Categoría */}
-                    <div className="baja-cargo-grid-3">
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_origen" className="baja-cargo-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_origen" className="gestion-label">
                           Origen
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_origen"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.origen}
                             disabled
                           >
@@ -1014,18 +1014,18 @@ export default function BajaCargo({
                                 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_caracter" className="baja-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_caracter" className="gestion-label">
                           Carácter
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_caracter"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.caracter}
                             disabled
                           >
@@ -1035,18 +1035,18 @@ export default function BajaCargo({
                                 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_categoria" className="baja-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_categoria" className="gestion-label">
                           Categoría
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_categoria"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.categoria}
                             disabled
                           >
@@ -1056,21 +1056,21 @@ export default function BajaCargo({
                                 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 2: Dedicación, Cant. de Horas */}
-                    <div className="baja-cargo-grid-2">
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_dedicacion" className="baja-cargo-label">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_dedicacion" className="gestion-label">
                           Dedicación
                         </label>
-                        <div className="baja-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_dedicacion"
-                            className="baja-cargo-select"
+                            className="gestion-select"
                             value={formData.dedicacion}
                             disabled
                           >
@@ -1080,18 +1080,18 @@ export default function BajaCargo({
                                 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-cargo-field">
-                        <label htmlFor="baja_cantHoras" className="baja-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_cantHoras" className="gestion-label">
                           Cant. de Horas
                         </label>
                         <input
                           id="baja_cantHoras"
                           type="text"
-                          className="baja-cargo-input"
+                          className="gestion-input"
                           value={formData.cantHoras}
                           readOnly
                           disabled
@@ -1104,10 +1104,10 @@ export default function BajaCargo({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="baja-cargo-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-baja-cargo btn-baja-cargo-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
               >
                 <FiTrash2 className="btn-icon" />
@@ -1116,7 +1116,7 @@ export default function BajaCargo({
 
               <button
                 type="button"
-                className="btn-baja-cargo btn-baja-cargo-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleOpenConfirmModal}
                 disabled={
                   isSubmitting ||
@@ -1140,24 +1140,24 @@ export default function BajaCargo({
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="baja-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baja-modal-title">
-          <div className="baja-modal">
-            <div className="baja-modal-header">
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+        <div className="gestion-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baja-modal-title">
+          <div className="gestion-modal">
+            <div className="gestion-modal-header">
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
               <h2 id="baja-modal-title">Confirmar Baja de Cargo</h2>
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
             </div>
-            <div className="baja-modal-content">
+            <div className="gestion-modal-content">
               <p>
                 ¿Está seguro de que desea dar de baja el <strong>Cargo N° {formData.numeroCargo}</strong>?
               </p>
-              <p className="baja-modal-subtext">
+              <p className="gestion-modal-subtext">
                 Esta acción dará de baja el cargo en el sistema y cambiará su estado a <strong>Dado de baja</strong>.
               </p>
-              <div className="baja-modal-actions">
+              <div className="gestion-modal-actions">
                 <button
                   type="button"
-                  className="baja-modal-btn-cancel"
+                  className="gestion-modal-btn-cancel"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={isSubmitting}
                 >
@@ -1165,7 +1165,7 @@ export default function BajaCargo({
                 </button>
                 <button
                   type="button"
-                  className="baja-modal-btn-confirm"
+                  className="gestion-modal-btn-confirm"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

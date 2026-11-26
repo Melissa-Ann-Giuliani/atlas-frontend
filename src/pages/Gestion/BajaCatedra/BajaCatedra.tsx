@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './BajaCatedra.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
@@ -968,46 +968,46 @@ export default function BajaCatedra({
   const hasLoadedCatedra = Boolean(formData.catedraId);
 
   return (
-    <div className="baja-catedra-page">
+    <div className="gestion-page gestion-page--baja">
       <Topbar onLogout={onLogout} />
 
-      <div className="baja-catedra-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="baja-catedra-main">
-          <div className="baja-catedra-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="baja-catedra-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="baja-catedra-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="baja-catedra-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="baja-catedra-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="baja-catedra-header-row">
-                <div className="baja-catedra-header-left">
-                  <h1 className="baja-catedra-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar matching Modificar Cátedra */}
-                <div className="baja-catedra-search-card">
-                  <label htmlFor="searchCatedraInput" className="baja-catedra-search-label">
+                <div className="gestion-search-card">
+                  <label htmlFor="searchCatedraInput" className="gestion-search-label">
                     Buscar Cátedra
                   </label>
-                  <div className="baja-catedra-search-row">
-                    <div className="baja-catedra-search-input-wrap" ref={searchWrapperRef}>
+                  <div className="gestion-search-row">
+                    <div className="gestion-search-input-wrap" ref={searchWrapperRef}>
                       <input
                         id="searchCatedraInput"
                         ref={searchInputRef}
                         type="search"
-                        className="baja-catedra-search-input"
+                        className="gestion-search-input"
                         placeholder="Nombre de cátedra o materia..."
                         value={searchQuery}
                         onChange={(e) => {
@@ -1027,15 +1027,15 @@ export default function BajaCatedra({
                         data-lpignore="true"
                         data-form-type="other"
                       />
-                      <FiSearch className="baja-catedra-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="baja-catedra-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-catedra-suggestion-item ${
+                              className={`gestion-suggestion-item ${
                                 idx === activeSuggestionIndex ? 'active' : ''
                               }`}
                               onMouseDown={(e) => {
@@ -1046,12 +1046,12 @@ export default function BajaCatedra({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="baja-catedra-suggestion-header">
-                                <span className="baja-catedra-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombre}
                                 </span>
                                 {item.tipologia ? (
-                                  <span className="baja-catedra-suggestion-tipologia-badge">
+                                  <span className="gestion-suggestion-badge">
                                     Tipología{' '}
                                     {TIPOLOGIA_OPTIONS.find((t) => t.id === item.tipologia)?.roman ||
                                       item.tipologia}
@@ -1059,7 +1059,7 @@ export default function BajaCatedra({
                                 ) : null}
                               </div>
                               {(item.materiaNombre || item.directorNombre) && (
-                                <span className="baja-catedra-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[
                                     item.materiaNombre ? `Materia: ${item.materiaNombre}` : null,
                                     item.directorNombre ? `Director: ${item.directorNombre}` : null,
@@ -1076,7 +1076,7 @@ export default function BajaCatedra({
 
                     <button
                       type="button"
-                      className="baja-catedra-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1087,15 +1087,15 @@ export default function BajaCatedra({
                 </div>
               </div>
 
-              {/* Form Card styled with Red Border & Dark Red Header matching Baja de Materia / Cargo */}
-              <div className="baja-catedra-form-card">
-                <div className="baja-catedra-card-header">
+              {/* Form Card styled with Red Border & Dark Red Header matching Baja de Cargo */}
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Baja de Cátedra</h2>
                 </div>
 
-                <div className="baja-catedra-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`baja-catedra-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
@@ -1103,8 +1103,8 @@ export default function BajaCatedra({
                   {hasLoadedCatedra &&
                     isCatedraDadaDeBaja(formData.estado) &&
                     feedback?.type !== 'success' && (
-                      <div className="baja-catedra-warning-box">
-                        <FiAlertTriangle className="baja-catedra-warning-icon" />
+                      <div className="gestion-warning-box">
+                        <FiAlertTriangle className="gestion-warning-icon" />
                         <span>
                           Esta cátedra ya ha sido dada de baja. Su estado actual es{' '}
                           <strong>{formData.estado || 'De baja'}</strong>.
@@ -1112,14 +1112,14 @@ export default function BajaCatedra({
                       </div>
                     )}
 
-                  <div className="baja-catedra-form">
+                  <div className="gestion-form">
                     {/* SECTION: DATOS DE CÁTEDRA */}
-                    <h3 className="baja-catedra-section-title">Datos de Cátedra</h3>
+                    <h3 className="gestion-section-title">Datos de Cátedra</h3>
 
                     {/* Row 1: Nombre de Cátedra, Tipología, Dependencia */}
-                    <div className="baja-catedra-grid-row-1">
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_nombreCatedra" className="baja-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_nombreCatedra" className="gestion-label">
                           Nombre de Cátedra *
                         </label>
                         <input
@@ -1127,7 +1127,7 @@ export default function BajaCatedra({
                           name="nombreCatedra"
                           type="text"
                           maxLength={50}
-                          className="baja-catedra-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de cátedra"
                           value={formData.nombreCatedra}
                           readOnly
@@ -1135,15 +1135,15 @@ export default function BajaCatedra({
                         />
                       </div>
 
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_tipologia" className="baja-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_tipologia" className="gestion-label">
                           Tipología *
                         </label>
-                        <div className="baja-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_tipologia"
                             name="tipologia"
-                            className="baja-catedra-select"
+                            className="gestion-select"
                             value={formData.tipologia}
                             disabled
                           >
@@ -1154,18 +1154,18 @@ export default function BajaCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="baja-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_dependencia" className="baja-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_dependencia" className="gestion-label">
                           Dependencia
                         </label>
-                        <div className="baja-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_dependencia"
-                            className="baja-catedra-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             disabled
                           >
@@ -1180,21 +1180,21 @@ export default function BajaCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="baja-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 2: Unidad Académica, Materia, Director de Cátedra */}
-                    <div className="baja-catedra-grid-row-1">
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_unidad" className="baja-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_unidad" className="gestion-label">
                           Unidad Académica
                         </label>
-                        <div className="baja-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_unidad"
-                            className="baja-catedra-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             disabled
                           >
@@ -1211,18 +1211,18 @@ export default function BajaCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="baja-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_materia" className="baja-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_materia" className="gestion-label">
                           Materia
                         </label>
-                        <div className="baja-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_materia"
-                            className="baja-catedra-select"
+                            className="gestion-select"
                             value={formData.materiaId}
                             disabled
                           >
@@ -1241,19 +1241,19 @@ export default function BajaCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="baja-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-catedra-field">
-                        <label htmlFor="baja_directorCatedra" className="baja-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_directorCatedra" className="gestion-label">
                           Director de Cátedra *
                         </label>
                         <input
                           id="baja_directorCatedra"
                           name="directorCatedra"
                           type="text"
-                          className="baja-catedra-input"
+                          className="gestion-input"
                           placeholder={
                             !formData.catedraId
                               ? 'Primero busque una cátedra'
@@ -1271,10 +1271,10 @@ export default function BajaCatedra({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="baja-catedra-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-baja-catedra btn-baja-catedra-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting || (!formData.catedraId && !searchQuery)}
               >
@@ -1284,7 +1284,7 @@ export default function BajaCatedra({
 
               <button
                 type="button"
-                className="btn-baja-catedra btn-baja-catedra-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleOpenConfirmModal}
                 disabled={
                   isSubmitting ||
@@ -1309,30 +1309,30 @@ export default function BajaCatedra({
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div
-          className="baja-modal-overlay"
+          className="gestion-modal-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="baja-catedra-modal-title"
         >
-          <div className="baja-modal">
-            <div className="baja-modal-header">
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+          <div className="gestion-modal">
+            <div className="gestion-modal-header">
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
               <h2 id="baja-catedra-modal-title">Confirmar Baja de Cátedra</h2>
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
             </div>
-            <div className="baja-modal-content">
+            <div className="gestion-modal-content">
               <p>
                 ¿Está seguro de que desea dar de baja la cátedra{' '}
                 <strong>"{formData.nombreCatedra}"</strong>?
               </p>
-              <p className="baja-modal-subtext">
+              <p className="gestion-modal-subtext">
                 Esta acción dará de baja la cátedra en el sistema y cambiará su estado a{' '}
                 <strong>De baja</strong>.
               </p>
-              <div className="baja-modal-actions">
+              <div className="gestion-modal-actions">
                 <button
                   type="button"
-                  className="baja-modal-btn-cancel"
+                  className="gestion-modal-btn-cancel"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={isSubmitting}
                 >
@@ -1340,7 +1340,7 @@ export default function BajaCatedra({
                 </button>
                 <button
                   type="button"
-                  className="baja-modal-btn-confirm"
+                  className="gestion-modal-btn-confirm"
                   onClick={handleSubmitBaja}
                   disabled={isSubmitting}
                 >

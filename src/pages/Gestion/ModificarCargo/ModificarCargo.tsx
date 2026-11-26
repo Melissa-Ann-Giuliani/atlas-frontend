@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
+import '../GestionForm.css';
 import './ModificarCargo.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
@@ -989,46 +990,46 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
   const hasLoadedCargo = formData.cargoId !== null;
 
   return (
-    <div className="modificar-cargo-page">
+    <div className="gestion-page gestion-page--modificar">
       <Topbar onLogout={onLogout} />
 
-      <div className="modificar-cargo-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="modificar-cargo-main">
-          <div className="modificar-cargo-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="modificar-cargo-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="modificar-cargo-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="modificar-cargo-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="modificar-cargo-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="modificar-cargo-header-row">
-                <div className="modificar-cargo-header-left">
-                  <h1 className="modificar-cargo-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar matching FilterBar style */}
-                <div className="modificar-cargo-search-card">
-                  <label htmlFor="searchCargoInput" className="modificar-cargo-search-label">
+                <div className="gestion-search-card">
+                  <label htmlFor="searchCargoInput" className="gestion-search-label">
                     Buscar Cargo a Modificar por Número
                   </label>
-                  <div className="modificar-cargo-search-row">
-                    <div className="modificar-cargo-search-input-wrap" ref={searchContainerRef}>
+                  <div className="gestion-search-row">
+                    <div className="gestion-search-input-wrap" ref={searchContainerRef}>
                       <input
                         id="searchCargoInput"
                         name="busqueda_cargo_query"
                         type="search"
-                        className="modificar-cargo-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese valor"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -1044,15 +1045,15 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                         data-form-type="other"
                         data-1p-ignore="true"
                       />
-                      <FiSearch className="modificar-cargo-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="modificar-cargo-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-cargo-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
                               onMouseDown={(e) => {
                                 // Prevent input blur before click registers
                                 e.preventDefault();
@@ -1062,11 +1063,11 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <span className="modificar-cargo-suggestion-number">
+                              <span className="gestion-suggestion-title">
                                 Cargo N° {item.numero}
                               </span>
                               {(item.categoria || item.unidad) && (
-                                <span className="modificar-cargo-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[item.categoria, item.unidad].filter(Boolean).join(' • ')}
                                 </span>
                               )}
@@ -1077,7 +1078,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                     </div>
                     <button
                       type="button"
-                      className="modificar-cargo-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1089,32 +1090,32 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
               </div>
 
               {/* Form Card */}
-              <div className="modificar-cargo-form-card">
-                <div className="modificar-cargo-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Modificación de Cargo</h2>
                 </div>
 
-                <div className="modificar-cargo-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`modificar-cargo-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  <div className="modificar-cargo-form">
+                  <div className="gestion-form">
                     {/* SECTION 1: DATOS DE CARGOS */}
-                    <h3 className="modificar-cargo-section-title">Datos de Cargos</h3>
+                    <h3 className="gestion-section-title">Datos de Cargos</h3>
 
                     {/* Row 1: N° de Cargo, Fecha de Creación, Estado */}
-                    <div className="modificar-cargo-grid-3">
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_numeroCargo" className="modificar-cargo-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_numeroCargo" className="gestion-label">
                           N° de Cargo
                         </label>
                         <input
                           id="mod_numeroCargo"
                           type="text"
-                          className="modificar-cargo-input"
+                          className="gestion-input"
                           placeholder="Número del cargo"
                           value={formData.numeroCargo}
                           readOnly
@@ -1122,11 +1123,11 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                         />
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_fechaCreacion" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_fechaCreacion" className="gestion-label">
                           Fecha de Creación
                         </label>
-                        <div className="modificar-cargo-datepicker-container">
+                        <div className="gestion-datepicker-container">
                           <DatePicker
                             id="mod_fechaCreacion"
                             selected={parseIsoToDate(formData.fechaCreacion)}
@@ -1134,25 +1135,25 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                             dateFormat="dd/MM/yyyy"
                             placeholderText="DD/MM/AAAA"
                             locale="es"
-                            className="modificar-cargo-input modificar-cargo-datepicker-input"
+                            className="gestion-input gestion-datepicker-input"
                             autoComplete="off"
                             showYearDropdown
                             showMonthDropdown
                             dropdownMode="select"
                             disabled={!hasLoadedCargo}
                           />
-                          <FiCalendar className="modificar-cargo-datepicker-icon" />
+                          <FiCalendar className="gestion-datepicker-icon" />
                         </div>
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_estado" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_estado" className="gestion-label">
                           Estado
                         </label>
                         <input
                           id="mod_estado"
                           type="text"
-                          className="modificar-cargo-input"
+                          className="gestion-input"
                           value={formData.estado}
                           readOnly
                           disabled
@@ -1161,29 +1162,29 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                     </div>
 
                     {/* Row 2: Dependencia, Departamento (Protected Invariants) */}
-                    <div className="modificar-cargo-grid-2">
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_dependencia" className="modificar-cargo-label">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_dependencia" className="gestion-label">
                           Dependencia
                         </label>
                         <input
                           id="mod_dependencia"
                           type="text"
-                          className="modificar-cargo-input"
+                          className="gestion-input"
                           value={formData.dependencia}
                           readOnly
                           disabled
                         />
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_departamento" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_departamento" className="gestion-label">
                           Departamento
                         </label>
                         <input
                           id="mod_departamento"
                           type="text"
-                          className="modificar-cargo-input"
+                          className="gestion-input"
                           value={formData.departamento}
                           readOnly
                           disabled
@@ -1191,21 +1192,21 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                       </div>
                     </div>
 
-                    <hr className="modificar-cargo-divider" />
+                    <hr className="gestion-divider" />
 
                     {/* SECTION 2: CLASIFICACIÓN (Editable) */}
-                    <h3 className="modificar-cargo-section-title">Clasificación</h3>
+                    <h3 className="gestion-section-title">Clasificación</h3>
 
                     {/* Row 1: Origen, Carácter, Categoría */}
-                    <div className="modificar-cargo-grid-3">
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_origen" className="modificar-cargo-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_origen" className="gestion-label">
                           Origen
                         </label>
-                        <div className="modificar-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="mod_origen"
-                            className="modificar-cargo-select"
+                            className="gestion-select"
                             value={formData.origen}
                             onChange={(e) => handleChange('origen', e.target.value)}
                             disabled={!hasLoadedCargo || isLoadingCatalogs}
@@ -1217,18 +1218,18 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_caracter" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_caracter" className="gestion-label">
                           Carácter
                         </label>
-                        <div className="modificar-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="mod_caracter"
-                            className="modificar-cargo-select"
+                            className="gestion-select"
                             value={formData.caracter}
                             onChange={(e) => handleChange('caracter', e.target.value)}
                             disabled={!hasLoadedCargo || (isLoadingCatalogs && caracteres.length === 0)}
@@ -1242,18 +1243,18 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_categoria" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_categoria" className="gestion-label">
                           Categoría
                         </label>
-                        <div className="modificar-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="mod_categoria"
-                            className="modificar-cargo-select"
+                            className="gestion-select"
                             value={formData.categoria}
                             onChange={(e) => handleChange('categoria', e.target.value)}
                             disabled={!hasLoadedCargo || (isLoadingCatalogs && categorias.length === 0)}
@@ -1267,21 +1268,21 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 2: Dedicación, Cant. de Horas */}
-                    <div className="modificar-cargo-grid-2">
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_dedicacion" className="modificar-cargo-label">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_dedicacion" className="gestion-label">
                           Dedicación
                         </label>
-                        <div className="modificar-cargo-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="mod_dedicacion"
-                            className="modificar-cargo-select"
+                            className="gestion-select"
                             value={formData.dedicacion}
                             onChange={(e) => handleChange('dedicacion', e.target.value)}
                             disabled={!hasLoadedCargo || (isLoadingCatalogs && dedicaciones.length === 0)}
@@ -1295,19 +1296,19 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-cargo-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-cargo-field">
-                        <label htmlFor="mod_cantHoras" className="modificar-cargo-label">
+                      <div className="gestion-field">
+                        <label htmlFor="mod_cantHoras" className="gestion-label">
                           Cant. de Horas
                         </label>
                         <input
                           id="mod_cantHoras"
                           type="number"
                           min="0"
-                          className="modificar-cargo-input"
+                          className="gestion-input"
                           placeholder="Horas asignadas"
                           value={formData.cantHoras}
                           onChange={(e) => handleChange('cantHoras', e.target.value)}
@@ -1316,7 +1317,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                       </div>
                     </div>
 
-                    <hr className="modificar-cargo-divider" />
+                    <hr className="gestion-divider" />
 
                     {/* SECTION 4: DIVISIÓN DE CARGO (RF19) */}
                     <div className="modificar-cargo-division-section">
@@ -1333,7 +1334,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                         }}
                       >
                         <div className="modificar-cargo-division-header-left">
-                          <h3 className="modificar-cargo-section-title">División de Cargo</h3>
+                          <h3 className="gestion-section-title">División de Cargo</h3>
                           {subcargos.length > 0 && (
                             <span className="modificar-cargo-division-badge">
                               {subcargos.length} subcargos generados
@@ -1358,8 +1359,8 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
                           {/* Control to generate subcargos */}
                           <div className="modificar-cargo-division-generator-bar">
-                            <div className="modificar-cargo-field division-field-inline">
-                              <label htmlFor="num_subcargos" className="modificar-cargo-label">
+                            <div className="gestion-field division-field-inline">
+                              <label htmlFor="num_subcargos" className="gestion-label">
                                 Cantidad de subcargos:
                               </label>
                               <input
@@ -1367,7 +1368,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                 type="number"
                                 min="2"
                                 max="4"
-                                className="modificar-cargo-input division-count-input"
+                                className="gestion-input division-count-input"
                                 value={numSubcargosInput}
                                 onChange={(e) => setNumSubcargosInput(e.target.value)}
                                 disabled={!hasLoadedCargo}
@@ -1437,14 +1438,14 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
                                   <div className="modificar-cargo-subcargo-grid">
                                     {/* Subcargo N° de Cargo */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         N° de Cargo *
                                       </label>
                                       <input
                                         type="number"
                                         min="1"
-                                        className="modificar-cargo-input"
+                                        className="gestion-input"
                                         placeholder="Ej: 8002"
                                         value={sc.numeroCargo}
                                         onChange={(e) => handleSubcargoChange(index, 'numeroCargo', e.target.value)}
@@ -1452,11 +1453,11 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                     </div>
 
                                     {/* Subcargo Fecha de Creación */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Fecha de Creación *
                                       </label>
-                                      <div className="modificar-cargo-datepicker-container">
+                                      <div className="gestion-datepicker-container">
                                         <DatePicker
                                           selected={parseIsoToDate(sc.fechaCreacion)}
                                           onChange={(date: Date | null) =>
@@ -1465,24 +1466,24 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                           dateFormat="dd/MM/yyyy"
                                           placeholderText="DD/MM/AAAA"
                                           locale="es"
-                                          className="modificar-cargo-input modificar-cargo-datepicker-input"
+                                          className="gestion-input gestion-datepicker-input"
                                           autoComplete="off"
                                           showYearDropdown
                                           showMonthDropdown
                                           dropdownMode="select"
                                         />
-                                        <FiCalendar className="modificar-cargo-datepicker-icon" />
+                                        <FiCalendar className="gestion-datepicker-icon" />
                                       </div>
                                     </div>
 
                                     {/* Subcargo Origen */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Origen *
                                       </label>
-                                      <div className="modificar-cargo-select-wrapper">
+                                      <div className="gestion-select-wrapper">
                                         <select
-                                          className="modificar-cargo-select"
+                                          className="gestion-select"
                                           value={sc.origen}
                                           onChange={(e) => handleSubcargoChange(index, 'origen', e.target.value)}
                                         >
@@ -1493,18 +1494,18 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                             </option>
                                           ))}
                                         </select>
-                                        <FiChevronDown className="modificar-cargo-select-caret" />
+                                        <FiChevronDown className="gestion-select-caret" />
                                       </div>
                                     </div>
 
                                     {/* Subcargo Carácter */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Carácter *
                                       </label>
-                                      <div className="modificar-cargo-select-wrapper">
+                                      <div className="gestion-select-wrapper">
                                         <select
-                                          className="modificar-cargo-select"
+                                          className="gestion-select"
                                           value={sc.caracter}
                                           onChange={(e) => handleSubcargoChange(index, 'caracter', e.target.value)}
                                         >
@@ -1515,18 +1516,18 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                             </option>
                                           ))}
                                         </select>
-                                        <FiChevronDown className="modificar-cargo-select-caret" />
+                                        <FiChevronDown className="gestion-select-caret" />
                                       </div>
                                     </div>
 
                                     {/* Subcargo Categoría */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Categoría *
                                       </label>
-                                      <div className="modificar-cargo-select-wrapper">
+                                      <div className="gestion-select-wrapper">
                                         <select
-                                          className="modificar-cargo-select"
+                                          className="gestion-select"
                                           value={sc.categoria}
                                           onChange={(e) => handleSubcargoChange(index, 'categoria', e.target.value)}
                                         >
@@ -1537,18 +1538,18 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                             </option>
                                           ))}
                                         </select>
-                                        <FiChevronDown className="modificar-cargo-select-caret" />
+                                        <FiChevronDown className="gestion-select-caret" />
                                       </div>
                                     </div>
 
                                     {/* Subcargo Dedicación */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Dedicación *
                                       </label>
-                                      <div className="modificar-cargo-select-wrapper">
+                                      <div className="gestion-select-wrapper">
                                         <select
-                                          className="modificar-cargo-select"
+                                          className="gestion-select"
                                           value={sc.dedicacion}
                                           onChange={(e) => handleSubcargoChange(index, 'dedicacion', e.target.value)}
                                         >
@@ -1559,19 +1560,19 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                             </option>
                                           ))}
                                         </select>
-                                        <FiChevronDown className="modificar-cargo-select-caret" />
+                                        <FiChevronDown className="gestion-select-caret" />
                                       </div>
                                     </div>
 
                                     {/* Subcargo Horas */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Cant. de Horas
                                       </label>
                                       <input
                                         type="number"
                                         min="0"
-                                        className="modificar-cargo-input"
+                                        className="gestion-input"
                                         placeholder="Horas asignadas"
                                         value={sc.cantHoras}
                                         onChange={(e) => handleSubcargoChange(index, 'cantHoras', e.target.value)}
@@ -1579,13 +1580,13 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                     </div>
 
                                     {/* Subcargo Dependencia / Unidad */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         Dependencia / Unidad
                                       </label>
                                       <input
                                         type="text"
-                                        className="modificar-cargo-input"
+                                        className="gestion-input"
                                         value={sc.dependencia || formData.dependencia}
                                         onChange={(e) => handleSubcargoChange(index, 'dependencia', e.target.value)}
                                         placeholder="Unidad académica"
@@ -1593,13 +1594,13 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                     </div>
 
                                     {/* Subcargo N° Predecesor Posible */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         N° Predecesor Posible (Opcional)
                                       </label>
                                       <input
                                         type="text"
-                                        className="modificar-cargo-input"
+                                        className="gestion-input"
                                         placeholder="N° cargo predecesor"
                                         value={sc.nroCargoPredecesor}
                                         onChange={(e) => handleSubcargoChange(index, 'nroCargoPredecesor', e.target.value)}
@@ -1607,13 +1608,13 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
                                     </div>
 
                                     {/* Subcargo N° Origen de División (Bloqueado al padre) */}
-                                    <div className="modificar-cargo-field">
-                                      <label className="modificar-cargo-label">
+                                    <div className="gestion-field">
+                                      <label className="gestion-label">
                                         N° Origen de División
                                       </label>
                                       <input
                                         type="text"
-                                        className="modificar-cargo-input input-locked-origin"
+                                        className="gestion-input input-locked-origin"
                                         value={formData.numeroCargo ? `Cargo N° ${formData.numeroCargo}` : ''}
                                         readOnly
                                         disabled
@@ -1635,7 +1636,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
                                 <button
                                   type="button"
-                                  className="btn-modificar-cargo btn-modificar-cargo-dividir"
+                                  className="gestion-btn btn-modificar-cargo-dividir"
                                   onClick={handleSubmitDivision}
                                   disabled={isSubmittingDivision || horasExcedidas || !hasLoadedCargo || subcargos.length < 2}
                                 >
@@ -1654,10 +1655,10 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
             </div>
 
             {/* Bottom Actions Toolbar: Limpiar & Confirmar */}
-            <div className="modificar-cargo-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-modificar-cargo btn-modificar-cargo-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
               >
                 <FiTrash2 className="btn-icon" />
@@ -1666,7 +1667,7 @@ export default function ModificarCargo({ initialCargo, onLogout, onNavigate, onB
 
               <button
                 type="button"
-                className="btn-modificar-cargo btn-modificar-cargo-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting || !hasLoadedCargo}
               >
