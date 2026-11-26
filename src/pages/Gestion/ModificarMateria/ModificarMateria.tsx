@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './ModificarMateria.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiSearch } from 'react-icons/fi';
@@ -895,46 +895,46 @@ export default function ModificarMateria({
   };
 
   return (
-    <div className="modificar-materia-page">
+    <div className="gestion-page gestion-page--modificar">
       <Topbar onLogout={onLogout} />
 
-      <div className="modificar-materia-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="modificar-materia-main">
-          <div className="modificar-materia-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Navigation: Retroceder */}
-            <div className="modificar-materia-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="modificar-materia-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="modificar-materia-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="modificar-materia-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="modificar-materia-header-row">
-                <div className="modificar-materia-header-left">
-                  <h1 className="modificar-materia-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar matching ModificarCargo style */}
-                <div className="modificar-materia-search-card">
-                  <label htmlFor="searchMateriaInput" className="modificar-materia-search-label">
+                <div className="gestion-search-card">
+                  <label htmlFor="searchMateriaInput" className="gestion-search-label">
                     Buscar Materia a Modificar por Nombre
                   </label>
-                  <div className="modificar-materia-search-row">
-                    <div className="modificar-materia-search-input-wrap" ref={searchContainerRef}>
+                  <div className="gestion-search-row">
+                    <div className="gestion-search-input-wrap" ref={searchContainerRef}>
                       <input
                         id="searchMateriaInput"
                         name="busqueda_materia_query"
                         type="search"
-                        className="modificar-materia-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese valor"
                         value={searchQuery}
                         onChange={(e) => {
@@ -956,15 +956,15 @@ export default function ModificarMateria({
                         data-form-type="other"
                         data-1p-ignore="true"
                       />
-                      <FiSearch className="modificar-materia-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="modificar-materia-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-materia-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -973,18 +973,18 @@ export default function ModificarMateria({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="modificar-materia-suggestion-header">
-                                <span className="modificar-materia-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombre}
                                 </span>
                                 {item.planEstudio ? (
-                                  <span className="modificar-materia-suggestion-plan-badge">
+                                  <span className="gestion-suggestion-badge">
                                     Plan {item.planEstudio}
                                   </span>
                                 ) : null}
                               </div>
                               {(item.unidad || item.anio) && (
-                                <span className="modificar-materia-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[
                                     item.unidad,
                                     item.anio ? `Año: ${item.anio}` : null,
@@ -1000,7 +1000,7 @@ export default function ModificarMateria({
                     </div>
                     <button
                       type="button"
-                      className="modificar-materia-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1012,32 +1012,32 @@ export default function ModificarMateria({
               </div>
 
               {/* Form Card */}
-              <div className="modificar-materia-form-card">
-                <div className="modificar-materia-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Modificar Materia</h2>
                 </div>
 
-                <div className="modificar-materia-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`modificar-materia-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
                   <form
-                    className="modificar-materia-form"
+                    className="gestion-form"
                     onSubmit={handleSubmit}
                     onFocusCapture={() => {
                       if (feedback && feedback.type !== 'info') setFeedback(null);
                     }}
                   >
                     {/* SECTION: DATOS DE MATERIA */}
-                    <h3 className="modificar-materia-section-title">Datos de Materia</h3>
+                    <h3 className="gestion-section-title">Datos de Materia</h3>
 
                     {/* Row 1: Nombre, Cantidad de Horas */}
-                    <div className="modificar-materia-grid-top">
-                      <div className="modificar-materia-field">
-                        <label htmlFor="nombre" className="modificar-materia-label">
+                    <div className="gestion-grid-asymmetric">
+                      <div className="gestion-field">
+                        <label htmlFor="nombre" className="gestion-label">
                           Nombre *
                         </label>
                         <input
@@ -1045,7 +1045,7 @@ export default function ModificarMateria({
                           name="nombre"
                           type="text"
                           maxLength={50}
-                          className="modificar-materia-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de la materia (máx. 50 caracteres)"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
@@ -1053,8 +1053,8 @@ export default function ModificarMateria({
                         />
                       </div>
 
-                      <div className="modificar-materia-field">
-                        <label htmlFor="cantHoras" className="modificar-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="cantHoras" className="gestion-label">
                           Cantidad de Horas *
                         </label>
                         <input
@@ -1063,7 +1063,7 @@ export default function ModificarMateria({
                           type="number"
                           min="1"
                           max="40"
-                          className="modificar-materia-input"
+                          className="gestion-input"
                           placeholder="Horas semanales (1 a 40)"
                           value={formData.cantHoras}
                           onChange={(e) => handleChange('cantHoras', e.target.value)}
@@ -1072,16 +1072,16 @@ export default function ModificarMateria({
                       </div>
                     </div>
 
-                    {/* Row 2: Dependencia y Unidad Académica (Exact same inputs and selectors as Alta de Materia) */}
-                    <div className="modificar-materia-grid-2">
-                      <div className="modificar-materia-field">
-                        <label htmlFor="dependencia" className="modificar-materia-label">
+                    {/* Row 2: Dependencia y Unidad Académica */}
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="dependencia" className="gestion-label">
                           Dependencia
                         </label>
-                        <div className="modificar-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="dependencia"
-                            className="modificar-materia-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             onChange={(e) => handleChange('dependencia', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || (isLoadingCatalogs && dependencias.length === 0)}
@@ -1095,18 +1095,18 @@ export default function ModificarMateria({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-materia-field">
-                        <label htmlFor="unidad" className="modificar-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="unidad" className="gestion-label">
                           Unidad Académica *
                         </label>
-                        <div className="modificar-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="unidad"
-                            className="modificar-materia-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             onChange={(e) => handleChange('unidad', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || isLoadingUnidades || (!formData.dependencia && unidades.length === 0)}
@@ -1124,21 +1124,21 @@ export default function ModificarMateria({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Row 3: Año Educativo, Despliegue, N° de Plan (Exact same inputs and selectors as Alta de Materia) */}
-                    <div className={formData.despliegueTipo === 'Semestral' ? 'modificar-materia-grid-bottom' : 'modificar-materia-grid-3'}>
-                      <div className="modificar-materia-field">
-                        <label htmlFor="anoEducativo" className="modificar-materia-label">
+                    {/* Row 3: Año Educativo, Despliegue, N° de Plan */}
+                    <div className={formData.despliegueTipo === 'Semestral' ? 'gestion-grid-4' : 'gestion-grid-3'}>
+                      <div className="gestion-field">
+                        <label htmlFor="anoEducativo" className="gestion-label">
                           Año Educativo *
                         </label>
-                        <div className="modificar-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="anoEducativo"
-                            className="modificar-materia-select"
+                            className="gestion-select"
                             value={formData.anoEducativo}
                             onChange={(e) => handleChange('anoEducativo', e.target.value)}
                           >
@@ -1151,18 +1151,18 @@ export default function ModificarMateria({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-materia-field">
-                        <label htmlFor="despliegueTipo" className="modificar-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="despliegueTipo" className="gestion-label">
                           Despliegue *
                         </label>
-                        <div className="modificar-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="despliegueTipo"
-                            className="modificar-materia-select"
+                            className="gestion-select"
                             value={formData.despliegueTipo}
                             onChange={(e) => handleChange('despliegueTipo', e.target.value)}
                           >
@@ -1172,19 +1172,19 @@ export default function ModificarMateria({
                             <option value="Anual">Anual</option>
                             <option value="Semestral">Semestral</option>
                           </select>
-                          <FiChevronDown className="modificar-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
                       {formData.despliegueTipo === 'Semestral' && (
-                        <div className="modificar-materia-field">
-                          <label htmlFor="despliegueSemestre" className="modificar-materia-label">
+                        <div className="gestion-field">
+                          <label htmlFor="despliegueSemestre" className="gestion-label">
                             Semestre *
                           </label>
-                          <div className="modificar-materia-select-wrapper">
+                          <div className="gestion-select-wrapper">
                             <select
                               id="despliegueSemestre"
-                              className="modificar-materia-select"
+                              className="gestion-select"
                               value={formData.despliegueSemestre}
                               onChange={(e) => handleChange('despliegueSemestre', e.target.value)}
                             >
@@ -1194,13 +1194,13 @@ export default function ModificarMateria({
                               <option value="Primer Semestre">Primer Semestre</option>
                               <option value="Segundo Semestre">Segundo Semestre</option>
                             </select>
-                            <FiChevronDown className="modificar-materia-select-caret" />
+                            <FiChevronDown className="gestion-select-caret" />
                           </div>
                         </div>
                       )}
 
-                      <div className="modificar-materia-field">
-                        <label htmlFor="nroPlan" className="modificar-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="nroPlan" className="gestion-label">
                           N° de Plan de Estudio *
                         </label>
                         <input
@@ -1209,7 +1209,7 @@ export default function ModificarMateria({
                           type="number"
                           min="1900"
                           max="2100"
-                          className="modificar-materia-input"
+                          className="gestion-input"
                           placeholder="Ej: 2023"
                           value={formData.nroPlan}
                           onChange={(e) => handleChange('nroPlan', e.target.value)}
@@ -1223,10 +1223,10 @@ export default function ModificarMateria({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="modificar-materia-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-modificar-materia btn-modificar-materia-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting}
               >
@@ -1236,7 +1236,7 @@ export default function ModificarMateria({
 
               <button
                 type="button"
-                className="btn-modificar-materia btn-modificar-materia-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
               >

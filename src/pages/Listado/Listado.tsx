@@ -3,7 +3,43 @@ import './Listado.css';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import FilterBar, { type FilterCategory, type FilterOption } from '../../components/FilterBar';
-import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+import ExportButton from '../../components/ExportButton';
+import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown } from 'react-icons/fi';
+
+type SortDirection = 'asc' | 'desc';
+
+type DocenteSortColumn =
+  | 'legajo'
+  | 'nombre'
+  | 'origen'
+  | 'unidad'
+  | 'categoria'
+  | 'dedicacion'
+  | 'caracter'
+  | 'estado';
+
+type CargoSortColumn =
+  | 'numero'
+  | 'fechaCreacion'
+  | 'estado'
+  | 'docente'
+  | 'categoria'
+  | 'dedicacion'
+  | 'caracter';
+
+type LicenciaSortColumn =
+  | 'nroResolucion'
+  | 'motivoNombre'
+  | 'docenteNombreCompleto'
+  | 'fechaInicio'
+  | 'fechaFin'
+  | 'diasUsados'
+  | 'estado';
+
+interface SortConfig<T extends string> {
+  column: T;
+  direction: SortDirection;
+}
 
 interface Licencia {
   id: number;
@@ -92,6 +128,7 @@ export default function Listado({
   const handleTabChange = (tab: 'docentes' | 'cargos' | 'licencias') => {
     setActiveTab(tab);
     setCurrentPage(1);
+    setExportError(null);
     if (onTabChange) {
       onTabChange(tab);
     }
@@ -137,9 +174,13 @@ export default function Listado({
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [docentesData, setDocentesData] = useState<Docente[]>([]);
   const [cargosData, setCargosData] = useState<Cargo[]>([]);
   const [licenciasData, setLicenciasData] = useState<Licencia[]>([]);
+  const [docentesSort, setDocentesSort] = useState<SortConfig<DocenteSortColumn> | null>(null);
+  const [cargosSort, setCargosSort] = useState<SortConfig<CargoSortColumn> | null>(null);
+  const [licenciasSort, setLicenciasSort] = useState<SortConfig<LicenciaSortColumn> | null>(null);
 
   // Rows per page based on screen height
   const [rowsPerPage, setRowsPerPage] = useState<number>(() => {
@@ -277,43 +318,55 @@ export default function Listado({
     setCurrentPage(1);
   };
 
+  const activeSort = activeTab === 'docentes' ? docentesSort : activeTab === 'cargos' ? cargosSort : licenciasSort;
+  const isSorting = activeSort !== null;
+  const fetchPage = isSorting ? 0 : currentPage - 1;
+  const fetchSize = isSorting ? 1000 : rowsPerPage;
+
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams({
-          page: (currentPage - 1).toString(),
-          size: rowsPerPage.toString()
-        });
+        const buildParams = (pageNum: number, sizeNum: number) => {
+          const params = new URLSearchParams({
+            page: pageNum.toString(),
+            size: sizeNum.toString()
+          });
 
-        if (searchTerm) {
-          params.append('search', searchTerm);
-        }
+          if (searchTerm) {
+            params.append('search', searchTerm);
+          }
 
-        appliedFilters.forEach(filter => {
-          const [categoryName, optionLabel] = filter.split(': ');
-          if (categoryName && optionLabel) {
-            const category = dynamicAvailableFilters.find(c => c.name === categoryName);
-            if (category) {
-              const option = category.options.find(o => o.label === optionLabel);
-              if (option) {
-                if (activeTab === 'licencias') {
-                  if (category.id === 'motivo') {
-                    params.append('motivoId', option.id);
+          appliedFilters.forEach(filter => {
+            const [categoryName, optionLabel] = filter.split(': ');
+            if (categoryName && optionLabel) {
+              const category = dynamicAvailableFilters.find(c => c.name === categoryName);
+              if (category) {
+                const option = category.options.find(o => o.label === optionLabel);
+                if (option) {
+                  if (activeTab === 'licencias') {
+                    if (category.id === 'motivo') {
+                      params.append('motivoId', option.id);
+                    }
+                  } else {
+                    // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
+                    // so the backend can use whichever it is actually looking for.
+                    params.append(`${category.id}Id`, option.id);
+                    params.append(category.id, option.label);
                   }
-                } else {
-                  // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
-                  // so the backend can use whichever it is actually looking for.
-                  params.append(`${category.id}Id`, option.id);
-                  params.append(category.id, option.label);
                 }
               }
             }
-          }
-        });
+          });
+
+          return params;
+        };
 
         const token = localStorage.getItem('token');
         const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
         const endpoint = activeTab === 'cargos'
           ? '/api/cargos'
@@ -321,41 +374,128 @@ export default function Listado({
           ? '/api/licencias'
           : '/api/docentes';
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}${endpoint}?${params.toString()}`, {
-          headers
+        const firstParams = buildParams(fetchPage, fetchSize);
+        const response = await fetch(`${apiUrl}${endpoint}?${firstParams.toString()}`, {
+          headers,
+          signal: controller.signal
         });
+
         if (response.ok) {
           const data = await response.json();
-          if (activeTab === 'cargos') {
-            setCargosData(data.content || []);
-          } else if (activeTab === 'licencias') {
-            setLicenciasData(data.content || []);
-          } else {
-            setDocentesData(data.content || []);
+          let items = data.content || [];
+
+          if (isSorting && (data.totalPages || 1) > 1) {
+            const remainingPages = Array.from({ length: data.totalPages - 1 }, (_, i) => i + 1);
+            const remainingResponses = await Promise.all(
+              remainingPages.map((p) =>
+                fetch(`${apiUrl}${endpoint}?${buildParams(p, fetchSize).toString()}`, {
+                  headers,
+                  signal: controller.signal
+                }).then((res) => (res.ok ? res.json() : { content: [] }))
+              )
+            );
+            for (const pageData of remainingResponses) {
+              if (Array.isArray(pageData.content)) {
+                items = items.concat(pageData.content);
+              }
+            }
           }
-          setTotalElements(data.totalElements || 0);
-          setTotalPages(data.totalPages || 1);
+
+          if (activeTab === 'cargos') {
+            setCargosData(items);
+          } else if (activeTab === 'licencias') {
+            setLicenciasData(items);
+          } else {
+            setDocentesData(items);
+          }
+          setTotalElements(isSorting ? items.length : (data.totalElements || 0));
+          setTotalPages(isSorting ? Math.max(1, Math.ceil(items.length / rowsPerPage)) : (data.totalPages || 1));
         } else {
           console.error(`Failed to fetch ${activeTab}, status:`, response.status);
           if (response.status === 401) {
             if (onLogout) onLogout();
           }
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return;
         console.error(`Error fetching ${activeTab}:`, error);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
-  }, [currentPage, rowsPerPage, searchTerm, appliedFilters, activeTab]);
+    return () => controller.abort();
+  }, [fetchPage, fetchSize, isSorting, searchTerm, appliedFilters, activeTab]);
 
+  const exportConfig = useMemo(() => {
+    const params = new URLSearchParams();
+    const trimmedSearch = searchTerm.trim();
+    if (trimmedSearch) {
+      params.append('search', trimmedSearch);
+      params.append('filtros', `Búsqueda: ${trimmedSearch}`);
+    }
+
+    appliedFilters.forEach((filter) => {
+      const separatorIdx = filter.indexOf(': ');
+      if (separatorIdx === -1) return;
+      const categoryName = filter.slice(0, separatorIdx);
+      const optionLabel = filter.slice(separatorIdx + 2);
+      const category = dynamicAvailableFilters.find((c) => c.name === categoryName);
+      if (!category) return;
+      const option = category.options.find((o) => o.label === optionLabel);
+      if (!option) return;
+
+      if (activeTab === 'docentes') {
+        if (['origen', 'dedicacion', 'categoria', 'caracter', 'tipoUnidad', 'estado'].includes(category.id)) {
+          params.append(category.id, option.label);
+          params.append('filtros', filter);
+        }
+      } else if (activeTab === 'cargos') {
+        if (category.id === 'estado') {
+          params.append('estado', option.label);
+          params.append('filtros', filter);
+        } else if (['categoria', 'dedicacion', 'caracter'].includes(category.id)) {
+          params.append(`${category.id}Id`, option.id);
+          params.append('filtros', filter);
+        }
+      } else if (activeTab === 'licencias') {
+        if (category.id === 'motivo') {
+          params.append('motivoId', option.id);
+          params.append('filtros', filter);
+        }
+      }
+    });
+
+    if (activeTab === 'cargos') {
+      return {
+        endpoint: '/api/cargos/exportar',
+        fallbackBaseName: 'listado_cargos',
+        params,
+      };
+    }
+    if (activeTab === 'licencias') {
+      return {
+        endpoint: '/api/licencias/exportar',
+        fallbackBaseName: 'listado_licencias',
+        params,
+      };
+    }
+    return {
+      endpoint: '/api/docentes/exportar',
+      fallbackBaseName: 'listado_docentes',
+      params,
+    };
+  }, [activeTab, searchTerm, appliedFilters, dynamicAvailableFilters]);
+
+  const effectiveTotalPages = isSorting ? Math.max(1, Math.ceil(totalElements / rowsPerPage)) : totalPages;
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1 && page <= effectiveTotalPages) {
       setCurrentPage(page);
     }
   };
@@ -364,7 +504,7 @@ export default function Listado({
     const buttons = [];
     const maxVisibleButtons = 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+    let endPage = Math.min(effectiveTotalPages, startPage + maxVisibleButtons - 1);
 
     if (endPage - startPage + 1 < maxVisibleButtons) {
       startPage = Math.max(1, endPage - maxVisibleButtons + 1);
@@ -394,6 +534,201 @@ export default function Listado({
     return new Date(dateStr).toLocaleDateString();
   };
 
+  const toggleSort = <T extends string>(
+    prev: SortConfig<T> | null,
+    column: T
+  ): SortConfig<T> | null => {
+    if (!prev || prev.column !== column) {
+      return { column, direction: 'asc' };
+    }
+    if (prev.direction === 'asc') {
+      return { column, direction: 'desc' };
+    }
+    return null;
+  };
+
+  const compareDates = (dateA: string | undefined, dateB: string | undefined, multiplier: number) => {
+    const timeA = dateA ? new Date(dateA).getTime() : NaN;
+    const timeB = dateB ? new Date(dateB).getTime() : NaN;
+    const validA = !Number.isNaN(timeA);
+    const validB = !Number.isNaN(timeB);
+    if (validA && validB) return (timeA - timeB) * multiplier;
+    if (validA) return -1 * multiplier;
+    if (validB) return 1 * multiplier;
+    return 0;
+  };
+
+  const compareNumbers = (numA: number | undefined | null, numB: number | undefined | null, multiplier: number) => {
+    const validA = typeof numA === 'number' && !Number.isNaN(numA);
+    const validB = typeof numB === 'number' && !Number.isNaN(numB);
+    if (validA && validB) return (numA - numB) * multiplier;
+    if (validA) return -1 * multiplier;
+    if (validB) return 1 * multiplier;
+    return 0;
+  };
+
+  const sortedDocentesData = useMemo(() => {
+    if (!docentesSort) return docentesData;
+    const { column, direction } = docentesSort;
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...docentesData].sort((a, b) => {
+      const getTextValue = (d: Docente): string => {
+        switch (column) {
+          case 'legajo':
+            return d.legajo != null ? String(d.legajo) : '';
+          case 'nombre':
+            return d.apellido ? `${d.apellido}, ${d.nombre}` : d.nombre || '';
+          case 'origen':
+            return d.origen || '';
+          case 'unidad':
+            return d.unidad || '';
+          case 'categoria':
+            return d.categoria || '';
+          case 'dedicacion':
+            return d.dedicacion || '';
+          case 'caracter':
+            return d.caracter || '';
+          case 'estado':
+            return d.estado || '';
+        }
+      };
+
+      return getTextValue(a).localeCompare(getTextValue(b), 'es', { numeric: true, sensitivity: 'base' }) * multiplier;
+    });
+  }, [docentesData, docentesSort]);
+
+  const sortedCargosData = useMemo(() => {
+    if (!cargosSort) return cargosData;
+    const { column, direction } = cargosSort;
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...cargosData].sort((a, b) => {
+      if (column === 'numero') {
+        return compareNumbers(a.numero, b.numero, multiplier);
+      }
+      if (column === 'fechaCreacion') {
+        return compareDates(a.fechaCreacion, b.fechaCreacion, multiplier);
+      }
+
+      const getTextValue = (c: Cargo): string => {
+        switch (column) {
+          case 'estado':
+            return c.estado || '';
+          case 'docente':
+            return c.estado === 'Libre' ? '-' : c.apellidoNombre || '';
+          case 'categoria':
+            return c.categoria || '';
+          case 'dedicacion':
+            return c.dedicacion || '';
+          case 'caracter':
+            return c.caracter || '';
+        }
+      };
+
+      return getTextValue(a).localeCompare(getTextValue(b), 'es', { numeric: true, sensitivity: 'base' }) * multiplier;
+    });
+  }, [cargosData, cargosSort]);
+
+  const sortedLicenciasData = useMemo(() => {
+    if (!licenciasSort) return licenciasData;
+    const { column, direction } = licenciasSort;
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...licenciasData].sort((a, b) => {
+      if (column === 'fechaInicio') {
+        return compareDates(a.fechaInicio, b.fechaInicio, multiplier);
+      }
+      if (column === 'fechaFin') {
+        return compareDates(a.fechaFin, b.fechaFin, multiplier);
+      }
+      if (column === 'diasUsados') {
+        return compareNumbers(a.diasUsados, b.diasUsados, multiplier);
+      }
+
+      const getTextValue = (l: Licencia): string => {
+        switch (column) {
+          case 'nroResolucion':
+            return l.nroResolucion || '';
+          case 'motivoNombre':
+            return l.motivoNombre || '';
+          case 'docenteNombreCompleto':
+            return l.docenteNombreCompleto || '';
+          case 'estado':
+            return l.estado || '';
+        }
+      };
+
+      return getTextValue(a).localeCompare(getTextValue(b), 'es', { numeric: true, sensitivity: 'base' }) * multiplier;
+    });
+  }, [licenciasData, licenciasSort]);
+
+  const displayedDocentesData = useMemo(
+    () => (isSorting ? sortedDocentesData.slice(startIndex, startIndex + rowsPerPage) : sortedDocentesData),
+    [isSorting, sortedDocentesData, startIndex, rowsPerPage]
+  );
+
+  const displayedCargosData = useMemo(
+    () => (isSorting ? sortedCargosData.slice(startIndex, startIndex + rowsPerPage) : sortedCargosData),
+    [isSorting, sortedCargosData, startIndex, rowsPerPage]
+  );
+
+  const displayedLicenciasData = useMemo(
+    () => (isSorting ? sortedLicenciasData.slice(startIndex, startIndex + rowsPerPage) : sortedLicenciasData),
+    [isSorting, sortedLicenciasData, startIndex, rowsPerPage]
+  );
+
+  const handleDocenteSort = (col: DocenteSortColumn) => {
+    setDocentesSort((prev) => toggleSort(prev, col));
+    setCurrentPage(1);
+  };
+
+  const handleCargoSort = (col: CargoSortColumn) => {
+    setCargosSort((prev) => toggleSort(prev, col));
+    setCurrentPage(1);
+  };
+
+  const handleLicenciaSort = (col: LicenciaSortColumn) => {
+    setLicenciasSort((prev) => toggleSort(prev, col));
+    setCurrentPage(1);
+  };
+
+  const getAriaSort = <T extends string>(
+    sortConfig: SortConfig<T> | null,
+    column: T
+  ): 'ascending' | 'descending' | 'none' => {
+    if (!sortConfig || sortConfig.column !== column) return 'none';
+    return sortConfig.direction === 'asc' ? 'ascending' : 'descending';
+  };
+
+  const renderSortHeader = <T extends string>(
+    sortConfig: SortConfig<T> | null,
+    onSort: (column: T) => void,
+    column: T,
+    label: string
+  ) => {
+    const isActive = sortConfig?.column === column;
+    return (
+      <th aria-sort={getAriaSort(sortConfig, column)} className="listado-sortable-th">
+        <button
+          type="button"
+          className={`listado-sort-btn ${isActive ? 'active' : ''}`}
+          onClick={() => onSort(column)}
+        >
+          <span>{label}</span>
+          <span className="listado-sort-icons" aria-hidden="true">
+            <FiChevronUp
+              className={`listado-sort-icon ${isActive && sortConfig.direction === 'asc' ? 'active' : ''}`}
+            />
+            <FiChevronDown
+              className={`listado-sort-icon ${isActive && sortConfig.direction === 'desc' ? 'active' : ''}`}
+            />
+          </span>
+        </button>
+      </th>
+    );
+  };
+
   return (
     <div className="dashboard-layout">
       <Topbar onLogout={onLogout} />
@@ -414,25 +749,34 @@ export default function Listado({
                       ? 'Listado de Licencias'
                       : 'Listado de Docentes'}
                   </h1>
-                  <div className="listado-tabs">
-                    <button
-                      className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('docentes')}
-                    >
-                      Docentes
-                    </button>
-                    <button
-                      className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('cargos')}
-                    >
-                      Cargos
-                    </button>
-                    <button
-                      className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
-                      onClick={() => handleTabChange('licencias')}
-                    >
-                      Licencias
-                    </button>
+                  <div className="listado-tabs-row">
+                    <div className="listado-tabs">
+                      <button
+                        className={`tab-btn ${activeTab === 'docentes' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('docentes')}
+                      >
+                        Docentes
+                      </button>
+                      <button
+                        className={`tab-btn ${activeTab === 'cargos' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('cargos')}
+                      >
+                        Cargos
+                      </button>
+                      <button
+                        className={`tab-btn ${activeTab === 'licencias' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('licencias')}
+                      >
+                        Licencias
+                      </button>
+                    </div>
+                    <ExportButton
+                      endpoint={exportConfig.endpoint}
+                      params={exportConfig.params}
+                      fallbackBaseName={exportConfig.fallbackBaseName}
+                      onUnauthorized={onLogout}
+                      onError={setExportError}
+                    />
                   </div>
                 </div>
 
@@ -450,39 +794,53 @@ export default function Listado({
                 </div>
               </div>
 
+              {exportError && (
+                <div className="listado-error-banner" role="alert">
+                  <span>{exportError}</span>
+                  <button
+                    type="button"
+                    className="listado-error-close"
+                    onClick={() => setExportError(null)}
+                    aria-label="Cerrar mensaje de error"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+
               <div className="listado-table-container">
                 <table className="listado-table">
                   <thead>
                     {activeTab === 'cargos' ? (
                       <tr>
-                        <th>Número</th>
-                        <th>FechaCreación</th>
-                        <th>Estado</th>
-                        <th>Docente</th>
-                        <th>Categoría</th>
-                        <th>Dedicación</th>
-                        <th>Caracter</th>
+                        {renderSortHeader(cargosSort, handleCargoSort, 'numero', 'Número')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'fechaCreacion', 'FechaCreación')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'estado', 'Estado')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'docente', 'Docente')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'categoria', 'Categoría')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'dedicacion', 'Dedicación')}
+                        {renderSortHeader(cargosSort, handleCargoSort, 'caracter', 'Caracter')}
                       </tr>
                     ) : activeTab === 'licencias' ? (
                       <tr>
-                        <th>N° Resolución</th>
-                        <th>Motivo</th>
-                        <th>Docente</th>
-                        <th>Fecha Inicio</th>
-                        <th>Fecha Fin</th>
-                        <th>Días Usados</th>
-                        <th>Estado</th>
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'nroResolucion', 'N° Resolución')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'motivoNombre', 'Motivo')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'docenteNombreCompleto', 'Docente')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'fechaInicio', 'Fecha Inicio')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'fechaFin', 'Fecha Fin')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'diasUsados', 'Días Usados')}
+                        {renderSortHeader(licenciasSort, handleLicenciaSort, 'estado', 'Estado')}
                       </tr>
                     ) : (
                       <tr>
-                        <th>N° Legajo</th>
-                        <th>Nombre</th>
-                        <th>Origen</th>
-                        <th>Unidad</th>
-                        <th>Categoría</th>
-                        <th>Dedicación</th>
-                        <th>Caracter</th>
-                        <th>Estado</th>
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'legajo', 'N° Legajo')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'nombre', 'Nombre')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'origen', 'Origen')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'unidad', 'Unidad')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'categoria', 'Categoría')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'dedicacion', 'Dedicación')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'caracter', 'Caracter')}
+                        {renderSortHeader(docentesSort, handleDocenteSort, 'estado', 'Estado')}
                       </tr>
                     )}
                   </thead>
@@ -492,12 +850,12 @@ export default function Listado({
                         <td colSpan={activeTab === 'docentes' ? 8 : 7} style={{ textAlign: 'center', padding: '24px' }}>Cargando {activeTab}...</td>
                       </tr>
                     ) : activeTab === 'cargos' ? (
-                      cargosData.length === 0 ? (
+                      displayedCargosData.length === 0 ? (
                         <tr>
                           <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron cargos</td>
                         </tr>
                       ) : (
-                        cargosData.map((cargo, idx) => (
+                        displayedCargosData.map((cargo, idx) => (
                           <tr key={idx} onClick={() => onNavigate && onNavigate('cargo_detalle', cargo)} style={{ cursor: 'pointer' }}>
                             <td>{cargo.numero}</td>
                             <td>{cargo.fechaCreacion ? new Date(cargo.fechaCreacion).toLocaleDateString() : ''}</td>
@@ -510,12 +868,12 @@ export default function Listado({
                         ))
                       )
                     ) : activeTab === 'licencias' ? (
-                      licenciasData.length === 0 ? (
+                      displayedLicenciasData.length === 0 ? (
                         <tr>
                           <td colSpan={7} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron licencias</td>
                         </tr>
                       ) : (
-                        licenciasData.map((licencia, idx) => (
+                        displayedLicenciasData.map((licencia, idx) => (
                           <tr key={idx} onClick={() => onNavigate && onNavigate('licencia_detalle', licencia)} style={{ cursor: 'pointer' }}>
                             <td>{licencia.nroResolucion}</td>
                             <td>{licencia.motivoNombre}</td>
@@ -528,12 +886,12 @@ export default function Listado({
                         ))
                       )
                     ) : (
-                      docentesData.length === 0 ? (
+                      displayedDocentesData.length === 0 ? (
                         <tr>
                           <td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>No se encontraron docentes</td>
                         </tr>
                       ) : (
-                        docentesData.map((docente, idx) => (
+                        displayedDocentesData.map((docente, idx) => (
                           <tr key={idx} onClick={() => onNavigate && onNavigate('docente_detalle', docente)} style={{ cursor: 'pointer' }}>
                             <td>{docente.legajo ?? '-'}</td>
                             <td>{docente.apellido ? `${docente.apellido}, ${docente.nombre}` : docente.nombre}</td>
@@ -562,12 +920,12 @@ export default function Listado({
 
                 {renderPageButtons()}
 
-                {totalPages > 3 && currentPage < totalPages - 1 && (
+                {effectiveTotalPages > 3 && currentPage < effectiveTotalPages - 1 && (
                   <button className="page-btn dots">...</button>
                 )}
 
-                <button className="page-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}><FiChevronRight /></button>
-                <button className="page-btn" onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages}><FiChevronsRight /></button>
+                <button className="page-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === effectiveTotalPages}><FiChevronRight /></button>
+                <button className="page-btn" onClick={() => goToPage(effectiveTotalPages)} disabled={currentPage === effectiveTotalPages}><FiChevronsRight /></button>
               </div>
             </div>
 

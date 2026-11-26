@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './ModificarCatedra.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiSearch } from 'react-icons/fi';
@@ -1029,42 +1029,42 @@ export default function ModificarCatedra({
   };
 
   return (
-    <div className="modificar-catedra-page">
+    <div className="gestion-page gestion-page--modificar">
       <Topbar onLogout={onLogout} />
 
-      <div className="modificar-catedra-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="modificar-catedra-main">
-          <div className="modificar-catedra-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="modificar-catedra-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="modificar-catedra-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="modificar-catedra-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="modificar-catedra-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="modificar-catedra-header-row">
-                <div className="modificar-catedra-header-left">
-                  <h1 className="modificar-catedra-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
-                <div className="modificar-catedra-search-card">
-                  <span className="modificar-catedra-search-label">Buscar Cátedra</span>
-                  <div className="modificar-catedra-search-row">
-                    <div className="modificar-catedra-search-input-wrap" ref={searchWrapperRef}>
+                <div className="gestion-search-card">
+                  <span className="gestion-search-label">Buscar Cátedra</span>
+                  <div className="gestion-search-row">
+                    <div className="gestion-search-input-wrap" ref={searchWrapperRef}>
                       <input
                         ref={searchInputRef}
                         type="search"
-                        className="modificar-catedra-search-input"
+                        className="gestion-search-input"
                         placeholder="Nombre de cátedra o materia..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -1078,15 +1078,15 @@ export default function ModificarCatedra({
                         data-lpignore="true"
                         data-form-type="other"
                       />
-                      <FiSearch className="modificar-catedra-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="modificar-catedra-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`modificar-catedra-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''
                                 }`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
@@ -1096,12 +1096,12 @@ export default function ModificarCatedra({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="modificar-catedra-suggestion-header">
-                                <span className="modificar-catedra-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombre}
                                 </span>
                                 {item.tipologia ? (
-                                  <span className="modificar-catedra-suggestion-tipologia-badge">
+                                  <span className="gestion-suggestion-badge">
                                     Tipología{' '}
                                     {TIPOLOGIA_OPTIONS.find((t) => t.id === item.tipologia)?.roman ||
                                       item.tipologia}
@@ -1109,7 +1109,7 @@ export default function ModificarCatedra({
                                 ) : null}
                               </div>
                               {(item.materiaNombre || item.directorNombre) && (
-                                <span className="modificar-catedra-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[
                                     item.materiaNombre ? `Materia: ${item.materiaNombre}` : null,
                                     item.directorNombre ? `Director: ${item.directorNombre}` : null,
@@ -1126,7 +1126,7 @@ export default function ModificarCatedra({
 
                     <button
                       type="button"
-                      className="modificar-catedra-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1138,31 +1138,31 @@ export default function ModificarCatedra({
               </div>
 
               {/* Form Card */}
-              <div className="modificar-catedra-form-card">
-                <div className="modificar-catedra-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Modificar Cátedra</h2>
                 </div>
 
                 <div
-                  className="modificar-catedra-card-body"
+                  className="gestion-card-body"
                   onFocusCapture={() => {
                     if (feedback && feedback.type !== 'info') setFeedback(null);
                   }}
                 >
                   {feedback && (
-                    <div className={`modificar-catedra-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  <div className="modificar-catedra-form">
+                  <div className="gestion-form">
                     {/* SECTION: DATOS DE CÁTEDRA */}
-                    <h3 className="modificar-catedra-section-title">Datos de Cátedra</h3>
+                    <h3 className="gestion-section-title">Datos de Cátedra</h3>
 
                     {/* Row 1: Nombre de Cátedra, Tipología, Dependencia */}
-                    <div className="modificar-catedra-grid-row-1">
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="nombreCatedra" className="modificar-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="nombreCatedra" className="gestion-label">
                           Nombre de Cátedra *
                         </label>
                         <input
@@ -1170,7 +1170,7 @@ export default function ModificarCatedra({
                           name="nombreCatedra"
                           type="text"
                           maxLength={50}
-                          className="modificar-catedra-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de cátedra"
                           value={formData.nombreCatedra}
                           onChange={(e) => handleChange('nombreCatedra', e.target.value)}
@@ -1183,15 +1183,15 @@ export default function ModificarCatedra({
                         />
                       </div>
 
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="tipologia" className="modificar-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="tipologia" className="gestion-label">
                           Tipología *
                         </label>
-                        <div className="modificar-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="tipologia"
                             name="tipologia"
-                            className="modificar-catedra-select"
+                            className="gestion-select"
                             value={formData.tipologia}
                             onChange={(e) => handleChange('tipologia', e.target.value)}
                             disabled={!formData.catedraId}
@@ -1203,18 +1203,18 @@ export default function ModificarCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="dependencia" className="modificar-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="dependencia" className="gestion-label">
                           Dependencia
                         </label>
-                        <div className="modificar-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="dependencia"
-                            className="modificar-catedra-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             disabled={true}
                             title="La dependencia está vinculada a la materia asociada y no puede modificarse"
@@ -1230,21 +1230,21 @@ export default function ModificarCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 2: Unidad Académica, Materia, Director de Cátedra */}
-                    <div className="modificar-catedra-grid-row-1">
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="unidad" className="modificar-catedra-label">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="unidad" className="gestion-label">
                           Unidad Académica
                         </label>
-                        <div className="modificar-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="unidad"
-                            className="modificar-catedra-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             disabled={true}
                             title="La unidad académica está vinculada a la materia asociada y no puede modificarse"
@@ -1262,18 +1262,18 @@ export default function ModificarCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="materia" className="modificar-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="materia" className="gestion-label">
                           Materia
                         </label>
-                        <div className="modificar-catedra-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="materia"
-                            className="modificar-catedra-select"
+                            className="gestion-select"
                             value={formData.materiaId}
                             disabled={true}
                             title="La materia asignada a la cátedra permanece fija tras su creación"
@@ -1293,20 +1293,20 @@ export default function ModificarCatedra({
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="modificar-catedra-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="modificar-catedra-field">
-                        <label htmlFor="directorCatedra" className="modificar-catedra-label">
+                      <div className="gestion-field">
+                        <label htmlFor="directorCatedra" className="gestion-label">
                           Director de Cátedra *
                         </label>
-                        <div className="modificar-catedra-search-wrapper" ref={directorWrapperRef}>
+                        <div className="gestion-autocomplete-wrapper" ref={directorWrapperRef}>
                           <input
                             id="directorCatedra"
                             name="directorCatedra"
                             type="text"
-                            className="modificar-catedra-input"
+                            className="gestion-input"
                             placeholder={
                               !formData.catedraId
                                 ? 'Primero busque una cátedra'
@@ -1328,18 +1328,18 @@ export default function ModificarCatedra({
 
                           {showDirectorSuggestions && (
                             <ul
-                              className="modificar-catedra-director-suggestions-list"
+                              className="gestion-suggestions-list"
                               role="listbox"
                             >
                               {isSearchingDirector ? (
-                                <li className="modificar-catedra-director-suggestion-item disabled">
-                                  <span className="modificar-catedra-director-suggestion-name">
+                                <li className="gestion-suggestion-item disabled">
+                                  <span className="gestion-suggestion-title">
                                     Buscando docentes...
                                   </span>
                                 </li>
                               ) : directorSuggestions.length === 0 ? (
-                                <li className="modificar-catedra-director-suggestion-item disabled">
-                                  <span className="modificar-catedra-director-suggestion-name">
+                                <li className="gestion-suggestion-item disabled">
+                                  <span className="gestion-suggestion-title">
                                     No se encontraron docentes activos
                                   </span>
                                 </li>
@@ -1347,22 +1347,22 @@ export default function ModificarCatedra({
                                 directorSuggestions.map((doc, idx) => (
                                   <li
                                     key={doc.id}
-                                    className={`modificar-catedra-director-suggestion-item ${idx === activeDirectorIndex ? 'active' : ''
+                                    className={`gestion-suggestion-item ${idx === activeDirectorIndex ? 'active' : ''
                                       }`}
                                     onClick={() => handleSelectDirector(doc)}
                                   >
-                                    <div className="modificar-catedra-director-suggestion-header">
-                                      <span className="modificar-catedra-director-suggestion-name">
+                                    <div className="gestion-suggestion-header">
+                                      <span className="gestion-suggestion-title">
                                         {doc.nombreCompleto}
                                       </span>
                                       {doc.dni && (
-                                        <span className="modificar-catedra-director-suggestion-badge">
+                                        <span className="gestion-suggestion-badge">
                                           DNI: {doc.dni}
                                         </span>
                                       )}
                                     </div>
                                     {doc.unidad && (
-                                      <span className="modificar-catedra-director-suggestion-subtitle">
+                                      <span className="gestion-suggestion-sub">
                                         {doc.unidad}
                                       </span>
                                     )}
@@ -1380,10 +1380,10 @@ export default function ModificarCatedra({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="modificar-catedra-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-modificar-catedra btn-modificar-catedra-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={!formData.catedraId && !searchQuery}
               >
@@ -1393,7 +1393,7 @@ export default function ModificarCatedra({
 
               <button
                 type="button"
-                className="btn-modificar-catedra btn-modificar-catedra-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !formData.catedraId}
               >

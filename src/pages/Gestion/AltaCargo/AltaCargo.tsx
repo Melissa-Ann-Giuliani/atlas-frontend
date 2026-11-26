@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './AltaCargo.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiCalendar } from 'react-icons/fi';
@@ -406,373 +406,373 @@ export default function AltaCargo({ onLogout, onNavigate, onBack }: AltaCargoPro
   };
 
   return (
-    <div className="alta-cargo-page">
-      <Topbar onLogout={onLogout} />
+      <div className="gestion-page gestion-page--alta">
+        <Topbar onLogout={onLogout} />
 
-      <div className="alta-cargo-body">
-        <Sidebar activeItem="gestion" onNavigate={onNavigate} />
+          <div className="gestion-body">
+            <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="alta-cargo-main">
-          <div className="alta-cargo-content-area">
-            {/* Top Back Navigation */}
-            <div className="alta-cargo-top-nav">
-              <button
-                type="button"
-                className="alta-cargo-back-btn"
-                onClick={handleBack}
-              >
-                <FiChevronLeft className="alta-cargo-back-icon" />
-                <span>Retroceder</span>
-              </button>
-            </div>
+                <main className="gestion-main">
+                  <div className="gestion-content-area">
+                    {/* Top Back Navigation */}
+                      <div className="gestion-top-nav">
+                        <button
+                          type="button"
+                          className="gestion-back-btn"
+                          onClick={handleBack}
+                        >
+                          <FiChevronLeft className="gestion-back-icon" />
+                          <span>Retroceder</span>
+                        </button>
+                      </div>
 
-            {/* Container Card */}
-            <div className="alta-cargo-container-card">
-              <div className="alta-cargo-header">
-                <h1 className="alta-cargo-title">Gestión</h1>
-              </div>
+                      {/* Container Card */}
+                          <div className="gestion-container-card">
+                            <div className="gestion-header">
+                              <h1 className="gestion-title">Gestión</h1>
+                            </div>
 
-              {/* Form Card */}
-              <div className="alta-cargo-form-card">
-                <div className="alta-cargo-card-header">
-                  <h2>Alta de Cargo</h2>
-                </div>
+                            {/* Form Card */}
+                                <div className="gestion-form-card">
+                                  <div className="gestion-card-header">
+                                    <h2>Alta de Cargo</h2>
+                                  </div>
 
-                <div className="alta-cargo-card-body">
-                  {feedback && (
-                    <div className={`alta-cargo-feedback feedback-${feedback.type}`}>
-                      {feedback.message}
-                    </div>
+                                    <div className="gestion-card-body">
+                                      {feedback && (
+                                          <div className={`gestion-feedback feedback-${feedback.type}`}>
+                                            {feedback.message}
+                                          </div>
                   )}
 
-                  <div
-                    className="alta-cargo-form"
-                    onFocusCapture={() => {
-                      if (feedback) setFeedback(null);
-                    }}
-                  >
-                    {/* SECTION 1: DATOS DE CARGOS */}
-                    <h3 className="alta-cargo-section-title">Datos de Cargos</h3>
+                                          <div
+                                            className="gestion-form"
+                                            onFocusCapture={() => {
+                                              if (feedback) setFeedback(null);
+                                            }}
+                                          >
+                                            {/* SECTION 1: DATOS DE CARGOS */}
+                                            <h3 className="gestion-section-title">Datos de Cargos</h3>
 
-                    {/* Row 1: N° de Cargo, Fecha de Creación, Estado */}
-                    <div className="alta-cargo-grid-3">
-                      <div className="alta-cargo-field">
-                        <label htmlFor="codigo_cargo_pos" className="alta-cargo-label">
-                          N° de Cargo
-                        </label>
-                        <input
-                          id="codigo_cargo_pos"
-                          name="codigo_cargo_pos"
-                          type="text"
-                          className="alta-cargo-input"
-                          placeholder="Ingrese valor"
-                          value={formData.numeroCargo}
-                          onChange={(e) => handleChange('numeroCargo', e.target.value)}
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck={false}
-                          data-lpignore="true"
-                          data-form-type="other"
-                          data-1p-ignore="true"
-                        />
-                      </div>
+                                            {/* Row 1: N° de Cargo, Fecha de Creación, Estado */}
+                                                  <div className="gestion-grid-3">
+                                                    <div className="gestion-field">
+                                                      <label htmlFor="codigo_cargo_pos" className="gestion-label">
+                                                        N° de Cargo
+                                                      </label>
+                                                      <input
+                                                        id="codigo_cargo_pos"
+                                                        name="codigo_cargo_pos"
+                                                        type="text"
+                                                        className="gestion-input"
+                                                        placeholder="Ingrese valor"
+                                                        value={formData.numeroCargo}
+                                                        onChange={(e) => handleChange('numeroCargo', e.target.value)}
+                                                        autoComplete="off"
+                                                        autoCorrect="off"
+                                                        autoCapitalize="off"
+                                                        spellCheck={false}
+                                                        data-lpignore="true"
+                                                        data-form-type="other"
+                                                        data-1p-ignore="true"
+                                                      />
+                                                    </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="fechaCreacion" className="alta-cargo-label">
-                          Fecha de Creación
-                        </label>
-                        <div className="alta-cargo-datepicker-container">
-                          <DatePicker
-                            id="fechaCreacion"
-                            name="fecha_alta_cargo"
-                            selected={parseIsoToDate(formData.fechaCreacion)}
-                            onChange={(date: Date | null) => handleChange('fechaCreacion', formatDateToIso(date))}
-                            dateFormat="dd/MM/yyyy"
-                            placeholderText="DD/MM/AAAA"
-                            locale="es"
-                            className="alta-cargo-input alta-cargo-datepicker-input"
-                            autoComplete="off"
-                            showYearDropdown
-                            showMonthDropdown
-                            dropdownMode="select"
-                          />
-                          <FiCalendar className="alta-cargo-datepicker-icon" />
-                        </div>
-                      </div>
+                                                        <div className="gestion-field">
+                                                          <label htmlFor="fechaCreacion" className="gestion-label">
+                                                            Fecha de Creación
+                                                          </label>
+                                                            <div className="gestion-datepicker-container">
+                                                              <DatePicker
+                                                                id="fechaCreacion"
+                                                                name="fecha_alta_cargo"
+                                                                selected={parseIsoToDate(formData.fechaCreacion)}
+                                                                onChange={(date: Date | null) => handleChange('fechaCreacion', formatDateToIso(date))}
+                                                                dateFormat="dd/MM/yyyy"
+                                                                placeholderText="DD/MM/AAAA"
+                                                                locale="es"
+                                                                className="gestion-input gestion-datepicker-input"
+                                                                autoComplete="off"
+                                                                showYearDropdown
+                                                                showMonthDropdown
+                                                                dropdownMode="select"
+                                                              />
+                                                              <FiCalendar className="gestion-datepicker-icon" />
+                                                            </div>
+                                                          </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="estado" className="alta-cargo-label">
-                          Estado
-                        </label>
-                        <input
-                          id="estado"
-                          name="estado"
-                          type="text"
-                          className="alta-cargo-input"
-                          value={formData.estado}
-                          readOnly
-                        />
-                      </div>
-                    </div>
+                                                              <div className="gestion-field">
+                                                                <label htmlFor="estado" className="gestion-label">
+                                                                  Estado
+                                                                </label>
+                                                                <input
+                                                                  id="estado"
+                                                                  name="estado"
+                                                                  type="text"
+                                                                  className="gestion-input"
+                                                                  value={formData.estado}
+                                                                  readOnly
+                                                                />
+                                                              </div>
+                                                          </div>
 
-                    {/* Row 2: Dependencia, Unidad */}
-                    <div className="alta-cargo-grid-2">
-                      <div className="alta-cargo-field">
-                        <label htmlFor="dependencia" className="alta-cargo-label">
-                          Dependencia
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="dependencia"
-                            className="alta-cargo-select"
-                            value={formData.dependencia}
-                            onChange={(e) => handleChange('dependencia', e.target.value)}
-                            disabled={isLoadingCatalogs && dependencias.length === 0}
-                          >
-                            <option value="">
-                              {isLoadingCatalogs && dependencias.length === 0 ? 'Cargando dependencias...' : 'Seleccione'}
-                            </option>
-                            {dependencias.map((dep) => (
-                              <option key={dep.id} value={dep.id}>
-                                {dep.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
+                                                          {/* Row 2: Dependencia, Unidad */}
+                                                                <div className="gestion-grid-2">
+                                                                  <div className="gestion-field">
+                                                                    <label htmlFor="dependencia" className="gestion-label">
+                                                                      Dependencia
+                                                                    </label>
+                                                                      <div className="gestion-select-wrapper">
+                                                                        <select
+                                                                          id="dependencia"
+                                                                          className="gestion-select"
+                                                                          value={formData.dependencia}
+                                                                          onChange={(e) => handleChange('dependencia', e.target.value)}
+                                                                          disabled={isLoadingCatalogs && dependencias.length === 0}
+                                                                        >
+                                                                          <option value="">
+                                                                            {isLoadingCatalogs && dependencias.length === 0 ? 'Cargando dependencias...' : 'Seleccione'}
+                                                                          </option>
+                                                                          {dependencias.map((dep) => (
+                                                                            <option key={dep.id} value={dep.id}>
+                                                                              {dep.label}
+                                                                            </option>
+                                                                          ))}
+                                                                        </select>
+                                                                        <FiChevronDown className="gestion-select-caret" />
+                                                                      </div>
+                                                                    </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="unidad" className="alta-cargo-label">
-                          Unidad
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="unidad"
-                            className="alta-cargo-select"
-                            value={formData.unidad}
-                            onChange={(e) => handleChange('unidad', e.target.value)}
-                            disabled={!formData.dependencia || isLoadingUnidades}
-                          >
-                            <option value="">
-                              {isLoadingUnidades
-                                ? 'Cargando...'
-                                : !formData.dependencia
-                                  ? 'Seleccione dependencia primero'
-                                  : 'Seleccione'}
-                            </option>
-                            {unidades.map((uni) => (
-                              <option key={uni.id} value={uni.id}>
-                                {uni.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
-                    </div>
+                                                                        <div className="gestion-field">
+                                                                          <label htmlFor="unidad" className="gestion-label">
+                                                                            Unidad
+                                                                          </label>
+                                                                            <div className="gestion-select-wrapper">
+                                                                              <select
+                                                                                id="unidad"
+                                                                                className="gestion-select"
+                                                                                value={formData.unidad}
+                                                                                onChange={(e) => handleChange('unidad', e.target.value)}
+                                                                                disabled={!formData.dependencia || isLoadingUnidades}
+                                                                              >
+                                                                                <option value="">
+                                                                                  {isLoadingUnidades
+                                                                                    ? 'Cargando...'
+                                                                                    : !formData.dependencia
+                                                                                      ? 'Seleccione dependencia primero'
+                                                                                      : 'Seleccione'}
+                                                                                </option>
+                                                                                {unidades.map((uni) => (
+                                                                                  <option key={uni.id} value={uni.id}>
+                                                                                    {uni.label}
+                                                                                  </option>
+                                                                                ))}
+                                                                              </select>
+                                                                              <FiChevronDown className="gestion-select-caret" />
+                                                                            </div>
+                                                                          </div>
+                                                                        </div>
 
-                    <hr className="alta-cargo-divider" />
+                                                                        <hr className="gestion-divider" />
 
-                    {/* SECTION 2: CLASIFICACIÓN */}
-                    <h3 className="alta-cargo-section-title">Clasificación</h3>
+                                                                        {/* SECTION 2: CLASIFICACIÓN */}
+                                                                        <h3 className="gestion-section-title">Clasificación</h3>
 
-                    {/* Row 1: Origen, Carácter, Categoría */}
-                    <div className="alta-cargo-grid-3">
-                      <div className="alta-cargo-field">
-                        <label htmlFor="origen" className="alta-cargo-label">
-                          Origen
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="origen"
-                            className="alta-cargo-select"
-                            value={formData.origen}
-                            onChange={(e) => handleChange('origen', e.target.value)}
-                          >
-                            <option value="">Seleccione</option>
-                            {origenes.map((ori) => (
-                              <option key={ori.id} value={ori.id}>
-                                {ori.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
+                                                                        {/* Row 1: Origen, Carácter, Categoría */}
+                                                                              <div className="gestion-grid-3">
+                                                                                <div className="gestion-field">
+                                                                                  <label htmlFor="origen" className="gestion-label">
+                                                                                    Origen
+                                                                                  </label>
+                                                                                    <div className="gestion-select-wrapper">
+                                                                                      <select
+                                                                                        id="origen"
+                                                                                        className="gestion-select"
+                                                                                        value={formData.origen}
+                                                                                        onChange={(e) => handleChange('origen', e.target.value)}
+                                                                                      >
+                                                                                        <option value="">Seleccione</option>
+                                                                                        {origenes.map((ori) => (
+                                                                                          <option key={ori.id} value={ori.id}>
+                                                                                            {ori.label}
+                                                                                          </option>
+                                                                                        ))}
+                                                                                      </select>
+                                                                                      <FiChevronDown className="gestion-select-caret" />
+                                                                                    </div>
+                                                                                  </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="caracter" className="alta-cargo-label">
-                          Carácter
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="caracter"
-                            className="alta-cargo-select"
-                            value={formData.caracter}
-                            onChange={(e) => handleChange('caracter', e.target.value)}
-                            disabled={isLoadingCatalogs && caracteres.length === 0}
-                          >
-                            <option value="">
-                              {isLoadingCatalogs && caracteres.length === 0 ? 'Cargando caracteres...' : 'Seleccione'}
-                            </option>
-                            {caracteres.map((car) => (
-                              <option key={car.id} value={car.id}>
-                                {car.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
+                                                                                      <div className="gestion-field">
+                                                                                        <label htmlFor="caracter" className="gestion-label">
+                                                                                          Carácter
+                                                                                        </label>
+                                                                                          <div className="gestion-select-wrapper">
+                                                                                            <select
+                                                                                              id="caracter"
+                                                                                              className="gestion-select"
+                                                                                              value={formData.caracter}
+                                                                                              onChange={(e) => handleChange('caracter', e.target.value)}
+                                                                                              disabled={isLoadingCatalogs && caracteres.length === 0}
+                                                                                            >
+                                                                                              <option value="">
+                                                                                                {isLoadingCatalogs && caracteres.length === 0 ? 'Cargando caracteres...' : 'Seleccione'}
+                                                                                              </option>
+                                                                                              {caracteres.map((car) => (
+                                                                                                <option key={car.id} value={car.id}>
+                                                                                                  {car.label}
+                                                                                                </option>
+                                                                                              ))}
+                                                                                            </select>
+                                                                                            <FiChevronDown className="gestion-select-caret" />
+                                                                                          </div>
+                                                                                        </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="categoria" className="alta-cargo-label">
-                          Categoría
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="categoria"
-                            className="alta-cargo-select"
-                            value={formData.categoria}
-                            onChange={(e) => handleChange('categoria', e.target.value)}
-                            disabled={isLoadingCatalogs && categorias.length === 0}
-                          >
-                            <option value="">
-                              {isLoadingCatalogs && categorias.length === 0 ? 'Cargando categorías...' : 'Seleccione'}
-                            </option>
-                            {categorias.map((cat) => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
-                    </div>
+                                                                                            <div className="gestion-field">
+                                                                                              <label htmlFor="categoria" className="gestion-label">
+                                                                                                Categoría
+                                                                                              </label>
+                                                                                                <div className="gestion-select-wrapper">
+                                                                                                  <select
+                                                                                                    id="categoria"
+                                                                                                    className="gestion-select"
+                                                                                                    value={formData.categoria}
+                                                                                                    onChange={(e) => handleChange('categoria', e.target.value)}
+                                                                                                    disabled={isLoadingCatalogs && categorias.length === 0}
+                                                                                                  >
+                                                                                                    <option value="">
+                                                                                                      {isLoadingCatalogs && categorias.length === 0 ? 'Cargando categorías...' : 'Seleccione'}
+                                                                                                    </option>
+                                                                                                    {categorias.map((cat) => (
+                                                                                                      <option key={cat.id} value={cat.id}>
+                                                                                                        {cat.label}
+                                                                                                      </option>
+                                                                                                    ))}
+                                                                                                  </select>
+                                                                                                  <FiChevronDown className="gestion-select-caret" />
+                                                                                                </div>
+                                                                                              </div>
+                                                                                            </div>
 
-                    {/* Row 2: Dedicación, Cant. de Horas */}
-                    <div className="alta-cargo-grid-2">
-                      <div className="alta-cargo-field">
-                        <label htmlFor="dedicacion" className="alta-cargo-label">
-                          Dedicación
-                        </label>
-                        <div className="alta-cargo-select-wrapper">
-                          <select
-                            id="dedicacion"
-                            className="alta-cargo-select"
-                            value={formData.dedicacion}
-                            onChange={(e) => handleChange('dedicacion', e.target.value)}
-                            disabled={isLoadingCatalogs && dedicaciones.length === 0}
-                          >
-                            <option value="">
-                              {isLoadingCatalogs && dedicaciones.length === 0 ? 'Cargando dedicaciones...' : 'Seleccione'}
-                            </option>
-                            {dedicaciones.map((ded) => (
-                              <option key={ded.id} value={ded.id}>
-                                {ded.label}
-                              </option>
-                            ))}
-                          </select>
-                          <FiChevronDown className="alta-cargo-select-caret" />
-                        </div>
-                      </div>
+                                                                                            {/* Row 2: Dedicación, Cant. de Horas */}
+                                                                                                  <div className="gestion-grid-2">
+                                                                                                    <div className="gestion-field">
+                                                                                                      <label htmlFor="dedicacion" className="gestion-label">
+                                                                                                        Dedicación
+                                                                                                      </label>
+                                                                                                        <div className="gestion-select-wrapper">
+                                                                                                          <select
+                                                                                                            id="dedicacion"
+                                                                                                            className="gestion-select"
+                                                                                                            value={formData.dedicacion}
+                                                                                                            onChange={(e) => handleChange('dedicacion', e.target.value)}
+                                                                                                            disabled={isLoadingCatalogs && dedicaciones.length === 0}
+                                                                                                          >
+                                                                                                            <option value="">
+                                                                                                              {isLoadingCatalogs && dedicaciones.length === 0 ? 'Cargando dedicaciones...' : 'Seleccione'}
+                                                                                                            </option>
+                                                                                                            {dedicaciones.map((ded) => (
+                                                                                                              <option key={ded.id} value={ded.id}>
+                                                                                                                {ded.label}
+                                                                                                              </option>
+                                                                                                            ))}
+                                                                                                          </select>
+                                                                                                          <FiChevronDown className="gestion-select-caret" />
+                                                                                                        </div>
+                                                                                                      </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="cantHoras" className="alta-cargo-label">
-                          Cant. de Horas
-                        </label>
-                        <input
-                          id="cantHoras"
-                          name="cantHoras"
-                          type="number"
-                          min="0"
-                          className="alta-cargo-input"
-                          placeholder="Ingrese valor"
-                          value={formData.cantHoras}
-                          onChange={(e) => handleChange('cantHoras', e.target.value)}
-                          autoComplete="off"
-                        />
-                      </div>
-                    </div>
+                                                                                                          <div className="gestion-field">
+                                                                                                            <label htmlFor="cantHoras" className="gestion-label">
+                                                                                                              Cant. de Horas
+                                                                                                            </label>
+                                                                                                            <input
+                                                                                                              id="cantHoras"
+                                                                                                              name="cantHoras"
+                                                                                                              type="number"
+                                                                                                              min="0"
+                                                                                                              className="gestion-input"
+                                                                                                              placeholder="Ingrese valor"
+                                                                                                              value={formData.cantHoras}
+                                                                                                              onChange={(e) => handleChange('cantHoras', e.target.value)}
+                                                                                                              autoComplete="off"
+                                                                                                            />
+                                                                                                          </div>
+                                                                                                      </div>
 
-                    <hr className="alta-cargo-divider" />
+                                                                                                      <hr className="gestion-divider" />
 
-                    {/* SECTION 3: VINCULACIONES */}
-                    <h3 className="alta-cargo-section-title">Vinculaciones</h3>
+                                                                                                      {/* SECTION 3: VINCULACIONES */}
+                                                                                                      <h3 className="gestion-section-title">Vinculaciones</h3>
 
-                    <div className="alta-cargo-grid-2">
-                      <div className="alta-cargo-field">
-                        <label htmlFor="nroDesignacionAsociado" className="alta-cargo-label">
-                          N° Designación Asociado
-                        </label>
-                        <input
-                          id="nroDesignacionAsociado"
-                          name="nroDesignacionAsociado"
-                          type="text"
-                          className="alta-cargo-input"
-                          placeholder="Ingrese valor"
-                          value={formData.nroDesignacionAsociado}
-                          onChange={(e) => handleChange('nroDesignacionAsociado', e.target.value)}
-                          autoComplete="off"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          data-lpignore="true"
-                          data-form-type="other"
-                        />
-                      </div>
+                                                                                                            <div className="gestion-grid-2">
+                                                                                                              <div className="gestion-field">
+                                                                                                                <label htmlFor="nroDesignacionAsociado" className="gestion-label">
+                                                                                                                  N° Designación Asociado
+                                                                                                                </label>
+                                                                                                                <input
+                                                                                                                  id="nroDesignacionAsociado"
+                                                                                                                  name="nroDesignacionAsociado"
+                                                                                                                  type="text"
+                                                                                                                  className="gestion-input"
+                                                                                                                  placeholder="Ingrese valor"
+                                                                                                                  value={formData.nroDesignacionAsociado}
+                                                                                                                  onChange={(e) => handleChange('nroDesignacionAsociado', e.target.value)}
+                                                                                                                  autoComplete="off"
+                                                                                                                  autoCorrect="off"
+                                                                                                                  spellCheck={false}
+                                                                                                                  data-lpignore="true"
+                                                                                                                  data-form-type="other"
+                                                                                                                />
+                                                                                                              </div>
 
-                      <div className="alta-cargo-field">
-                        <label htmlFor="nroCargoPredecesor" className="alta-cargo-label">
-                          N° Cargo Predecesor (Opcional)
-                        </label>
-                        <input
-                          id="nroCargoPredecesor"
-                          name="nroCargoPredecesor"
-                          type="text"
-                          className="alta-cargo-input"
-                          placeholder="Ingrese valor"
-                          value={formData.nroCargoPredecesor}
-                          onChange={(e) => handleChange('nroCargoPredecesor', e.target.value)}
-                          autoComplete="off"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          data-lpignore="true"
-                          data-form-type="other"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                                                                                                                  <div className="gestion-field">
+                                                                                                                    <label htmlFor="nroCargoPredecesor" className="gestion-label">
+                                                                                                                      N° Cargo Predecesor (Opcional)
+                                                                                                                    </label>
+                                                                                                                    <input
+                                                                                                                      id="nroCargoPredecesor"
+                                                                                                                      name="nroCargoPredecesor"
+                                                                                                                      type="text"
+                                                                                                                      className="gestion-input"
+                                                                                                                      placeholder="Ingrese valor"
+                                                                                                                      value={formData.nroCargoPredecesor}
+                                                                                                                      onChange={(e) => handleChange('nroCargoPredecesor', e.target.value)}
+                                                                                                                      autoComplete="off"
+                                                                                                                      autoCorrect="off"
+                                                                                                                      spellCheck={false}
+                                                                                                                      data-lpignore="true"
+                                                                                                                      data-form-type="other"
+                                                                                                                    />
+                                                                                                                  </div>
+                                                                                                              </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                      </div>
+                                                                                                    </div>
 
-            {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="alta-cargo-actions">
-              <button
-                type="button"
-                className="btn-alta-cargo btn-alta-cargo-borrar"
-                onClick={handleClear}
-              >
-                <FiTrash2 className="btn-icon" />
-                <span>Borrar</span>
-              </button>
+                                                                                                    {/* Bottom Actions Toolbar: Borrar & Confirmar */}
+                                                                                                      <div className="gestion-actions">
+                                                                                                        <button
+                                                                                                          type="button"
+                                                                                                          className="gestion-btn gestion-btn--borrar"
+                                                                                                          onClick={handleClear}
+                                                                                                        >
+                                                                                                          <FiTrash2 className="btn-icon" />
+                                                                                                          <span>Borrar</span>
+                                                                                                        </button>
 
-              <button
-                type="button"
-                className="btn-alta-cargo btn-alta-cargo-confirmar"
-                onClick={() => handleSubmit()}
-                disabled={isSubmitting}
-              >
-                <FiCheckSquare className="btn-icon" />
-                <span>{isSubmitting ? 'Guardando...' : 'Confirmar'}</span>
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+                                                                                                        <button
+                                                                                                          type="button"
+                                                                                                          className="gestion-btn gestion-btn--confirmar"
+                                                                                                          onClick={() => handleSubmit()}
+                                                                                                          disabled={isSubmitting}
+                                                                                                        >
+                                                                                                          <FiCheckSquare className="btn-icon" />
+                                                                                                          <span>{isSubmitting ? 'Guardando...' : 'Confirmar'}</span>
+                                                                                                        </button>
+                                                                                                      </div>
+                                                                                                    </div>
+                                                                                                  </main>
+                                                                                              </div>
+                                                                                            </div>
+                                                                                            );
 }

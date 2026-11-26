@@ -80,16 +80,10 @@
 
 .main-card-header h2 {
   font-size: 36px;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
 }
 
 .sub-card-header h3 {
   font-size: 24px;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
   margin: 0;
 }
 
@@ -287,12 +281,6 @@
   white-space: nowrap;
 }
 
-@media (max-height: 900px) {
-  .content-area {
-    padding: 28px;
-  }
-}
-
 @media (min-width: 1024px) {
   .legend-label {
     font-size: 18px;
@@ -390,6 +378,20 @@
   }
 }
 
+@media (max-height: 900px) {
+  .content-area {
+    padding: 20px 28px;
+  }
+
+  .main-card-header h2 {
+    font-size: 32px;
+  }
+
+  .sub-card-header h3 {
+    font-size: 26px;
+  }
+}
+
 /* Vencimientos Alert Banner in Dashboard */
 .dashboard-vencimientos-banner {
   display: flex;
@@ -480,6 +482,7 @@
     opacity: 0;
     transform: translateX(110%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -491,6 +494,7 @@
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(110%);
@@ -560,9 +564,7 @@
 }
 
 .dashboard-alert-modal-keyword {
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  font-weight: 800;
   margin-right: 4px;
   color: #112D21;
 }
@@ -609,6 +611,7 @@
   from {
     width: 0%;
   }
+
   to {
     width: 100%;
   }
