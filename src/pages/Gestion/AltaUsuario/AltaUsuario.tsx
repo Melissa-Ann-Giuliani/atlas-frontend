@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
-import './AltaUsuario.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare, FiRefreshCw, FiEye, FiEyeOff, FiCalendar } from 'react-icons/fi';
@@ -808,55 +808,55 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
   };
 
   return (
-    <div className="alta-usuario-page">
+    <div className="gestion-page gestion-page--alta">
       <Topbar onLogout={onLogout} />
 
-      <div className="alta-usuario-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="alta-usuario-main">
-          <div className="alta-usuario-content-area">
-            <div className="alta-usuario-top-nav">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="alta-usuario-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="alta-usuario-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
-            <div className="alta-usuario-container-card">
-              <div className="alta-usuario-header">
-                <h1 className="alta-usuario-title">Gestión</h1>
+            <div className="gestion-container-card">
+              <div className="gestion-header">
+                <h1 className="gestion-title">Gestión</h1>
               </div>
 
-              <div className="alta-usuario-form-card">
-                <div className="alta-usuario-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Alta de Usuario</h2>
                 </div>
 
-                <div className="alta-usuario-card-body">
-                  <h3 className="alta-usuario-section-title">Datos de Usuario</h3>
+                <div className="gestion-card-body">
+                  <h3 className="gestion-section-title">Datos de Usuario</h3>
 
                   {feedback && (
-                    <div className={`alta-usuario-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
-                  <form className="alta-usuario-form" onSubmit={handleSubmit} autoComplete="off">
-                    <div className="alta-usuario-form-grid">
-                      <div className="alta-usuario-field">
-                        <label htmlFor="apellido" className="alta-usuario-label">
+                  <form className="gestion-form" onSubmit={handleSubmit} autoComplete="off">
+                    <div className="gestion-grid-3">
+                      <div className="gestion-field">
+                        <label htmlFor="apellido" className="gestion-label">
                           Apellido/s
                         </label>
                         <input
                           id="apellido"
                           name="atlas_user_apellido"
                           type="text"
-                          className="alta-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.apellido}
                           onChange={(e) => handleChange('apellido', e.target.value)}
@@ -864,65 +864,65 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                         />
                       </div>
 
-                      <div className="alta-usuario-field">
-                        <label htmlFor="nombre" className="alta-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="nombre" className="gestion-label">
                           Nombre/s
                         </label>
                         <input
                           id="nombre"
                           type="text"
-                          className="alta-usuario-input"
+                          className="gestion-input"
                           placeholder="Ingrese valor"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
                         />
                       </div>
 
-                      <div className="alta-usuario-field">
-                        <label htmlFor="correo" className="alta-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="correo" className="gestion-label">
                           Correo Electrónico
                         </label>
                         <input
                           id="correo"
                           type="email"
-                          className="alta-usuario-input"
+                          className="gestion-input"
                           placeholder="ejemplo@correo.com"
                           value={formData.correo}
                           onChange={(e) => handleChange('correo', e.target.value)}
                         />
                       </div>
 
-                      <div className="alta-usuario-field">
-                        <label htmlFor="username" className="alta-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="username" className="gestion-label">
                           Nombre de Usuario
                         </label>
                         <input
                           id="username"
                           type="text"
-                          className="alta-usuario-input"
+                          className="gestion-input"
                           placeholder="Nombre Provisorio"
                           value={formData.username}
                           onChange={(e) => handleChange('username', e.target.value)}
                         />
                       </div>
 
-                      <div className="alta-usuario-field">
-                        <label htmlFor="password" className="alta-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="password" className="gestion-label">
                           Contraseña
                         </label>
-                        <div className="alta-usuario-password-wrapper">
+                        <div className="gestion-password-wrapper">
                           <input
                             id="password"
                             type={showPassword ? 'text' : 'password'}
-                            className="alta-usuario-input alta-usuario-password-input"
+                            className="gestion-input gestion-password-input"
                             placeholder={isLoadingPassword ? 'Generando contraseña...' : '••••••••'}
                             value={formData.password}
                             onChange={(e) => handleChange('password', e.target.value)}
                           />
-                          <div className="alta-usuario-password-actions">
+                          <div className="gestion-password-actions">
                             <button
                               type="button"
-                              className="password-action-btn"
+                              className="gestion-password-action-btn"
                               title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                               onClick={() => setShowPassword(!showPassword)}
                               tabIndex={-1}
@@ -931,7 +931,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                             </button>
                             <button
                               type="button"
-                              className={`password-action-btn ${isLoadingPassword ? 'spinning' : ''}`}
+                              className={`gestion-password-action-btn ${isLoadingPassword ? 'spinning' : ''}`}
                               title="Regenerar contraseña"
                               onClick={() => fetchRandomPassword()}
                               disabled={isLoadingPassword}
@@ -943,14 +943,14 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                         </div>
                       </div>
 
-                      <div className="alta-usuario-field">
-                        <label htmlFor="rol" className="alta-usuario-label">
+                      <div className="gestion-field">
+                        <label htmlFor="rol" className="gestion-label">
                           Rol
                         </label>
-                        <div className="alta-usuario-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="rol"
-                            className="alta-usuario-select"
+                            className="gestion-select"
                             value={formData.rol}
                             onChange={(e) => handleChange('rol', e.target.value)}
                             disabled={isLoadingRoles && roles.length === 0}
@@ -964,24 +964,24 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-usuario-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
-                    <hr className="alta-usuario-divider" />
+                    <hr className="gestion-divider" />
 
                     {isAdminGlobal && (
-                      <div className="alta-usuario-extra-section">
-                        <div className="alta-usuario-extra-grid alta-usuario-single-grid">
-                          <div className="alta-usuario-field alta-usuario-field-cargo">
-                            <label htmlFor="cargo" className="alta-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo
                             </label>
-                            <div className="alta-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="alta-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargos && cargosAdminGlobal.length === 0}
@@ -997,7 +997,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="alta-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1005,16 +1005,16 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                     )}
 
                     {isAuditor && (
-                      <div className="alta-usuario-extra-section">
-                        <div className="alta-usuario-extra-grid alta-usuario-single-grid">
-                          <div className="alta-usuario-field alta-usuario-field-cargo">
-                            <label htmlFor="cargo" className="alta-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-single">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo
                             </label>
-                            <div className="alta-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="alta-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargosAuditor && cargosAuditor.length === 0}
@@ -1030,7 +1030,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="alta-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
                         </div>
@@ -1038,16 +1038,16 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                     )}
 
                     {isAdminUnidad && (
-                      <div className="alta-usuario-extra-section">
-                        <div className="alta-usuario-extra-grid alta-usuario-admin-unidad-grid">
-                          <div className="alta-usuario-field alta-usuario-field-cargo">
-                            <label htmlFor="cargo" className="alta-usuario-label">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-3">
+                          <div className="gestion-field">
+                            <label htmlFor="cargo" className="gestion-label">
                               Cargo
                             </label>
-                            <div className="alta-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="cargo"
-                                className="alta-usuario-select"
+                                className="gestion-select"
                                 value={formData.cargo}
                                 onChange={(e) => handleChange('cargo', e.target.value)}
                                 disabled={isLoadingCargosUnidad && cargosAdminUnidad.length === 0}
@@ -1063,18 +1063,18 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="alta-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="alta-usuario-field alta-usuario-field-dependencia">
-                            <label htmlFor="dependencia" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="dependencia" className="gestion-label">
                               Dependencia
                             </label>
-                            <div className="alta-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="dependencia"
-                                className="alta-usuario-select"
+                                className="gestion-select"
                                 value={formData.dependencia}
                                 onChange={(e) => handleChange('dependencia', e.target.value)}
                                 disabled={isLoadingDependencias && dependencias.length === 0}
@@ -1090,19 +1090,19 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="alta-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
                           {formData.dependencia && (
-                            <div className="alta-usuario-field alta-usuario-field-unidad">
-                              <label htmlFor="unidad" className="alta-usuario-label">
+                            <div className="gestion-field">
+                              <label htmlFor="unidad" className="gestion-label">
                                 {dynamicUnidadLabel}
                               </label>
-                              <div className="alta-usuario-select-wrapper">
+                              <div className="gestion-select-wrapper">
                                 <select
                                   id="unidad"
-                                  className="alta-usuario-select"
+                                  className="gestion-select"
                                   value={formData.unidad}
                                   onChange={(e) => handleChange('unidad', e.target.value)}
                                   disabled={isLoadingUnidades}
@@ -1116,7 +1116,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                     </option>
                                   ))}
                                 </select>
-                                <FiChevronDown className="alta-usuario-select-caret" />
+                                <FiChevronDown className="gestion-select-caret" />
                               </div>
                             </div>
                           )}
@@ -1125,17 +1125,17 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                     )}
 
                     {isDocente && (
-                      <div className="alta-usuario-extra-section">
-                        <div className="alta-usuario-docente-grid">
+                      <div className="gestion-extra-section">
+                        <div className="gestion-grid-4">
                           {/* Fila 1 */}
-                          <div className="alta-usuario-field">
-                            <label htmlFor="tipoDni" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="tipoDni" className="gestion-label">
                               Tipo DNI
                             </label>
-                            <div className="alta-usuario-select-wrapper">
+                            <div className="gestion-select-wrapper">
                               <select
                                 id="tipoDni"
-                                className="alta-usuario-select"
+                                className="gestion-select"
                                 value={formData.tipoDni}
                                 onChange={(e) => handleChange('tipoDni', e.target.value)}
                                 disabled={isLoadingTiposDni && tiposDni.length === 0}
@@ -1149,19 +1149,19 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                   </option>
                                 ))}
                               </select>
-                              <FiChevronDown className="alta-usuario-select-caret" />
+                              <FiChevronDown className="gestion-select-caret" />
                             </div>
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="numeroDni" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="numeroDni" className="gestion-label">
                               Número
                             </label>
                             <input
                               id="numeroDni"
                               name="docente_numero_documento"
                               type="text"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.numeroDni}
                               onChange={(e) => handleChange('numeroDni', e.target.value)}
@@ -1169,15 +1169,15 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                             />
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="cuil" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="cuil" className="gestion-label">
                               CUIL
                             </label>
                             <input
                               id="cuil"
                               name="docente_cuil"
                               type="text"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.cuil}
                               onChange={(e) => handleChange('cuil', e.target.value)}
@@ -1185,15 +1185,15 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                             />
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="domicilio" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="domicilio" className="gestion-label">
                               Domicilio
                             </label>
                             <input
                               id="domicilio"
                               name="docente_domicilio"
                               type="text"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.domicilio}
                               onChange={(e) => handleChange('domicilio', e.target.value)}
@@ -1202,8 +1202,8 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                           </div>
 
                           {/* Fila 2 */}
-                          <div className="alta-usuario-field">
-                            <label htmlFor="legajo" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="legajo" className="gestion-label">
                               N° Legajo
                             </label>
                             <input
@@ -1211,7 +1211,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                               name="docente_legajo"
                               type="number"
                               min="1"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.legajo}
                               onChange={(e) => handleChange('legajo', e.target.value)}
@@ -1219,15 +1219,15 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                             />
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="emailInstitucional" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="emailInstitucional" className="gestion-label">
                               Email Institucional
                             </label>
                             <input
                               id="emailInstitucional"
                               name="docente_email_institucional"
                               type="email"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.emailInstitucional}
                               onChange={(e) => handleChange('emailInstitucional', e.target.value)}
@@ -1236,11 +1236,11 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                             />
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="fechaIngreso" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="fechaIngreso" className="gestion-label">
                               Fecha de Ingreso a la Universidad
                             </label>
-                            <div className="alta-usuario-datepicker-container">
+                            <div className="gestion-datepicker-container">
                               <DatePicker
                                 id="fechaIngreso"
                                 name="docente_fecha_ingreso"
@@ -1249,18 +1249,18 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="DD/MM/AAAA"
                                 locale="es"
-                                className="alta-usuario-input alta-usuario-datepicker-input"
+                                className="gestion-input gestion-datepicker-input"
                                 autoComplete="off"
                                 showYearDropdown
                                 showMonthDropdown
                                 dropdownMode="select"
                               />
-                              <FiCalendar className="alta-usuario-datepicker-icon" />
+                              <FiCalendar className="gestion-datepicker-icon" />
                             </div>
                           </div>
 
-                          <div className="alta-usuario-field">
-                            <label htmlFor="antigPrevia" className="alta-usuario-label">
+                          <div className="gestion-field">
+                            <label htmlFor="antigPrevia" className="gestion-label">
                               Antigüedad Previa
                             </label>
                             <input
@@ -1268,7 +1268,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
                               name="docente_antiguedad_previa"
                               type="number"
                               min="0"
-                              className="alta-usuario-input"
+                              className="gestion-input"
                               placeholder="Ingrese valor"
                               value={formData.antigPrevia}
                               onChange={(e) => handleChange('antigPrevia', e.target.value)}
@@ -1283,10 +1283,10 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
               </div>
             </div>
 
-            <div className="alta-usuario-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-alta-usuario btn-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
               >
                 <FiTrash2 className="btn-icon" />
@@ -1295,7 +1295,7 @@ export default function AltaUsuario({ onLogout, onNavigate, onBack, initialRol }
 
               <button
                 type="button"
-                className="btn-alta-usuario btn-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
               >

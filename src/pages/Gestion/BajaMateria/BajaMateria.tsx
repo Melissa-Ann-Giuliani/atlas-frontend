@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './BajaMateria.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import {
@@ -930,46 +930,46 @@ export default function BajaMateria({
   const hasLoadedMateria = Boolean(formData.materiaId);
 
   return (
-    <div className="baja-materia-page">
+    <div className="gestion-page gestion-page--baja">
       <Topbar onLogout={onLogout} />
 
-      <div className="baja-materia-body">
+      <div className="gestion-body">
         <Sidebar activeItem="gestion" onNavigate={onNavigate} />
 
-        <main className="baja-materia-main">
-          <div className="baja-materia-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Back Navigation */}
-            <div className="baja-materia-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="baja-materia-back-btn"
+                className="gestion-back-btn"
                 onClick={handleBack}
               >
-                <FiChevronLeft className="baja-materia-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="baja-materia-container-card">
+            <div className="gestion-container-card">
               {/* Header & Search Bar Row */}
-              <div className="baja-materia-header-row">
-                <div className="baja-materia-header-left">
-                  <h1 className="baja-materia-title">Gestión</h1>
+              <div className="gestion-header-row">
+                <div className="gestion-header-left">
+                  <h1 className="gestion-title">Gestión</h1>
                 </div>
 
                 {/* Search Bar matching Modificar Materia selectors/inputs */}
-                <div className="baja-materia-search-card">
-                  <label htmlFor="searchMateriaInput" className="baja-materia-search-label">
+                <div className="gestion-search-card">
+                  <label htmlFor="searchMateriaInput" className="gestion-search-label">
                     Buscar Materia a Dar de Baja por Nombre
                   </label>
-                  <div className="baja-materia-search-row">
-                    <div className="baja-materia-search-input-wrap" ref={searchContainerRef}>
+                  <div className="gestion-search-row">
+                    <div className="gestion-search-input-wrap" ref={searchContainerRef}>
                       <input
                         id="searchMateriaInput"
                         name="busqueda_materia_query"
                         type="search"
-                        className="baja-materia-search-input"
+                        className="gestion-search-input"
                         placeholder="Ingrese valor"
                         value={searchQuery}
                         onChange={(e) => {
@@ -991,15 +991,15 @@ export default function BajaMateria({
                         data-form-type="other"
                         data-1p-ignore="true"
                       />
-                      <FiSearch className="baja-materia-search-icon" />
+                      <FiSearch className="gestion-search-icon" />
 
                       {/* Suggestions Dropdown */}
                       {showSuggestions && suggestions.length > 0 && (
-                        <ul className="baja-materia-suggestions-list" role="listbox">
+                        <ul className="gestion-suggestions-list" role="listbox">
                           {suggestions.map((item, idx) => (
                             <li
                               key={item.id ?? idx}
-                              className={`baja-materia-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
+                              className={`gestion-suggestion-item ${idx === activeSuggestionIndex ? 'active' : ''}`}
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 selectSuggestion(item);
@@ -1008,18 +1008,18 @@ export default function BajaMateria({
                               role="option"
                               aria-selected={idx === activeSuggestionIndex}
                             >
-                              <div className="baja-materia-suggestion-header">
-                                <span className="baja-materia-suggestion-name">
+                              <div className="gestion-suggestion-header">
+                                <span className="gestion-suggestion-title">
                                   {item.nombre}
                                 </span>
                                 {item.planEstudio ? (
-                                  <span className="baja-materia-suggestion-plan-badge">
+                                  <span className="gestion-suggestion-badge">
                                     Plan {item.planEstudio}
                                   </span>
                                 ) : null}
                               </div>
                               {(item.unidad || item.anio) && (
-                                <span className="baja-materia-suggestion-sub">
+                                <span className="gestion-suggestion-sub">
                                   {[
                                     item.unidad,
                                     item.anio ? `Año: ${item.anio}` : null,
@@ -1035,7 +1035,7 @@ export default function BajaMateria({
                     </div>
                     <button
                       type="button"
-                      className="baja-materia-search-btn"
+                      className="gestion-search-btn"
                       onClick={() => handleSearch()}
                       disabled={isSearching}
                     >
@@ -1047,14 +1047,14 @@ export default function BajaMateria({
               </div>
 
               {/* Form Card styled with Red Border & Dark Red Header matching Baja de Cargo */}
-              <div className="baja-materia-form-card">
-                <div className="baja-materia-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Baja de Materia</h2>
                 </div>
 
-                <div className="baja-materia-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`baja-materia-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
@@ -1062,8 +1062,8 @@ export default function BajaMateria({
                   {hasLoadedMateria &&
                     isMateriaDadaDeBaja(formData.estado) &&
                     feedback?.type !== 'success' && (
-                      <div className="baja-materia-warning-box">
-                        <FiAlertTriangle className="baja-materia-warning-icon" />
+                      <div className="gestion-warning-box">
+                        <FiAlertTriangle className="gestion-warning-icon" />
                         <span>
                           Esta materia ya ha sido dada de baja. Su estado actual es{' '}
                           <strong>{formData.estado || 'Dada de baja'}</strong>.
@@ -1071,14 +1071,14 @@ export default function BajaMateria({
                       </div>
                     )}
 
-                  <div className="baja-materia-form">
+                  <div className="gestion-form">
                     {/* SECTION: DATOS DE MATERIA */}
-                    <h3 className="baja-materia-section-title">Datos de Materia</h3>
+                    <h3 className="gestion-section-title">Datos de Materia</h3>
 
                     {/* Row 1: Nombre, Cantidad de Horas */}
-                    <div className="baja-materia-grid-top">
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_nombre" className="baja-materia-label">
+                    <div className="gestion-grid-asymmetric">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_nombre" className="gestion-label">
                           Nombre *
                         </label>
                         <input
@@ -1086,7 +1086,7 @@ export default function BajaMateria({
                           name="nombre"
                           type="text"
                           maxLength={50}
-                          className="baja-materia-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de la materia (máx. 50 caracteres)"
                           value={formData.nombre}
                           readOnly
@@ -1094,15 +1094,15 @@ export default function BajaMateria({
                         />
                       </div>
 
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_cantHoras" className="baja-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_cantHoras" className="gestion-label">
                           Cantidad de Horas *
                         </label>
                         <input
                           id="baja_cantHoras"
                           name="cantHoras"
                           type="text"
-                          className="baja-materia-input"
+                          className="gestion-input"
                           placeholder="Horas semanales (1 a 40)"
                           value={formData.cantHoras}
                           readOnly
@@ -1112,15 +1112,15 @@ export default function BajaMateria({
                     </div>
 
                     {/* Row 2: Dependencia y Unidad Académica */}
-                    <div className="baja-materia-grid-2">
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_dependencia" className="baja-materia-label">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_dependencia" className="gestion-label">
                           Dependencia
                         </label>
-                        <div className="baja-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_dependencia"
-                            className="baja-materia-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             disabled
                           >
@@ -1130,18 +1130,18 @@ export default function BajaMateria({
                                 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_unidad" className="baja-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_unidad" className="gestion-label">
                           Unidad Académica *
                         </label>
-                        <div className="baja-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_unidad"
-                            className="baja-materia-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             disabled
                           >
@@ -1151,21 +1151,21 @@ export default function BajaMateria({
                                 (!formData.dependencia ? 'Primero seleccione una dependencia' : 'Seleccione')}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 3: Año Educativo, Despliegue, Semestre (if Semestral), N° de Plan */}
-                    <div className={formData.despliegueTipo === 'Semestral' ? 'baja-materia-grid-bottom' : 'baja-materia-grid-3'}>
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_anoEducativo" className="baja-materia-label">
+                    <div className={formData.despliegueTipo === 'Semestral' ? 'gestion-grid-4' : 'gestion-grid-3'}>
+                      <div className="gestion-field">
+                        <label htmlFor="baja_anoEducativo" className="gestion-label">
                           Año Educativo *
                         </label>
-                        <div className="baja-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_anoEducativo"
-                            className="baja-materia-select"
+                            className="gestion-select"
                             value={formData.anoEducativo}
                             disabled
                           >
@@ -1173,18 +1173,18 @@ export default function BajaMateria({
                               {formData.anoEducativo || 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_despliegueTipo" className="baja-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_despliegueTipo" className="gestion-label">
                           Despliegue *
                         </label>
-                        <div className="baja-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="baja_despliegueTipo"
-                            className="baja-materia-select"
+                            className="gestion-select"
                             value={formData.despliegueTipo}
                             disabled
                           >
@@ -1192,19 +1192,19 @@ export default function BajaMateria({
                               {formData.despliegueTipo || 'Seleccione'}
                             </option>
                           </select>
-                          <FiChevronDown className="baja-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
                       {formData.despliegueTipo === 'Semestral' && (
-                        <div className="baja-materia-field">
-                          <label htmlFor="baja_despliegueSemestre" className="baja-materia-label">
+                        <div className="gestion-field">
+                          <label htmlFor="baja_despliegueSemestre" className="gestion-label">
                             Semestre *
                           </label>
-                          <div className="baja-materia-select-wrapper">
+                          <div className="gestion-select-wrapper">
                             <select
                               id="baja_despliegueSemestre"
-                              className="baja-materia-select"
+                              className="gestion-select"
                               value={formData.despliegueSemestre}
                               disabled
                             >
@@ -1212,20 +1212,20 @@ export default function BajaMateria({
                                 {formData.despliegueSemestre || 'Seleccione'}
                               </option>
                             </select>
-                            <FiChevronDown className="baja-materia-select-caret" />
+                            <FiChevronDown className="gestion-select-caret" />
                           </div>
                         </div>
                       )}
 
-                      <div className="baja-materia-field">
-                        <label htmlFor="baja_nroPlan" className="baja-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="baja_nroPlan" className="gestion-label">
                           N° de Plan de Estudio *
                         </label>
                         <input
                           id="baja_nroPlan"
                           name="nroPlan"
                           type="text"
-                          className="baja-materia-input"
+                          className="gestion-input"
                           placeholder="Ej: 2023"
                           value={formData.nroPlan}
                           readOnly
@@ -1239,10 +1239,10 @@ export default function BajaMateria({
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="baja-materia-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-baja-materia btn-baja-materia-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting}
               >
@@ -1252,7 +1252,7 @@ export default function BajaMateria({
 
               <button
                 type="button"
-                className="btn-baja-materia btn-baja-materia-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={handleOpenConfirmModal}
                 disabled={
                   isSubmitting ||
@@ -1276,24 +1276,24 @@ export default function BajaMateria({
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="baja-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baja-materia-modal-title">
-          <div className="baja-modal">
-            <div className="baja-modal-header">
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+        <div className="gestion-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baja-materia-modal-title">
+          <div className="gestion-modal">
+            <div className="gestion-modal-header">
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
               <h2 id="baja-materia-modal-title">Confirmar Baja de Materia</h2>
-              <FiAlertTriangle className="baja-modal-warning-icon" />
+              <FiAlertTriangle className="gestion-modal-warning-icon" />
             </div>
-            <div className="baja-modal-content">
+            <div className="gestion-modal-content">
               <p>
                 ¿Está seguro de que desea dar de baja la materia <strong>"{formData.nombre}"</strong>?
               </p>
-              <p className="baja-modal-subtext">
+              <p className="gestion-modal-subtext">
                 Esta acción dará de baja la materia en el sistema y cambiará su estado a <strong>Dada de baja</strong>.
               </p>
-              <div className="baja-modal-actions">
+              <div className="gestion-modal-actions">
                 <button
                   type="button"
-                  className="baja-modal-btn-cancel"
+                  className="gestion-modal-btn-cancel"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={isSubmitting}
                 >
@@ -1301,7 +1301,7 @@ export default function BajaMateria({
                 </button>
                 <button
                   type="button"
-                  className="baja-modal-btn-confirm"
+                  className="gestion-modal-btn-confirm"
                   onClick={handleSubmitBaja}
                   disabled={isSubmitting}
                 >

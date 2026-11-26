@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './AltaMateria.css';
+import '../GestionForm.css';
 import Sidebar from '../../../components/Sidebar';
 import Topbar from '../../../components/Topbar';
 import { FiChevronLeft, FiChevronDown, FiTrash2, FiCheckSquare } from 'react-icons/fi';
@@ -333,62 +333,62 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
   };
 
   return (
-    <div className="alta-materia-page">
+    <div className="gestion-page gestion-page--alta">
       <Topbar onLogout={onLogout} />
 
-      <div className="alta-materia-body">
+      <div className="gestion-body">
         <Sidebar
           activeItem="gestion"
           onNavigate={onNavigate}
         />
 
-        <main className="alta-materia-main">
-          <div className="alta-materia-content-area">
+        <main className="gestion-main">
+          <div className="gestion-content-area">
             {/* Top Navigation: Retroceder */}
-            <div className="alta-materia-top-nav">
+            <div className="gestion-top-nav">
               <button
                 type="button"
-                className="alta-materia-back-btn"
+                className="gestion-back-btn"
                 onClick={onBack || (() => onNavigate && onNavigate('gestion'))}
               >
-                <FiChevronLeft className="alta-materia-back-icon" />
+                <FiChevronLeft className="gestion-back-icon" />
                 <span>Retroceder</span>
               </button>
             </div>
 
             {/* Container Card */}
-            <div className="alta-materia-container-card">
-              <div className="alta-materia-header">
-                <h1 className="alta-materia-title">Gestión</h1>
+            <div className="gestion-container-card">
+              <div className="gestion-header">
+                <h1 className="gestion-title">Gestión</h1>
               </div>
 
               {/* Form Card */}
-              <div className="alta-materia-form-card">
-                <div className="alta-materia-card-header">
+              <div className="gestion-form-card">
+                <div className="gestion-card-header">
                   <h2>Alta de Materia</h2>
                 </div>
 
-                <div className="alta-materia-card-body">
+                <div className="gestion-card-body">
                   {feedback && (
-                    <div className={`alta-materia-feedback feedback-${feedback.type}`}>
+                    <div className={`gestion-feedback feedback-${feedback.type}`}>
                       {feedback.message}
                     </div>
                   )}
 
                   <form
-                    className="alta-materia-form"
+                    className="gestion-form"
                     onSubmit={handleSubmit}
                     onFocusCapture={() => {
                       if (feedback) setFeedback(null);
                     }}
                   >
                     {/* SECTION: DATOS DE MATERIA */}
-                    <h3 className="alta-materia-section-title">Datos de Materia</h3>
+                    <h3 className="gestion-section-title">Datos de Materia</h3>
 
                     {/* Row 1: Nombre, Cantidad de Horas */}
-                    <div className="alta-materia-grid-top">
-                      <div className="alta-materia-field">
-                        <label htmlFor="nombre" className="alta-materia-label">
+                    <div className="gestion-grid-asymmetric">
+                      <div className="gestion-field">
+                        <label htmlFor="nombre" className="gestion-label">
                           Nombre *
                         </label>
                         <input
@@ -396,7 +396,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                           name="nombre"
                           type="text"
                           maxLength={50}
-                          className="alta-materia-input"
+                          className="gestion-input"
                           placeholder="Ingrese nombre de la materia (máx. 50 caracteres)"
                           value={formData.nombre}
                           onChange={(e) => handleChange('nombre', e.target.value)}
@@ -404,8 +404,8 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                         />
                       </div>
 
-                      <div className="alta-materia-field">
-                        <label htmlFor="cantHoras" className="alta-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="cantHoras" className="gestion-label">
                           Cantidad de Horas *
                         </label>
                         <input
@@ -414,7 +414,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                           type="number"
                           min="1"
                           max="40"
-                          className="alta-materia-input"
+                          className="gestion-input"
                           placeholder="Horas semanales (1 a 40)"
                           value={formData.cantHoras}
                           onChange={(e) => handleChange('cantHoras', e.target.value)}
@@ -424,15 +424,15 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                     </div>
 
                     {/* Row 2: Dependencia y Unidad Académica */}
-                    <div className="alta-materia-grid-2">
-                      <div className="alta-materia-field">
-                        <label htmlFor="dependencia" className="alta-materia-label">
+                    <div className="gestion-grid-2">
+                      <div className="gestion-field">
+                        <label htmlFor="dependencia" className="gestion-label">
                           Dependencia
                         </label>
-                        <div className="alta-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="dependencia"
-                            className="alta-materia-select"
+                            className="gestion-select"
                             value={formData.dependencia}
                             onChange={(e) => handleChange('dependencia', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || (isLoadingCatalogs && dependencias.length === 0)}
@@ -446,18 +446,18 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="alta-materia-field">
-                        <label htmlFor="unidad" className="alta-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="unidad" className="gestion-label">
                           Unidad Académica *
                         </label>
-                        <div className="alta-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="unidad"
-                            className="alta-materia-select"
+                            className="gestion-select"
                             value={formData.unidad}
                             onChange={(e) => handleChange('unidad', e.target.value)}
                             disabled={(!isGlobal && !!userUnitId) || isLoadingUnidades || (!formData.dependencia && unidades.length === 0)}
@@ -475,21 +475,21 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
                     </div>
 
                     {/* Row 3: Año Educativo, Despliegue, N° de Plan */}
-                    <div className={formData.despliegueTipo === 'Semestral' ? 'alta-materia-grid-bottom' : 'alta-materia-grid-3'}>
-                      <div className="alta-materia-field">
-                        <label htmlFor="anoEducativo" className="alta-materia-label">
+                    <div className={formData.despliegueTipo === 'Semestral' ? 'gestion-grid-4' : 'gestion-grid-3'}>
+                      <div className="gestion-field">
+                        <label htmlFor="anoEducativo" className="gestion-label">
                           Año Educativo *
                         </label>
-                        <div className="alta-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="anoEducativo"
-                            className="alta-materia-select"
+                            className="gestion-select"
                             value={formData.anoEducativo}
                             onChange={(e) => handleChange('anoEducativo', e.target.value)}
                           >
@@ -502,18 +502,18 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                               </option>
                             ))}
                           </select>
-                          <FiChevronDown className="alta-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
-                      <div className="alta-materia-field">
-                        <label htmlFor="despliegueTipo" className="alta-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="despliegueTipo" className="gestion-label">
                           Despliegue *
                         </label>
-                        <div className="alta-materia-select-wrapper">
+                        <div className="gestion-select-wrapper">
                           <select
                             id="despliegueTipo"
-                            className="alta-materia-select"
+                            className="gestion-select"
                             value={formData.despliegueTipo}
                             onChange={(e) => handleChange('despliegueTipo', e.target.value)}
                           >
@@ -523,19 +523,19 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                             <option value="Anual">Anual</option>
                             <option value="Semestral">Semestral</option>
                           </select>
-                          <FiChevronDown className="alta-materia-select-caret" />
+                          <FiChevronDown className="gestion-select-caret" />
                         </div>
                       </div>
 
                       {formData.despliegueTipo === 'Semestral' && (
-                        <div className="alta-materia-field">
-                          <label htmlFor="despliegueSemestre" className="alta-materia-label">
+                        <div className="gestion-field">
+                          <label htmlFor="despliegueSemestre" className="gestion-label">
                             Semestre *
                           </label>
-                          <div className="alta-materia-select-wrapper">
+                          <div className="gestion-select-wrapper">
                             <select
                               id="despliegueSemestre"
-                              className="alta-materia-select"
+                              className="gestion-select"
                               value={formData.despliegueSemestre}
                               onChange={(e) => handleChange('despliegueSemestre', e.target.value)}
                             >
@@ -545,13 +545,13 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                               <option value="Primer Semestre">Primer Semestre</option>
                               <option value="Segundo Semestre">Segundo Semestre</option>
                             </select>
-                            <FiChevronDown className="alta-materia-select-caret" />
+                            <FiChevronDown className="gestion-select-caret" />
                           </div>
                         </div>
                       )}
 
-                      <div className="alta-materia-field">
-                        <label htmlFor="nroPlan" className="alta-materia-label">
+                      <div className="gestion-field">
+                        <label htmlFor="nroPlan" className="gestion-label">
                           N° de Plan de Estudio *
                         </label>
                         <input
@@ -560,7 +560,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
                           type="number"
                           min="1900"
                           max="2100"
-                          className="alta-materia-input"
+                          className="gestion-input"
                           placeholder="Ej: 2023"
                           value={formData.nroPlan}
                           onChange={(e) => handleChange('nroPlan', e.target.value)}
@@ -574,10 +574,10 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
             </div>
 
             {/* Bottom Actions Toolbar: Borrar & Confirmar */}
-            <div className="alta-materia-actions">
+            <div className="gestion-actions">
               <button
                 type="button"
-                className="btn-alta-materia btn-alta-materia-borrar"
+                className="gestion-btn gestion-btn--borrar"
                 onClick={handleClear}
                 disabled={isSubmitting}
               >
@@ -587,7 +587,7 @@ export default function AltaMateria({ onLogout, onNavigate, onBack }: AltaMateri
 
               <button
                 type="button"
-                className="btn-alta-materia btn-alta-materia-confirmar"
+                className="gestion-btn gestion-btn--confirmar"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
               >

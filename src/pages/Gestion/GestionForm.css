@@ -146,7 +146,9 @@
 }
 
 /* Page Header (Simple for Alta, Flex Row with Search Bar for Modificar / Baja) */
-.gestion-header {
+.gestion-page--alta .gestion-header,
+.gestion-page--modificar .gestion-header,
+.gestion-page--baja .gestion-header {
   margin-bottom: 20px;
   flex-shrink: 0;
 }
@@ -198,6 +200,46 @@
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+/* Optional Filter Select inside Search Bar (e.g. Role Filter in Usuarios) */
+.gestion-search-filter-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 170px;
+}
+
+.gestion-search-filter-select {
+  height: 36px;
+  width: 100%;
+  padding: 6px 32px 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--users-secondary-300, #C4B59C);
+  background-color: var(--users-secondary-50, #F6F3EE);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--admin-primary-900, #1A2E1C);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gestion-search-filter-select:focus {
+  border-color: var(--gestion-focus-border);
+  box-shadow: 0 0 0 2px var(--gestion-focus-ring);
+}
+
+.gestion-search-filter-caret {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--admin-primary-900, #1A2E1C);
+  font-size: 15px;
 }
 
 .gestion-search-input-wrap {
@@ -369,23 +411,25 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
-.gestion-card-header {
+.gestion-form-card .gestion-card-header {
   background-color: var(--gestion-accent);
   padding: 12px 24px;
   flex-shrink: 0;
+  text-align: left;
 }
 
-.gestion-card-header h2 {
+.gestion-form-card .gestion-card-header h2 {
   margin: 0;
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 24px;
   font-weight: 700;
   color: #FFFFFF;
   letter-spacing: 0.2px;
+  text-align: left;
 }
 
 /* Scrollable Form Body */
-.gestion-card-body {
+.gestion-form-card .gestion-card-body {
   padding: 20px 28px;
   display: flex;
   flex-direction: column;
@@ -495,15 +539,16 @@
   text-align: left;
 }
 
-.gestion-divider {
+.gestion-form .gestion-divider {
   border: none;
   border-top: 1px solid #757873;
   opacity: 0.55;
   margin: 20px 0;
+  margin-inline: 0;
   width: 100%;
 }
 
-.gestion-page--modificar .gestion-divider {
+.gestion-page--modificar .gestion-form .gestion-divider {
   border-top: 1px solid var(--users-secondary-100, #E7DFD0);
   opacity: 1;
 }
@@ -522,7 +567,49 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-asymmetric {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(180px, 0.8fr);
+  column-gap: 24px;
+  row-gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gestion-grid-single {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px);
+  gap: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.gestion-extra-section {
+  display: flex;
+  flex-direction: column;
+  padding-top: 6px;
+  animation: gestionFadeInField 0.25s ease-out;
+}
+
+@keyframes gestionFadeInField {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Form Fields */
@@ -694,6 +781,105 @@
 .gestion-datepicker-container:hover .gestion-datepicker-icon,
 .gestion-datepicker-container:focus-within .gestion-datepicker-icon {
   color: #1A2E1C;
+}
+
+/* Custom theme for react-datepicker popup */
+.react-datepicker {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  border-radius: 8px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.react-datepicker__header {
+  background-color: #F8FAF7 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+  padding-top: 10px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header {
+  font-weight: 600 !important;
+  color: #1A2E1C !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--admin-primary-600, #4B8653) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+}
+
+.react-datepicker__day:hover {
+  border-radius: 6px !important;
+  background-color: rgba(75, 134, 83, 0.15) !important;
+}
+
+.react-datepicker__year-select,
+.react-datepicker__month-select {
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2D3748;
+  margin: 0 4px;
+}
+
+/* Password Input with Action Icons (Show/Hide, Regenerate) */
+.gestion-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gestion-password-input {
+  width: 100%;
+  padding-right: 68px;
+}
+
+.gestion-password-actions {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gestion-password-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.gestion-password-action-btn:hover {
+  color: var(--gestion-accent);
+  background-color: rgba(42, 75, 47, 0.08);
+}
+
+.gestion-password-action-btn.spinning svg {
+  animation: gestionSpin 0.8s linear infinite;
+}
+
+@keyframes gestionSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Bottom Actions Toolbar */
@@ -968,8 +1154,13 @@
     width: auto;
   }
 
-  .gestion-grid-3 {
+  .gestion-grid-3,
+  .gestion-grid-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gestion-grid-asymmetric {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -986,7 +1177,7 @@
     font-size: 32px;
   }
 
-  .gestion-card-header h2 {
+  .gestion-form-card .gestion-card-header h2 {
     font-size: 20px;
   }
 
@@ -995,7 +1186,10 @@
   }
 
   .gestion-grid-3,
-  .gestion-grid-2 {
+  .gestion-grid-2,
+  .gestion-grid-4,
+  .gestion-grid-asymmetric,
+  .gestion-grid-single {
     grid-template-columns: 1fr;
     gap: 14px;
   }
@@ -1005,6 +1199,7 @@
     align-items: stretch;
   }
 
+  .gestion-search-filter-wrap,
   .gestion-search-input-wrap {
     width: 100%;
   }
@@ -1033,11 +1228,11 @@
     font-size: 36px;
   }
 
-  .gestion-card-header {
+  .gestion-form-card .gestion-card-header {
     padding: 10px 20px;
   }
 
-  .gestion-card-body {
+  .gestion-form-card .gestion-card-body {
     padding: 16px 24px;
   }
 
@@ -1046,21 +1241,16 @@
     margin: 0 0 12px 0;
   }
 
-  .gestion-divider {
+  .gestion-form .gestion-divider {
     margin: 16px 0;
   }
 
   .gestion-grid-3,
-  .gestion-grid-2 {
+  .gestion-grid-2,
+  .gestion-grid-4,
+  .gestion-grid-asymmetric {
     row-gap: 12px;
-  }
-
-  .gestion-grid-3 {
     margin-bottom: 16px;
-  }
-
-  .gestion-grid-2 {
-    margin-bottom: 4px;
   }
 
   .gestion-input,
