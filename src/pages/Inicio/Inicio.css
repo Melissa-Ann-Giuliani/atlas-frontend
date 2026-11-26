@@ -154,23 +154,6 @@
   font-size: 12px;
 }
 
-
-
-.details-btn {
-  background-color: #333;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.details-btn:hover {
-  background-color: #444;
-}
-
 /* Sub Cards Container */
 .sub-cards-container {
   display: grid;
@@ -336,11 +319,6 @@
   .chart-section {
     max-height: 270px;
   }
-
-  .details-btn {
-    font-size: 16px;
-    padding: 10px 20px;
-  }
 }
 
 @media (min-width: 1800px) {
@@ -370,11 +348,6 @@
 
   .chart-section {
     max-height: 280px;
-  }
-
-  .details-btn {
-    font-size: 18px;
-    padding: 10px 20px;
   }
 }
 

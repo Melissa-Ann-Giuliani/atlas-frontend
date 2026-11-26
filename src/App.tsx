@@ -159,6 +159,15 @@ function App() {
     return 'docentes';
   });
 
+  const [listadoInitialFilters, setListadoInitialFilters] = useState<string[] | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('atlas_listado_initial_filters');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const updateListadoTab = (tab: 'docentes' | 'cargos' | 'licencias') => {
     setListadoTab(tab);
     sessionStorage.setItem('atlas_listado_tab', tab);
@@ -221,6 +230,8 @@ function App() {
     setSelectedCatedra(null);
     setCargoHistory([]);
     setListadoTab('docentes');
+    setListadoInitialFilters(null);
+    sessionStorage.removeItem('atlas_listado_initial_filters');
     setNewUserInitialRole(null);
     setNewUserReturnPage(null);
     setAltaCargoReturnPage(null);
@@ -383,6 +394,13 @@ function App() {
       if (data?.tab) {
         updateListadoTab(data.tab);
       }
+      if (Array.isArray(data?.filters)) {
+        setListadoInitialFilters(data.filters);
+        sessionStorage.setItem('atlas_listado_initial_filters', JSON.stringify(data.filters));
+      } else {
+        setListadoInitialFilters(null);
+        sessionStorage.removeItem('atlas_listado_initial_filters');
+      }
     }
   };
 
@@ -392,9 +410,11 @@ function App() {
         case 'listado':
           return (
             <Listado
+              key={listadoInitialFilters ? listadoInitialFilters.join('|') : 'default'}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               initialTab={listadoTab}
+              initialFilters={listadoInitialFilters}
               onTabChange={updateListadoTab}
             />
           );

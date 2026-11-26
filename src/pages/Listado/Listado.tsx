@@ -80,6 +80,7 @@ interface ListadoProps {
   onLogout?: () => void;
   onNavigate?: (page: any, data?: any) => void;
   initialTab?: 'docentes' | 'cargos' | 'licencias';
+  initialFilters?: string[] | null;
   onTabChange?: (tab: 'docentes' | 'cargos' | 'licencias') => void;
 }
 
@@ -97,12 +98,16 @@ export default function Listado({
   onLogout,
   onNavigate,
   initialTab = 'docentes',
+  initialFilters = null,
   onTabChange
 }: ListadoProps) {
-  const [docentesFilters, setDocentesFilters] = useState<string[]>(['Estado: Activo']);
+  const [docentesFilters, setDocentesFilters] = useState<string[]>(() =>
+    initialFilters && initialFilters.length > 0 ? initialFilters : ['Estado: Activo']
+  );
   const [cargosFilters, setCargosFilters] = useState<string[]>(['Estado: Asignado']);
   const [licenciasFilters, setLicenciasFilters] = useState<string[]>([]);
   const [motivosOptions, setMotivosOptions] = useState<FilterOption[]>([]);
+  const [filtersLoaded, setFiltersLoaded] = useState(false);
   const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([
     {
       id: 'estado',
@@ -146,27 +151,29 @@ export default function Listado({
         }
       ];
     }
-    return availableFilters.map(filter => {
-      if (filter.id === 'estado') {
-        if (activeTab === 'cargos') {
+    return availableFilters
+      .filter(filter => !(activeTab === 'cargos' && filter.id === 'unidad'))
+      .map(filter => {
+        if (filter.id === 'estado') {
+          if (activeTab === 'cargos') {
+            return {
+              ...filter,
+              options: [
+                { id: 'Asignado', label: 'Asignado' },
+                { id: 'Libre', label: 'Libre' }
+              ]
+            };
+          }
           return {
             ...filter,
             options: [
-              { id: 'Asignado', label: 'Asignado' },
-              { id: 'Libre', label: 'Libre' }
+              { id: 'Activo', label: 'Activo' },
+              { id: 'Licencia', label: 'Licencia' }
             ]
           };
         }
-        return {
-          ...filter,
-          options: [
-            { id: 'Activo', label: 'Activo' },
-            { id: 'Licencia', label: 'Licencia' }
-          ]
-        };
-      }
-      return filter;
-    });
+        return filter;
+      });
   }, [availableFilters, activeTab, motivosOptions]);
 
   // Pagination state
@@ -208,24 +215,27 @@ export default function Listado({
         const token = localStorage.getItem('token');
         const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad, resMotivos] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/caracteres`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/categorias`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/dedicaciones`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/tipos-unidad`, { headers }),
-          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/motivos-licencias`, { headers })
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad, resUnidades, resMotivos] = await Promise.all([
+          fetch(`${apiUrl}/api/caracteres`, { headers }),
+          fetch(`${apiUrl}/api/categorias`, { headers }),
+          fetch(`${apiUrl}/api/dedicaciones`, { headers }),
+          fetch(`${apiUrl}/api/tipos-unidad`, { headers }),
+          fetch(`${apiUrl}/api/unidades`, { headers }),
+          fetch(`${apiUrl}/api/motivos-licencias`, { headers })
         ]);
 
-        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401 || resMotivos.status === 401) {
+        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401 || resUnidades.status === 401 || resMotivos.status === 401) {
           if (onLogout) onLogout();
           return;
         }
 
-        const [caracteres, categorias, dedicaciones, tiposUnidad, motivos] = await Promise.all([
+        const [caracteres, categorias, dedicaciones, tiposUnidad, unidades, motivos] = await Promise.all([
           resCaracteres.ok ? resCaracteres.json() : [],
           resCategorias.ok ? resCategorias.json() : [],
           resDedicaciones.ok ? resDedicaciones.json() : [],
           resTiposUnidad.ok ? resTiposUnidad.json() : [],
+          resUnidades.ok ? resUnidades.json() : [],
           resMotivos.ok ? resMotivos.json() : []
         ]);
 
@@ -237,6 +247,17 @@ export default function Listado({
             }))
           );
         }
+
+        const unidadesOptions: FilterOption[] = Array.isArray(unidades)
+          ? unidades
+              .map((item: any) => ({
+                id: (item.unidadId || item.id)?.toString() || '',
+                label: item.unidadNombre || item.nombre || 'Desconocido'
+              }))
+              .sort((a: FilterOption, b: FilterOption) =>
+                a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+              )
+          : [];
 
         setAvailableFilters([
           {
@@ -286,10 +307,17 @@ export default function Listado({
               id: (item.tipoUnidadId || item.id)?.toString() || '',
               label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
             }))
+          },
+          {
+            id: 'unidad',
+            name: 'Unidad',
+            options: unidadesOptions
           }
         ]);
       } catch (err) {
         console.error("Error fetching filter options:", err);
+      } finally {
+        setFiltersLoaded(true);
       }
     };
 
@@ -320,46 +348,81 @@ export default function Listado({
 
   const activeSort = activeTab === 'docentes' ? docentesSort : activeTab === 'cargos' ? cargosSort : licenciasSort;
   const isSorting = activeSort !== null;
-  const fetchPage = isSorting ? 0 : currentPage - 1;
-  const fetchSize = isSorting ? 1000 : rowsPerPage;
+  const selectedUnidades = useMemo(() => {
+    if (activeTab !== 'docentes') return [];
+    return appliedFilters
+      .filter(f => f.startsWith('Unidad: '))
+      .map(f => f.slice('Unidad: '.length).trim().replace(/\s+/g, ' ').toLowerCase())
+      .filter(Boolean);
+  }, [activeTab, appliedFilters]);
+
+  const hasUnresolvedFilters = useMemo(() => {
+    if (filtersLoaded) return false;
+    return appliedFilters.some(filter => {
+      const separatorIdx = filter.indexOf(': ');
+      if (separatorIdx === -1) return false;
+      const categoryName = filter.slice(0, separatorIdx);
+      return !dynamicAvailableFilters.some(c => c.name === categoryName);
+    });
+  }, [filtersLoaded, appliedFilters, dynamicAvailableFilters]);
+
+  const resolvedFilterQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    appliedFilters.forEach(filter => {
+      const separatorIdx = filter.indexOf(': ');
+      if (separatorIdx === -1) return;
+      const categoryName = filter.slice(0, separatorIdx);
+      const optionLabel = filter.slice(separatorIdx + 2);
+      if (!categoryName || !optionLabel) return;
+
+      const category = dynamicAvailableFilters.find(c => c.name === categoryName);
+      if (category) {
+        const option = category.options.find(
+          o => o.label === optionLabel || o.label.toLowerCase() === optionLabel.toLowerCase()
+        );
+        if (option) {
+          if (activeTab === 'licencias') {
+            if (category.id === 'motivo') {
+              params.append('motivoId', option.id);
+            }
+          } else if (category.id !== 'unidad') {
+            // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
+            // so the backend can use whichever it is actually looking for.
+            params.append(`${category.id}Id`, option.id);
+            params.append(category.id, option.label);
+          }
+        } else if (activeTab !== 'licencias' && category.id === 'tipoUnidad') {
+          params.append('tipoUnidad', optionLabel);
+        }
+      } else if (activeTab !== 'licencias' && categoryName === 'Tipo de Unidad') {
+        params.append('tipoUnidad', optionLabel);
+      }
+    });
+    return params.toString();
+  }, [appliedFilters, dynamicAvailableFilters, activeTab]);
+
+  const needsAllRows = isSorting || selectedUnidades.length > 0;
+  const fetchPage = needsAllRows ? 0 : currentPage - 1;
+  const fetchSize = needsAllRows ? 1000 : rowsPerPage;
 
   useEffect(() => {
+    if (hasUnresolvedFilters) {
+      return;
+    }
+
     const controller = new AbortController();
 
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const buildParams = (pageNum: number, sizeNum: number) => {
-          const params = new URLSearchParams({
-            page: pageNum.toString(),
-            size: sizeNum.toString()
-          });
+          const params = new URLSearchParams(resolvedFilterQuery);
+          params.set('page', pageNum.toString());
+          params.set('size', sizeNum.toString());
 
           if (searchTerm) {
-            params.append('search', searchTerm);
+            params.set('search', searchTerm);
           }
-
-          appliedFilters.forEach(filter => {
-            const [categoryName, optionLabel] = filter.split(': ');
-            if (categoryName && optionLabel) {
-              const category = dynamicAvailableFilters.find(c => c.name === categoryName);
-              if (category) {
-                const option = category.options.find(o => o.label === optionLabel);
-                if (option) {
-                  if (activeTab === 'licencias') {
-                    if (category.id === 'motivo') {
-                      params.append('motivoId', option.id);
-                    }
-                  } else {
-                    // Send both the ID (like categoryId=1) and the exact label (like categoria=Titular)
-                    // so the backend can use whichever it is actually looking for.
-                    params.append(`${category.id}Id`, option.id);
-                    params.append(category.id, option.label);
-                  }
-                }
-              }
-            }
-          });
 
           return params;
         };
@@ -384,7 +447,7 @@ export default function Listado({
           const data = await response.json();
           let items = data.content || [];
 
-          if (isSorting && (data.totalPages || 1) > 1) {
+          if (needsAllRows && (data.totalPages || 1) > 1) {
             const remainingPages = Array.from({ length: data.totalPages - 1 }, (_, i) => i + 1);
             const remainingResponses = await Promise.all(
               remainingPages.map((p) =>
@@ -401,6 +464,13 @@ export default function Listado({
             }
           }
 
+          if (activeTab === 'docentes' && selectedUnidades.length > 0) {
+            items = items.filter((d: Docente) => {
+              const docenteUnidad = (d.unidad || '').trim().replace(/\s+/g, ' ').toLowerCase();
+              return selectedUnidades.includes(docenteUnidad);
+            });
+          }
+
           if (activeTab === 'cargos') {
             setCargosData(items);
           } else if (activeTab === 'licencias') {
@@ -408,8 +478,8 @@ export default function Listado({
           } else {
             setDocentesData(items);
           }
-          setTotalElements(isSorting ? items.length : (data.totalElements || 0));
-          setTotalPages(isSorting ? Math.max(1, Math.ceil(items.length / rowsPerPage)) : (data.totalPages || 1));
+          setTotalElements(needsAllRows ? items.length : (data.totalElements || 0));
+          setTotalPages(needsAllRows ? Math.max(1, Math.ceil(items.length / rowsPerPage)) : (data.totalPages || 1));
         } else {
           console.error(`Failed to fetch ${activeTab}, status:`, response.status);
           if (response.status === 401) {
@@ -428,7 +498,7 @@ export default function Listado({
 
     fetchData();
     return () => controller.abort();
-  }, [fetchPage, fetchSize, isSorting, searchTerm, appliedFilters, activeTab]);
+  }, [fetchPage, fetchSize, needsAllRows, hasUnresolvedFilters, resolvedFilterQuery, selectedUnidades, searchTerm, activeTab, rowsPerPage]);
 
   const exportConfig = useMemo(() => {
     const params = new URLSearchParams();
@@ -490,7 +560,7 @@ export default function Listado({
     };
   }, [activeTab, searchTerm, appliedFilters, dynamicAvailableFilters]);
 
-  const effectiveTotalPages = isSorting ? Math.max(1, Math.ceil(totalElements / rowsPerPage)) : totalPages;
+  const effectiveTotalPages = needsAllRows ? Math.max(1, Math.ceil(totalElements / rowsPerPage)) : totalPages;
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalElements);
 
@@ -664,8 +734,8 @@ export default function Listado({
   }, [licenciasData, licenciasSort]);
 
   const displayedDocentesData = useMemo(
-    () => (isSorting ? sortedDocentesData.slice(startIndex, startIndex + rowsPerPage) : sortedDocentesData),
-    [isSorting, sortedDocentesData, startIndex, rowsPerPage]
+    () => (needsAllRows ? sortedDocentesData.slice(startIndex, startIndex + rowsPerPage) : sortedDocentesData),
+    [needsAllRows, sortedDocentesData, startIndex, rowsPerPage]
   );
 
   const displayedCargosData = useMemo(
@@ -845,7 +915,7 @@ export default function Listado({
                     )}
                   </thead>
                   <tbody>
-                    {isLoading ? (
+                    {isLoading || hasUnresolvedFilters ? (
                       <tr>
                         <td colSpan={activeTab === 'docentes' ? 8 : 7} style={{ textAlign: 'center', padding: '24px' }}>Cargando {activeTab}...</td>
                       </tr>

@@ -68,10 +68,19 @@ const DonutChart = ({ data, size = 200, thickness = 30, centerText, centerSubtex
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
             transform={`rotate(-90 ${center} ${center})`}
-            style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease, opacity 0.2s ease', cursor: 'pointer' }}
+            role="button"
+            tabIndex={item.value > 0 ? 0 : -1}
+            aria-label={`${item.label}: ${item.value} docentes asignados. Click para ver en Listado`}
+            style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease, opacity 0.2s ease', cursor: 'pointer', outline: 'none' }}
             onMouseMove={(e) => onMouseMove && onMouseMove(e, item.label, item.value, item.color)}
             onMouseLeave={() => onMouseLeave && onMouseLeave()}
             onClick={() => onClick && onClick(item.label, item.value, item.color)}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+                e.preventDefault();
+                onClick(item.label, item.value, item.color);
+              }
+            }}
           />
         );
       })}
@@ -270,14 +279,79 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
     setAppliedFilters(prev => prev.filter(f => f !== filterToRemove));
   };
 
-  const handleChartClick = (label: string) => {
+  const normalizeText = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+  const resolveTipoUnidadLabel = (rawLabel: string): string => {
+    const tipoUnidadCategory = availableFilters.find(c => c.id === 'tipoUnidad');
+    if (!tipoUnidadCategory || tipoUnidadCategory.options.length === 0) {
+      return rawLabel;
+    }
+
+    const normalizedRaw = normalizeText(rawLabel);
+    const singularRaw = normalizedRaw.endsWith('s') ? normalizedRaw.slice(0, -1) : normalizedRaw;
+
+    const exactMatch = tipoUnidadCategory.options.find(
+      opt => normalizeText(opt.label) === normalizedRaw
+    );
+    if (exactMatch) return exactMatch.label;
+
+    const singularMatch = tipoUnidadCategory.options.find(opt => {
+      const normalizedOpt = normalizeText(opt.label);
+      const singularOpt = normalizedOpt.endsWith('s') ? normalizedOpt.slice(0, -1) : normalizedOpt;
+      return singularOpt === singularRaw;
+    });
+    if (singularMatch) return singularMatch.label;
+
+    return rawLabel;
+  };
+
+  const buildListadoFilters = (extraFilters: string[], replacePrefixes: string[] = []): string[] => {
+    const preserved = appliedFilters.filter(
+      filter =>
+        !filter.startsWith('Estado: ') &&
+        !replacePrefixes.some(prefix => filter.startsWith(prefix))
+    );
+    const result = ['Estado: Activo', ...preserved];
+    extraFilters.forEach(filter => {
+      if (!result.includes(filter)) {
+        result.push(filter);
+      }
+    });
+    return result;
+  };
+
+  const handleChartClick = (
+    chartKind: 'tipoUnidad' | 'unidad',
+    label: string,
+    tipoUnidadHint?: string
+  ) => {
+    if (onNavigate) {
+      if (chartKind === 'tipoUnidad') {
+        const resolvedTipo = resolveTipoUnidadLabel(label);
+        const filters = buildListadoFilters(
+          [`Tipo de Unidad: ${resolvedTipo}`],
+          ['Tipo de Unidad: ', 'Unidad: ']
+        );
+        onNavigate('listado', { tab: 'docentes', filters });
+      } else {
+        const extraFilters: string[] = [];
+        if (tipoUnidadHint) {
+          extraFilters.push(`Tipo de Unidad: ${resolveTipoUnidadLabel(tipoUnidadHint)}`);
+        }
+        extraFilters.push(`Unidad: ${label}`);
+        const filters = buildListadoFilters(extraFilters, ['Tipo de Unidad: ', 'Unidad: ']);
+        onNavigate('listado', { tab: 'docentes', filters });
+      }
+      return;
+    }
+
     if (onNavigateToListado) {
       onNavigateToListado(label);
-    } else {
-      // If we're not navigating, maybe add the label as a filter to demonstrate functionality
-      if (!appliedFilters.includes(label)) {
-        setAppliedFilters(prev => [...prev, label]);
-      }
     }
   };
 
@@ -397,7 +471,6 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                           </li>
                         ))}
                       </ul>
-                      <button className="details-btn">Ver Detalles</button>
                     </div>
                     <div className="chart-section">
                       <DonutChart
@@ -408,7 +481,7 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                         centerSubtext="Docentes"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
-                        onClick={handleChartClick}
+                        onClick={(label) => handleChartClick('tipoUnidad', label)}
                       />
                     </div>
                   </div>
@@ -441,7 +514,7 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
-                          onClick={handleChartClick}
+                          onClick={(label) => handleChartClick('unidad', label, 'Centro')}
                         />
                       </div>
                     </div>
@@ -472,7 +545,7 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
-                          onClick={handleChartClick}
+                          onClick={(label) => handleChartClick('unidad', label, 'Departamento')}
                         />
                       </div>
                     </div>
@@ -503,7 +576,7 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
                           centerSubtext="Docentes"
                           onMouseMove={handleMouseMove}
                           onMouseLeave={handleMouseLeave}
-                          onClick={handleChartClick}
+                          onClick={(label) => handleChartClick('unidad', label, 'Instituto')}
                         />
                       </div>
                     </div>
