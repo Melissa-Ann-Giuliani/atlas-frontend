@@ -103,9 +103,19 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
     departamentos: DonutData[];
     institutos: DonutData[];
   } | null>(null);
+  const ESTADO_FILTER_CATEGORY: FilterCategory = {
+    id: 'estado',
+    name: 'Estado',
+    options: [
+      { id: 'Activo', label: 'Activo' },
+      { id: 'Licencia', label: 'Licencia' }
+    ]
+  };
+
   const [tooltip, setTooltip] = useState<{ x: number, y: number, label: string, value: number, color: string } | null>(null);
-  const [appliedFilters, setAppliedFilters] = useState<string[]>([]); // added some mock filters for demo
-  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([]);
+  const [appliedFilters, setAppliedFilters] = useState<string[]>(['Estado: Activo']);
+  const [availableFilters, setAvailableFilters] = useState<FilterCategory[]>([ESTADO_FILTER_CATEGORY]);
+  const [tiposUnidadOptions, setTiposUnidadOptions] = useState<{ id: string; label: string }[]>([]);
   const [vencimientosResumen, setVencimientosResumen] = useState<DesignacionVencimientosResumen | null>(null);
   const [licenciasCount, setLicenciasCount] = useState<number>(0);
   const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
@@ -208,26 +218,36 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
 
-        const [resCaracteres, resCategorias, resDedicaciones, resTiposUnidad] = await Promise.all([
+        const [resCaracteres, resCategorias, resDedicaciones, resOrigenes, resTiposUnidad] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/caracteres`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL}/api/categorias`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL}/api/dedicaciones`, { headers }),
+          fetch(`${import.meta.env.VITE_API_URL}/api/origenes`, { headers }),
           fetch(`${import.meta.env.VITE_API_URL}/api/tipos-unidad`, { headers })
         ]);
 
-        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resTiposUnidad.status === 401) {
+        if (resCaracteres.status === 401 || resCategorias.status === 401 || resDedicaciones.status === 401 || resOrigenes.status === 401 || resTiposUnidad.status === 401) {
           if (onLogout) onLogout();
           return;
         }
 
-        const [caracteres, categorias, dedicaciones, tiposUnidad] = await Promise.all([
+        const [caracteres, categorias, dedicaciones, origenes, tiposUnidad] = await Promise.all([
           resCaracteres.ok ? resCaracteres.json() : [],
           resCategorias.ok ? resCategorias.json() : [],
           resDedicaciones.ok ? resDedicaciones.json() : [],
+          resOrigenes.ok ? resOrigenes.json() : [],
           resTiposUnidad.ok ? resTiposUnidad.json() : []
         ]);
 
+        setTiposUnidadOptions(
+          tiposUnidad.map((item: any) => ({
+            id: (item.tipoUnidadId || item.id)?.toString() || '',
+            label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
+          }))
+        );
+
         setAvailableFilters([
+          ESTADO_FILTER_CATEGORY,
           {
             id: 'caracter',
             name: 'Caracter',
@@ -253,11 +273,11 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
             }))
           },
           {
-            id: 'tipoUnidad',
-            name: 'Tipo de Unidad',
-            options: tiposUnidad.map((item: any) => ({
-              id: (item.tipoUnidadId || item.id)?.toString() || '',
-              label: item.tipoUnidadNombre || item.nombre || 'Desconocido'
+            id: 'origen',
+            name: 'Origen',
+            options: origenes.map((item: any) => ({
+              id: (item.origenId || item.id)?.toString() || '',
+              label: item.origenNombre || item.nombre || 'Desconocido'
             }))
           }
         ]);
@@ -287,20 +307,19 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
       .toLowerCase();
 
   const resolveTipoUnidadLabel = (rawLabel: string): string => {
-    const tipoUnidadCategory = availableFilters.find(c => c.id === 'tipoUnidad');
-    if (!tipoUnidadCategory || tipoUnidadCategory.options.length === 0) {
+    if (tiposUnidadOptions.length === 0) {
       return rawLabel;
     }
 
     const normalizedRaw = normalizeText(rawLabel);
     const singularRaw = normalizedRaw.endsWith('s') ? normalizedRaw.slice(0, -1) : normalizedRaw;
 
-    const exactMatch = tipoUnidadCategory.options.find(
+    const exactMatch = tiposUnidadOptions.find(
       opt => normalizeText(opt.label) === normalizedRaw
     );
     if (exactMatch) return exactMatch.label;
 
-    const singularMatch = tipoUnidadCategory.options.find(opt => {
+    const singularMatch = tiposUnidadOptions.find(opt => {
       const normalizedOpt = normalizeText(opt.label);
       const singularOpt = normalizedOpt.endsWith('s') ? normalizedOpt.slice(0, -1) : normalizedOpt;
       return singularOpt === singularRaw;
@@ -312,11 +331,9 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
 
   const buildListadoFilters = (extraFilters: string[], replacePrefixes: string[] = []): string[] => {
     const preserved = appliedFilters.filter(
-      filter =>
-        !filter.startsWith('Estado: ') &&
-        !replacePrefixes.some(prefix => filter.startsWith(prefix))
+      filter => !replacePrefixes.some(prefix => filter.startsWith(prefix))
     );
-    const result = ['Estado: Activo', ...preserved];
+    const result = [...preserved];
     extraFilters.forEach(filter => {
       if (!result.includes(filter)) {
         result.push(filter);
@@ -378,7 +395,13 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
         const category = availableFilters.find(c => c.name === categoryName);
         if (category) {
           const option = category.options.find(o => o.label === optionLabel);
-          if (option) queryParams.append(`${category.id}Id`, option.id);
+          if (option) {
+            if (category.id === 'estado') {
+              queryParams.append('estado', option.id);
+            } else {
+              queryParams.append(`${category.id}Id`, option.id);
+            }
+          }
         }
       }
     });
@@ -450,6 +473,7 @@ export default function Inicio({ onLogout, onNavigate, onNavigateToListado }: { 
               onAddFilter={handleAddFilter}
               onRemoveFilter={handleRemoveFilter}
               onSearch={(term) => console.log('Searching for:', term)}
+              inlineTags
             />
 
             {!data ? (

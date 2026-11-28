@@ -36,6 +36,7 @@ interface FilterBarProps {
   onAddFilter?: (filter: string) => void;
   onRemoveFilter?: (filter: string) => void;
   onSearch?: (searchTerm: string) => void;
+  inlineTags?: boolean;
 }
 
 export default function FilterBar({
@@ -43,11 +44,24 @@ export default function FilterBar({
   appliedFilters = [],
   onAddFilter,
   onRemoveFilter,
-  onSearch
+  onSearch,
+  inlineTags = false
 }: FilterBarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [closingFilters, setClosingFilters] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimersRef = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    setClosingFilters(prev => prev.filter(f => appliedFilters.includes(f)));
+  }, [appliedFilters]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(closeTimersRef.current).forEach(timerId => window.clearTimeout(timerId));
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,10 +95,37 @@ export default function FilterBar({
     }
   };
 
+  const finishRemoveFilter = (filter: string) => {
+    if (closeTimersRef.current[filter]) {
+      window.clearTimeout(closeTimersRef.current[filter]);
+      delete closeTimersRef.current[filter];
+    }
+    setClosingFilters(prev => prev.filter(f => f !== filter));
+    onRemoveFilter?.(filter);
+  };
+
+  const handleCloseFilter = (filter: string) => {
+    if (closingFilters.includes(filter)) return;
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      onRemoveFilter?.(filter);
+      return;
+    }
+
+    setClosingFilters(prev => [...prev, filter]);
+    closeTimersRef.current[filter] = window.setTimeout(() => {
+      finishRemoveFilter(filter);
+    }, 200);
+  };
+
   const activeCategory = availableFilters.find(c => c.id === activeCategoryId);
 
   return (
-    <div className="filter-bar">
+    <div className={`filter-bar${inlineTags ? ' filter-bar--inline-tags' : ''}`}>
       <div className="filter-bar-top">
         <div className="filter-dropdown-container" ref={dropdownRef}>
           <button
@@ -151,18 +192,30 @@ export default function FilterBar({
 
       {appliedFilters.length > 0 && (
         <div className="applied-filters-container">
-          {appliedFilters.map((filter, idx) => (
-            <div key={idx} className="filter-chip">
-              <span className="filter-chip-text">{filter}</span>
-              <button
-                className="filter-chip-close"
-                onClick={() => onRemoveFilter && onRemoveFilter(filter)}
-                aria-label={`Remove filter ${filter}`}
+          {appliedFilters.map((filter) => {
+            const isClosing = closingFilters.includes(filter);
+            return (
+              <div
+                key={filter}
+                className={`filter-chip${isClosing ? ' filter-chip--closing' : ''}`}
+                onAnimationEnd={(e) => {
+                  if (isClosing && e.animationName === 'filterChipFadeOut') {
+                    finishRemoveFilter(filter);
+                  }
+                }}
               >
-                <CloseIcon />
-              </button>
-            </div>
-          ))}
+                <span className="filter-chip-text">{filter}</span>
+                <button
+                  type="button"
+                  className="filter-chip-close"
+                  onClick={() => handleCloseFilter(filter)}
+                  aria-label={`Remove filter ${filter}`}
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

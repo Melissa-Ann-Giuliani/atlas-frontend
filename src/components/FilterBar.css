@@ -15,6 +15,32 @@
   width: 100%;
 }
 
+.filter-bar--inline-tags {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: safe center;
+  gap: 10px;
+}
+
+.filter-bar--inline-tags .filter-bar-top {
+  flex: 0 1 auto;
+  width: auto;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  align-items: safe center;
+}
+
+.filter-bar--inline-tags .search-input-wrapper {
+  flex: 0 1 300px;
+  width: auto;
+  max-width: none;
+  min-inline-size: 0;
+}
+
+.filter-bar--inline-tags .applied-filters-container {
+  display: contents;
+}
+
 .filter-dropdown-container {
   position: relative;
   display: inline-block;
@@ -173,18 +199,40 @@
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  animation: slideIn 0.2s ease-out forwards;
 }
 
-@keyframes slideIn {
+@media (prefers-reduced-motion: no-preference) {
+  .filter-chip {
+    animation: filterChipFadeInLeft 0.22s ease-out both;
+  }
+
+  .filter-chip--closing {
+    animation: filterChipFadeOut 0.16s ease-out forwards;
+    pointer-events: none;
+  }
+}
+
+@keyframes filterChipFadeInLeft {
   from {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateX(-12px);
   }
 
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes filterChipFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-6px);
   }
 }
 
